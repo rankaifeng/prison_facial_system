@@ -35,8 +35,9 @@ const StatusPieChart = ({ data }) => {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'rgba(20, 25, 45, 0.9)',
-        borderColor: 'rgba(0, 240, 255, 0.3)',
+        backgroundColor: 'rgba(20, 25, 45, 0.95)',
+        borderColor: 'rgba(0, 240, 255, 0.5)',
+        borderWidth: 1,
         textStyle: { color: '#fff' },
         formatter: '{b}: {c} ({d}%)'
       },
@@ -49,20 +50,29 @@ const StatusPieChart = ({ data }) => {
       },
       series: [{
         type: 'pie',
-        radius: ['40%', '70%'],
+        radius: ['40%', '80%'],
         center: ['50%', '45%'],
-        avoidLabelOverlap: false,
+        depth: 45,
+        animationType: 'expansion',
+        animationDuration: 1500,
+        animationEasing: 'elasticOut',
+        animationDelay: (idx) => idx * 100,
         itemStyle: {
-          borderRadius: 4,
-          borderColor: 'rgba(20, 25, 45, 0.85)',
-          borderWidth: 2
+          borderRadius: 8,
+          borderColor: 'rgba(20, 25, 45, 0.9)',
+          borderWidth: 3,
+          shadowBlur: 20,
+          shadowColor: 'rgba(0, 0, 0, 0.6)'
         },
         label: {
           show: false
         },
         emphasis: {
-          label: {
-            show: false
+          scale: true,
+          scaleSize: 12,
+          itemStyle: {
+            shadowBlur: 35,
+            shadowColor: 'rgba(0, 240, 255, 0.8)'
           }
         },
         data: chartData.map((item, index) => ({
@@ -75,6 +85,32 @@ const StatusPieChart = ({ data }) => {
     };
 
     chart.setOption(option);
+
+    let phase = 0;
+    const updateAnimation = () => {
+      phase += 0.03;
+      const animatedData = chartData.map((item, index) => {
+        const offset = Math.sin(phase + index * 0.8) * 0.1;
+        return {
+          ...item,
+          itemStyle: {
+            color: colors[index % colors.length],
+            borderWidth: 3 + offset * 5,
+            shadowBlur: 20 + offset * 20
+          }
+        };
+      });
+      chart.setOption({
+        series: [{
+          data: animatedData
+        }]
+      });
+      requestAnimationFrame(updateAnimation);
+    };
+
+    setTimeout(() => {
+      requestAnimationFrame(updateAnimation);
+    }, 2000);
 
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);

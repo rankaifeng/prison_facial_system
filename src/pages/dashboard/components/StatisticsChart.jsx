@@ -14,18 +14,18 @@ const StatisticsChart = ({ data }) => {
     const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
 
     const defaultData = [
-      { month: '01', prisons: [{ name: '北京第一监狱', value: 85 }, { name: '上海浦东监狱', value: 72 }, { name: '广州番禺监狱', value: 95 }, { name: '深圳南山监狱', value: 68 }] },
-      { month: '02', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 78 }, { name: '广州番禺监狱', value: 88 }, { name: '深圳南山监狱', value: 75 }] },
-      { month: '03', prisons: [{ name: '北京第一监狱', value: 88 }, { name: '上海浦东监狱', value: 82 }, { name: '广州番禺监狱', value: 92 }, { name: '深圳南山监狱', value: 72 }] },
-      { month: '04', prisons: [{ name: '北京第一监狱', value: 90 }, { name: '上海浦东监狱', value: 85 }, { name: '广州番禺监狱', value: 96 }, { name: '深圳南山监狱', value: 78 }] },
-      { month: '05', prisons: [{ name: '北京第一监狱', value: 95 }, { name: '上海浦东监狱', value: 88 }, { name: '广州番禺监狱', value: 98 }, { name: '深圳南山监狱', value: 82 }] },
-      { month: '06', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 90 }, { name: '广州番禺监狱', value: 95 }, { name: '深圳南山监狱', value: 80 }] },
-      { month: '07', prisons: [{ name: '北京第一监狱', value: 98 }, { name: '上海浦东监狱', value: 92 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 85 }] },
-      { month: '08', prisons: [{ name: '北京第一监狱', value: 95 }, { name: '上海浦东监狱', value: 90 }, { name: '广州番禺监狱', value: 98 }, { name: '深圳南山监狱', value: 88 }] },
-      { month: '09', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 88 }, { name: '广州番禺监狱', value: 96 }, { name: '深圳南山监狱', value: 85 }] },
-      { month: '10', prisons: [{ name: '北京第一监狱', value: 96 }, { name: '上海浦东监狱', value: 92 }, { name: '广州番禺监狱', value: 99 }, { name: '深圳南山监狱', value: 90 }] },
-      { month: '11', prisons: [{ name: '北京第一监狱', value: 98 }, { name: '上海浦东监狱', value: 95 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 92 }] },
-      { month: '12', prisons: [{ name: '北京第一监狱', value: 100 }, { name: '上海浦东监狱', value: 98 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 95 }] }
+      { month: '01', prisons: [{ name: '第一监狱', value: 85 }, { name: '第二监狱', value: 72 }, { name: '第三监狱', value: 95 }, { name: '第四监狱', value: 68 }] },
+      { month: '02', prisons: [{ name: '第一监狱', value: 92 }, { name: '第二监狱', value: 78 }, { name: '第三监狱', value: 88 }, { name: '第四监狱', value: 75 }] },
+      { month: '03', prisons: [{ name: '第一监狱', value: 88 }, { name: '第二监狱', value: 82 }, { name: '第三监狱', value: 92 }, { name: '第四监狱', value: 72 }] },
+      { month: '04', prisons: [{ name: '第一监狱', value: 90 }, { name: '第二监狱', value: 85 }, { name: '第三监狱', value: 96 }, { name: '第四监狱', value: 78 }] },
+      { month: '05', prisons: [{ name: '第一监狱', value: 95 }, { name: '第二监狱', value: 88 }, { name: '第三监狱', value: 98 }, { name: '第四监狱', value: 82 }] },
+      { month: '06', prisons: [{ name: '第一监狱', value: 92 }, { name: '第二监狱', value: 90 }, { name: '第三监狱', value: 95 }, { name: '第四监狱', value: 80 }] },
+      { month: '07', prisons: [{ name: '第一监狱', value: 98 }, { name: '第二监狱', value: 92 }, { name: '第三监狱', value: 100 }, { name: '第四监狱', value: 85 }] },
+      { month: '08', prisons: [{ name: '第一监狱', value: 95 }, { name: '第二监狱', value: 90 }, { name: '第三监狱', value: 98 }, { name: '第四监狱', value: 88 }] },
+      { month: '09', prisons: [{ name: '第一监狱', value: 92 }, { name: '第二监狱', value: 88 }, { name: '第三监狱', value: 96 }, { name: '第四监狱', value: 85 }] },
+      { month: '10', prisons: [{ name: '第一监狱', value: 96 }, { name: '第二监狱', value: 92 }, { name: '第三监狱', value: 99 }, { name: '第四监狱', value: 90 }] },
+      { month: '11', prisons: [{ name: '第一监狱', value: 98 }, { name: '第二监狱', value: 95 }, { name: '第三监狱', value: 100 }, { name: '第四监狱', value: 92 }] },
+      { month: '12', prisons: [{ name: '第一监狱', value: 100 }, { name: '第二监狱', value: 98 }, { name: '第三监狱', value: 100 }, { name: '第四监狱', value: 95 }] }
     ];
 
     const chartData = data?.length > 0 ? data : defaultData;
@@ -33,7 +33,7 @@ const StatisticsChart = ({ data }) => {
 
     const xData = chartType === 'month' ? months : quarters;
 
-    const prisonNames = chartData[0]?.prisons?.map(p => p.name) || ['北京第一监狱', '上海浦东监狱', '广州番禺监狱', '深圳南山监狱'];
+    const prisonNames = chartData[0]?.prisons?.map(p => p.name);
 
     const seriesData = prisonNames.map((prisonName, idx) => {
       const monthlyValues = chartData.map(monthData => {
@@ -48,23 +48,27 @@ const StatisticsChart = ({ data }) => {
         (monthlyValues[9] + monthlyValues[10] + monthlyValues[11]) / 3
       ].map(v => Math.round(v));
 
+      const color = colors[idx % colors.length];
+
       return {
         name: prisonName,
         type: 'line',
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6,
+        symbolSize: 8,
         lineStyle: {
           width: 2,
-          color: colors[idx % colors.length]
+          color: color
         },
         itemStyle: {
-          color: colors[idx % colors.length]
+          color: color,
+          shadowBlur: 10,
+          shadowColor: color
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: colors[idx % colors.length] + '40' },
-            { offset: 1, color: colors[idx % colors.length] + '05' }
+            { offset: 0, color: color + '40' },
+            { offset: 1, color: color + '05' }
           ])
         },
         data: chartType === 'month' ? monthlyValues : quarterlyValues
@@ -108,6 +112,24 @@ const StatisticsChart = ({ data }) => {
     };
 
     chart.setOption(option);
+
+    let phase = 0;
+    const animate = () => {
+      phase += 0.08;
+      const animatedSeries = seriesData.map((s, idx) => ({
+        ...s,
+        symbolSize: 6 + Math.sin(phase + idx * 0.5) * 4,
+        itemStyle: {
+          color: s.itemStyle.color,
+          shadowBlur: 8 + Math.sin(phase + idx * 0.5) * 6,
+          shadowColor: s.lineStyle.color
+        }
+      }));
+      chart.setOption({ series: animatedSeries });
+      requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
 
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
