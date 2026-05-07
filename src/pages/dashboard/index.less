@@ -178,17 +178,17 @@
         .prison-card {
           background: @card-bg;
           border-radius: 10px;
-          border: 1px solid @border-glow;
+          border: none;
           overflow: hidden;
           transition: all 0.3s ease;
           display: flex;
           flex-direction: column;
           min-height: 120px;
+          box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
           &:hover {
             transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-            border-color: @primary-glow;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 30px rgba(0, 240, 255, 0.05);
           }
 
           .prison-image {
@@ -254,11 +254,12 @@
       flex: 0 0 350px;
       background: @card-bg;
       border-radius: 10px;
-      border: 1px solid @border-glow;
+      border: none;
       padding: 10px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
     }
   }
 
@@ -276,9 +277,10 @@
   flex-shrink: 0;
   background: @card-bg;
   border-radius: 10px;
-  border: 1px solid @border-glow;
+  border: none;
   padding: 10px;
   overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
   .chart-title {
     font-size: 13px;
@@ -308,9 +310,9 @@
   .total-section {
     flex-shrink: 0;
     border-radius: 10px;
-    border: 1px solid @border-glow;
+    border: none;
     padding: 12px;
-    border-color: rgba(24, 119, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
     .chart-header {
       display: flex;
@@ -397,11 +399,12 @@
     flex: 1;
     background: @card-bg;
     border-radius: 10px;
-    border: 1px solid @border-glow;
+    border: none;
     padding: 12px;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
     .section-header {
       display: flex;
@@ -409,7 +412,6 @@
       gap: 6px;
       margin-bottom: 10px;
       padding-bottom: 8px;
-      border-bottom: 1px solid @border-glow;
       color: @primary-glow;
       font-size: 13px;
       font-weight: 500;
@@ -506,11 +508,12 @@
   flex: 1;
   background: @card-bg;
   border-radius: 10px;
-  border: 1px solid @border-glow;
+  border: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
   .panel-header {
     flex-shrink: 0;
@@ -518,7 +521,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 15px;
-    border-bottom: 1px solid @border-glow;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
     background: linear-gradient(90deg, rgba(24, 119, 255, 0.1) 0%, transparent 100%);
     color: @primary-glow;
     font-size: 13px;
@@ -617,7 +620,7 @@
     justify-content: space-between;
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid @border-glow;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
 
     .chart-title {
       display: flex;
@@ -639,7 +642,7 @@
       .tab-btn {
         padding: 4px 12px;
         background: rgba(0, 0, 0, 0.3);
-        border: 1px solid @border-glow;
+        border: 1px solid rgba(0, 240, 255, 0.15);
         border-radius: 4px;
         color: rgba(255, 255, 255, 0.6);
         font-size: 11px;
@@ -653,7 +656,7 @@
 
         &.active {
           background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%);
-          border-color: @primary-glow;
+          border-color: rgba(0, 240, 255, 0.4);
           color: @primary-glow;
         }
       }
