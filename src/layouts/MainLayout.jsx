@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Space, theme } from 'antd';
-import { UserOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, SettingOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { allMenus } from '@/router/menus';
@@ -19,6 +19,7 @@ const MainLayout = () => {
   const { token } = theme.useToken();
 
   const selectedKey = location.pathname;
+  const isDashboard = location.pathname === '/dashboard';
 
   const userMenu = {
     items: [
@@ -44,69 +45,88 @@ const MainLayout = () => {
     },
   };
 
+  const navMenu = {
+    items: allMenus.map(menu => ({
+      key: menu.key,
+      label: menu.label,
+    })),
+    onClick: ({ key }) => navigate(key),
+  };
+
   return (
     <Layout style={{ height: '100vh', overflow: 'hidden' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        width={220}
-        style={{
-          overflow: 'auto',
-          height: '100vh',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          background: '#001529',
-        }}
-      >
-        <Logo collapsed={collapsed} />
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={allMenus}
-          onClick={({ key }) => navigate(key)}
-        />
-      </Sider>
-      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'margin-left 0.2s', height: '100vh', overflow: 'hidden' }}>
-        <Header
+      {!isDashboard && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          width={220}
           style={{
-            padding: '0 16px',
-            background: '#fff',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-            position: 'sticky',
+            overflow: 'auto',
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
             top: 0,
-            zIndex: 100,
-            height: 64,
+            bottom: 0,
+            background: '#001529',
           }}
         >
-          <Space>
-            <span
-              onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: 18, cursor: 'pointer' }}
-            >
-              {collapsed ? '☰' : '✕'}
-            </span>
-            <Breadcrumb />
-          </Space>
-          <Space size={16}>
-            <Dropdown menu={userMenu}>
-              <Space style={{ cursor: 'pointer' }}>
-                <Avatar style={{ background: '#1890ff' }} icon={<UserOutlined />} />
-                <span>{cache.getVal("userName") || '管理员'}</span>
-              </Space>
-            </Dropdown>
-            <SettingOutlined
-              style={{ cursor: 'pointer', fontSize: 16 }}
-              onClick={() => setDrawerOpen(true)}
-            />
-          </Space>
-        </Header>
+          <Logo collapsed={collapsed} />
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            items={allMenus}
+            onClick={({ key }) => navigate(key)}
+          />
+        </Sider>
+      )}
+      <Layout
+        style={{
+          marginLeft: isDashboard ? 0 : (collapsed ? 80 : 220),
+          transition: 'margin-left 0.2s',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        {!isDashboard && (
+          <Header
+            style={{
+              padding: '0 16px',
+              background: '#fff',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+              position: 'sticky',
+              top: 0,
+              zIndex: 100,
+              height: 64,
+            }}
+          >
+            <Space>
+              <span
+                onClick={() => setCollapsed(!collapsed)}
+                style={{ fontSize: 18, cursor: 'pointer' }}
+              >
+                {collapsed ? '☰' : '✕'}
+              </span>
+              <Breadcrumb />
+            </Space>
+            <Space size={16}>
+              <Dropdown menu={userMenu}>
+                <Space style={{ cursor: 'pointer' }}>
+                  <Avatar style={{ background: '#1890ff' }} icon={<UserOutlined />} />
+                  <span>{cache.getVal("userName") || '管理员'}</span>
+                </Space>
+              </Dropdown>
+              <SettingOutlined
+                style={{ cursor: 'pointer', fontSize: 16 }}
+                onClick={() => setDrawerOpen(true)}
+              />
+            </Space>
+          </Header>
+        )}
         <Content
           style={{
             margin: 0,
@@ -114,7 +134,7 @@ const MainLayout = () => {
             background: 'transparent',
             borderRadius: 0,
             overflow: 'hidden',
-            height: 'calc(100vh - 64px)',
+            height: isDashboard ? '100vh' : 'calc(100vh - 64px)',
             flex: 1,
           }}
         >

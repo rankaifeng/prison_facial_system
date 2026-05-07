@@ -50,161 +50,220 @@
     .header-right {
       display: flex;
       align-items: center;
+      gap: 16px;
       color: rgba(255, 255, 255, 0.7);
       font-size: 12px;
 
-      .anticon {
-        margin-right: 6px;
+      .current-time {
+        margin-right: 8px;
+      }
+
+      .nav-icon, .user-icon {
+        font-size: 18px;
         color: @primary-glow;
+        cursor: pointer;
+        padding: 8px;
+        background: rgba(0, 240, 255, 0.1);
+        border-radius: 4px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba(0, 240, 255, 0.2);
+        }
       }
     }
   }
+}
 
-  .dashboard-content {
+:global {
+  .ant-dropdown-menu {
+    background: rgba(20, 25, 45, 0.95) !important;
+    border: 1px solid rgba(0, 240, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.15) !important;
+
+    .ant-dropdown-menu-item {
+      color: rgba(255, 255, 255, 0.85) !important;
+      border-radius: 4px !important;
+      padding: 10px 16px !important;
+      font-size: 13px !important;
+      border: 1px solid transparent !important;
+
+      &:hover {
+        background: rgba(0, 240, 255, 0.15) !important;
+        color: #00f0ff !important;
+      }
+    }
+
+    .ant-dropdown-menu-item-selected,
+    .ant-dropdown-menu-item-active {
+      background: rgba(0, 240, 255, 0.2) !important;
+      border: 1px solid rgba(0, 240, 255, 0.4) !important;
+      color: #00f0ff !important;
+    }
+
+    .ant-dropdown-menu-item-divider {
+      background: rgba(0, 240, 255, 0.3) !important;
+      margin: 8px 0 !important;
+    }
+  }
+
+  .ant-dropdown-menu-submenu-title {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 13px !important;
+
+    &:hover {
+      background: rgba(0, 240, 255, 0.15) !important;
+      color: #00f0ff !important;
+    }
+  }
+}
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+
+  .left-area {
+    width: 240px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    align-content: flex-start;
+  }
+
+  .center-area {
     flex: 1;
     display: flex;
-    padding: 10px;
+    flex-direction: column;
     gap: 10px;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
 
-    .left-area {
-      width: 240px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-      align-content: flex-start;
-    }
-
-    .center-area {
+    .prisons-section {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      min-width: 0;
       min-height: 0;
-      overflow: hidden;
 
-      .prisons-section {
+      .section-title {
+        font-size: 13px;
+        color: @primary-glow;
+        margin-bottom: 8px;
+        padding-left: 8px;
+        border-left: 3px solid @primary-glow;
+        flex-shrink: 0;
+      }
+
+      .prisons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
         flex: 1;
-        display: flex;
-        flex-direction: column;
         min-height: 0;
+        align-content: start;
 
-        .section-title {
-          font-size: 13px;
-          color: @primary-glow;
-          margin-bottom: 8px;
-          padding-left: 8px;
-          border-left: 3px solid @primary-glow;
-          flex-shrink: 0;
-        }
+        .prison-card {
+          background: @card-bg;
+          border-radius: 10px;
+          border: 1px solid @border-glow;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          min-height: 120px;
 
-        .prisons-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-          flex: 1;
-          min-height: 0;
-          align-content: start;
+          &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            border-color: @primary-glow;
+          }
 
-          .prison-card {
-            background: @card-bg;
-            border-radius: 10px;
-            border: 1px solid @border-glow;
+          .prison-image {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
             overflow: hidden;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            min-height: 120px;
 
-            &:hover {
-              transform: translateY(-3px);
-              box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-              border-color: @primary-glow;
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              display: block;
+            }
+          }
+
+          .prison-info {
+            flex-shrink: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
+            padding: 8px;
+            border-top: 1px solid @border-glow;
+
+            .prison-name {
+              text-align: center;
+              font-size: 12px;
+              font-weight: 500;
+              color: #fff;
+              margin-bottom: 6px;
             }
 
-            .prison-image {
-              flex: 1;
-              position: relative;
-              min-height: 0;
-              background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-              overflow: hidden;
+            .prison-stats {
+              display: flex;
+              justify-content: space-around;
 
-              img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-              }
-            }
-
-            .prison-info {
-              flex-shrink: 0;
-              background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
-              padding: 8px;
-              border-top: 1px solid @border-glow;
-
-              .prison-name {
-                text-align: center;
-                font-size: 12px;
-                font-weight: 500;
-                color: #fff;
-                margin-bottom: 6px;
-              }
-
-              .prison-stats {
+              .stat-item {
                 display: flex;
-                justify-content: space-around;
+                flex-direction: column;
+                align-items: center;
 
-                .stat-item {
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
+                .stat-label {
+                  font-size: 9px;
+                  color: rgba(255, 255, 255, 0.6);
+                }
 
-                  .stat-label {
-                    font-size: 9px;
-                    color: rgba(255, 255, 255, 0.6);
-                  }
+                .stat-value {
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #fff;
+                }
 
-                  .stat-value {
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #fff;
-                  }
-
-                  &.highlight .stat-value {
-                    color: #52c41a;
-                  }
+                &.highlight .stat-value {
+                  color: #52c41a;
                 }
               }
             }
           }
         }
       }
-
-      .chart-section {
-        flex: 0 0 350px;
-        background: @card-bg;
-        border-radius: 10px;
-        border: 1px solid @border-glow;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
     }
 
-    .right-area {
-      width: 280px;
-      flex-shrink: 0;
+    .chart-section {
+      flex: 0 0 350px;
+      background: @card-bg;
+      border-radius: 10px;
+      border: 1px solid @border-glow;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      min-height: 0;
+      overflow: hidden;
     }
+  }
+
+  .right-area {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
   }
 }
 
@@ -388,26 +447,32 @@
           background: rgba(24, 119, 255, 0.2);
           color: #1890ff;
         }
+
         &.working {
           background: rgba(82, 196, 26, 0.2);
           color: #52c41a;
         }
+
         &.hospital {
           background: rgba(255, 77, 79, 0.2);
           color: #ff4d4f;
         }
+
         &.isolated {
           background: rgba(255, 154, 38, 0.2);
           color: #faad14;
         }
+
         &.quarantine {
           background: rgba(139, 92, 246, 0.2);
           color: #8b5cf6;
         }
+
         &.visiting {
           background: rgba(0, 206, 200, 0.2);
           color: #00cec8;
         }
+
         &.punishment {
           background: rgba(255, 138, 0, 0.2);
           color: #ff8a00;
@@ -531,6 +596,7 @@
   0% {
     transform: translateY(0);
   }
+
   100% {
     transform: translateY(-50%);
   }
