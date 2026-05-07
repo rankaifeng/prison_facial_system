@@ -1,0 +1,112 @@
+.left-panel {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-section {
+  background: rgba(0, 10, 40, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(24, 144, 255, 0.3);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1890ff;
+  margin-bottom: 12px;
+}
+
+.total-section .total-number {
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(24, 144, 255, 0.5);
+  line-height: 1.2;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.stat-box:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.stat-icon.in-prison {
+  background: rgba(24, 144, 255, 0.2);
+  color: #1890ff;
+}
+
+.stat-icon.working {
+  background: rgba(82, 196, 26, 0.2);
+  color: #52c41a;
+}
+
+.stat-icon.hospital {
+  background: rgba(255, 77, 79, 0.2);
+  color: #ff4d4f;
+}
+
+.stat-icon.isolated {
+  background: rgba(255, 138, 0, 0.2);
+  color: #ff8a00;
+}
+
+.stat-icon.quarantine {
+  background: rgba(250, 173, 20, 0.2);
+  color: #faad14;
+}
+
+.stat-icon.visiting {
+  background: rgba(0, 206, 200, 0.2);
+  color: #00cec8;
+}
+
+.stat-icon.punishment {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff0000;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}

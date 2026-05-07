@@ -1,0 +1,116 @@
+.dashboard {
+  width: 100%;
+  height: calc(100vh - 32px - 64px);
+  background: linear-gradient(135deg, #0a0f1c 0%, #1a1f3a 50%, #0d1b2a 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.dashboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='none' stroke='rgba(24,144,255,0.05)' stroke-width='0.5' width='100' height='100'/%3E%3C/svg%3E");
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  background: rgba(0, 10, 40, 0.5);
+  border-bottom: 1px solid rgba(24, 144, 255, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 28px;
+  color: #1890ff;
+}
+
+.header-title {
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  text-shadow: 0 0 20px rgba(24, 144, 255, 0.5);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.left-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.center-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.prisons-grid {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: rgba(0, 10, 40, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(24, 144, 255, 0.2);
+}
+
+.bottom-area {
+  flex: 1;
+  min-height: 250px;
+}
+
+.bottom-area > * {
+  height: 100%;
+}
+
+.bottom-area .statistics-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.right-area {
+  flex-shrink: 0;
+}

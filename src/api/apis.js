@@ -1,0 +1,12 @@
+export const USER_LOGIN = '/user_manage/user_login/user_login_web';
+export const PRISON_LIST = '/prison_manage/prison_info/prison_info_list';
+export const PRISONER_LIST = '/prison_manage/prisoner_info/prisoner_info_list';
+export const PRISONER_DETAIL = '/prison_manage/prisoner_info/prisoner_info_detail';
+export const PRISONER_EXIT_RECORD = '/prison_manage/exit_record/exit_record_list';
+export const EXIT_STATISTICS = '/prison_manage/exit_statistics/exit_statistics_list';
+export const REALTIME_STATISTICS = '/prison_manage/realtime_statistics/realtime_statistics';
+export const WORK_STATISTICS = '/prison_manage/work_statistics/work_statistics_list';
+export const MESSAGE_LIST = '/prison_manage/message/message_list';
+export const ACCOUNT_LIST = '/prison_manage/account/account_list';
+export const RESET_PASSWORD = '/prison_manage/account/reset_password';
+export const PRISONER_ARCHIVE = '/prison_manage/prisoner_archive/prisoner_archive_list';

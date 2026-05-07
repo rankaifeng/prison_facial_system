@@ -1,0 +1,138 @@
+.statistics-chart {
+  background: rgba(0, 10, 40, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(24, 144, 255, 0.3);
+  padding: 16px;
+  flex: 1;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.chart-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-name {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chart-area {
+  height: 200px;
+  position: relative;
+}
+
+.chart-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  gap: 8px;
+}
+
+.chart-placeholder .anticon {
+  font-size: 32px;
+}
+
+.chart-lines {
+  display: flex;
+  height: calc(100% - 30px);
+  position: relative;
+}
+
+.chart-line {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.line-point {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.point-dot {
+  width: 100%;
+  background: var(--line-color);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  position: relative;
+  transition: all 0.3s;
+  opacity: 0.8;
+}
+
+.point-dot:hover {
+  opacity: 1;
+  transform: scaleY(1.1);
+}
+
+.point-value {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.point-dot:hover .point-value {
+  opacity: 1;
+}
+
+.chart-x-axis {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  right: 0;
+  display: flex;
+}
+
+.x-label {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
