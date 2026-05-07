@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Typography } from 'antd';
 import { SafetyOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import PrisonCard from './components/PrisonCard';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 import StatisticsChart from './components/StatisticsChart';
 import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
 import './index.less';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const Dashboard = () => {
   const [prisons, setPrisons] = useState([]);
@@ -59,32 +58,56 @@ const Dashboard = () => {
         </div>
 
         <div className="center-area">
-          <div className="prisons-grid">
-            {prisons.length > 0 ? (
-              prisons.map((p, index) => (
-                <PrisonCard
-                  key={p.id || index}
-                  name={p.name || `监狱${index + 1}`}
-                  totalCount={p.totalCount || 0}
-                  workCount={p.workCount || 0}
-                  imageUrl={p.imageUrl}
-                />
-              ))
-            ) : (
-              <>
-                {['第一监狱', '第二监狱', '第三监狱', '第四监狱', '第五监狱', '第六监狱', '第七监狱'].map((name, index) => (
-                  <PrisonCard
-                    key={index}
-                    name={name}
-                    totalCount={Math.floor(Math.random() * 500) + 200}
-                    workCount={Math.floor(Math.random() * 300) + 100}
-                  />
-                ))}
-              </>
-            )}
+          <div className="prisons-section">
+            <div className="section-title">监狱概览</div>
+            <div className="prisons-grid">
+              {prisons.length > 0 ? (
+                prisons.map((p, index) => (
+                  <div key={p.id || index} className="prison-card">
+                    <div className="prison-image">
+                      <img src={p.imageUrl || '/imgs/jy.png'} alt={p.name} />
+                      <div className="prison-overlay">
+                        <div className="prison-stats">
+                          <div className="stat-item">
+                            <span className="stat-value">{p.totalCount || 0}</span>
+                            <span>总人数</span>
+                          </div>
+                          <div className="stat-item highlight">
+                            <span className="stat-value">{p.workCount || 0}</span>
+                            <span>出工</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="prison-name">{p.name || `监狱${index + 1}`}</div>
+                  </div>
+                ))
+              ) : (
+                ['第一监狱', '第二监狱', '第三监狱', '第四监狱', '第五监狱', '第六监狱', '第七监狱'].map((name, index) => (
+                  <div key={index} className="prison-card">
+                    <div className="prison-image">
+                      <img src="/imgs/jy.png" alt={name} />
+                      <div className="prison-overlay">
+                        <div className="prison-stats">
+                          <div className="stat-item">
+                            <span className="stat-value">{Math.floor(Math.random() * 500) + 200}</span>
+                            <span>总人数</span>
+                          </div>
+                          <div className="stat-item highlight">
+                            <span className="stat-value">{Math.floor(Math.random() * 300) + 100}</span>
+                            <span>出工</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="prison-name">{name}</div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="bottom-area">
+          <div className="chart-section">
             <StatisticsChart data={workData} />
           </div>
         </div>

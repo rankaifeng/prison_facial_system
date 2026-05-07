@@ -19,8 +19,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 45px;
-    padding: 0 12px;
+    height: 50px;
+    padding: 0 20px;
     background: linear-gradient(90deg, rgba(20, 25, 45, 0.95) 0%, rgba(30, 40, 65, 0.9) 50%, rgba(20, 25, 45, 0.95) 100%);
     border-bottom: 1px solid @border-glow;
 
@@ -29,15 +29,15 @@
       align-items: center;
 
       .header-icon {
-        font-size: 18px;
+        font-size: 22px;
         color: @primary-glow;
-        margin-right: 8px;
-        filter: drop-shadow(0 0 6px @primary-glow);
+        margin-right: 10px;
+        filter: drop-shadow(0 0 8px @primary-glow);
       }
 
       .header-title {
         margin: 0;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
         background: linear-gradient(90deg, #fff 0%, @primary-glow 100%);
         -webkit-background-clip: text;
@@ -54,7 +54,7 @@
       font-size: 12px;
 
       .anticon {
-        margin-right: 4px;
+        margin-right: 6px;
         color: @primary-glow;
       }
     }
@@ -63,17 +63,17 @@
   .dashboard-content {
     flex: 1;
     display: flex;
-    padding: 6px;
-    gap: 6px;
+    padding: 10px;
+    gap: 10px;
     min-height: 0;
     overflow: hidden;
 
     .left-area {
-      width: 200px;
+      width: 240px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       min-height: 0;
     }
 
@@ -81,149 +81,155 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       min-width: 0;
       min-height: 0;
       overflow: hidden;
 
-      .prisons-grid {
+      .prisons-section {
         flex-shrink: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: center;
-        max-height: 160px;
-        overflow: hidden;
+
+        .section-title {
+          font-size: 13px;
+          color: @primary-glow;
+          margin-bottom: 8px;
+          padding-left: 8px;
+          border-left: 3px solid @primary-glow;
+        }
+
+        .prisons-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+
+          .prison-card {
+            background: @card-bg;
+            border-radius: 10px;
+            border: 1px solid @border-glow;
+            overflow: hidden;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: translateY(-3px);
+              box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+              border-color: @primary-glow;
+            }
+
+            .prison-image {
+              position: relative;
+              height: 80px;
+              background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+              overflow: hidden;
+
+              img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              }
+
+              .prison-overlay {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+                padding: 6px;
+
+                .prison-stats {
+                  display: flex;
+                  justify-content: space-around;
+                }
+
+                .stat-item {
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  font-size: 9px;
+                  color: rgba(255, 255, 255, 0.8);
+
+                  .stat-value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #fff;
+                  }
+
+                  &.highlight .stat-value {
+                    color: #52c41a;
+                  }
+                }
+              }
+            }
+
+            .prison-name {
+              padding: 8px;
+              text-align: center;
+              font-size: 12px;
+              font-weight: 500;
+              color: #fff;
+              background: rgba(0, 0, 0, 0.3);
+              border-top: 1px solid @border-glow;
+            }
+          }
+        }
       }
 
-      .bottom-area {
+      .chart-section {
         flex: 1;
         min-height: 0;
         background: @card-bg;
-        border-radius: 6px;
+        border-radius: 10px;
         border: 1px solid @border-glow;
-        padding: 6px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
     }
 
     .right-area {
-      width: 240px;
+      width: 280px;
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       min-height: 0;
     }
-  }
-}
-
-.prison-card {
-  width: 100px;
-  background: @card-bg;
-  border-radius: 6px;
-  border: 1px solid @border-glow;
-  overflow: hidden;
-  flex-shrink: 0;
-
-  .prison-image {
-    position: relative;
-    height: 60px;
-    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #1a237e 100%);
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .prison-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-      padding: 3px;
-
-      .prison-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-      }
-
-      .stat-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 8px;
-        color: rgba(255, 255, 255, 0.8);
-
-        .stat-label {
-          display: flex;
-          align-items: center;
-          gap: 1px;
-          font-size: 8px;
-        }
-
-        .stat-value {
-          font-weight: 600;
-          font-size: 10px;
-        }
-
-        &.highlight .stat-value {
-          color: #52c41a;
-        }
-      }
-    }
-  }
-
-  .prison-name {
-    padding: 4px 3px;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 500;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid @border-glow;
   }
 }
 
 .left-panel {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   height: 100%;
   min-height: 0;
 
-  .panel-section {
-    background: @card-bg;
-    border-radius: 6px;
-    border: 1px solid @border-glow;
-    padding: 8px;
-  }
-
   .total-section {
+    flex-shrink: 0;
+    background: @card-bg;
+    border-radius: 10px;
+    border: 1px solid @border-glow;
+    padding: 15px;
     text-align: center;
-    background: linear-gradient(135deg, rgba(24, 119, 255, 0.2) 0%, rgba(20, 25, 45, 0.9) 100%);
+    background: linear-gradient(135deg, rgba(24, 119, 255, 0.15) 0%, rgba(20, 25, 45, 0.9) 100%);
     border-color: rgba(24, 119, 255, 0.4);
 
     .section-header {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      margin-bottom: 2px;
+      gap: 8px;
+      margin-bottom: 8px;
       color: @primary-glow;
-      font-size: 11px;
+      font-size: 13px;
 
       .anticon {
-        font-size: 12px;
+        font-size: 16px;
       }
     }
 
     .total-number {
-      font-size: 28px;
+      font-size: 42px;
       font-weight: 700;
       background: linear-gradient(180deg, #fff 0%, @primary-glow 100%);
       -webkit-background-clip: text;
@@ -235,44 +241,56 @@
 
   .stats-section {
     flex: 1;
+    background: @card-bg;
+    border-radius: 10px;
+    border: 1px solid @border-glow;
+    padding: 12px;
     min-height: 0;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 
     .section-header {
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-bottom: 6px;
-      padding-bottom: 4px;
+      gap: 6px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 1px solid @border-glow;
       color: @primary-glow;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 500;
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 4px;
+      gap: 8px;
+      overflow-y: auto;
     }
 
     .stat-box {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 5px;
+      gap: 8px;
+      padding: 10px 8px;
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
+      border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(0, 240, 255, 0.05);
+        border-color: @border-glow;
+      }
 
       .stat-icon {
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 11px;
+        font-size: 16px;
 
         &.in-prison {
           background: rgba(24, 119, 255, 0.2);
@@ -309,13 +327,13 @@
         min-width: 0;
 
         .stat-label {
-          font-size: 9px;
+          font-size: 11px;
           color: rgba(255, 255, 255, 0.6);
-          margin-bottom: 0;
+          margin-bottom: 2px;
         }
 
         .stat-number {
-          font-size: 12px;
+          font-size: 16px;
           font-weight: 600;
           color: #fff;
         }
@@ -325,9 +343,9 @@
 }
 
 .right-panel {
-  height: 100%;
+  flex: 1;
   background: @card-bg;
-  border-radius: 6px;
+  border-radius: 10px;
   border: 1px solid @border-glow;
   display: flex;
   flex-direction: column;
@@ -339,26 +357,26 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10px;
+    padding: 12px 15px;
     border-bottom: 1px solid @border-glow;
     background: linear-gradient(90deg, rgba(24, 119, 255, 0.1) 0%, transparent 100%);
     color: @primary-glow;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
 
       .anticon {
-        font-size: 14px;
+        font-size: 16px;
       }
     }
 
     .detail-btn {
       padding: 0;
-      font-size: 10px;
+      font-size: 11px;
       color: @primary-glow;
       height: auto;
     }
@@ -367,11 +385,10 @@
   .message-list {
     flex: 1;
     overflow-y: auto;
-    padding: 4px;
-    min-height: 0;
+    padding: 8px;
 
     &::-webkit-scrollbar {
-      width: 3px;
+      width: 4px;
     }
 
     &::-webkit-scrollbar-track {
@@ -384,41 +401,45 @@
     }
 
     .message-item {
-      padding: 6px;
-      margin-bottom: 4px;
+      padding: 10px;
+      margin-bottom: 6px;
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
+      border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s ease;
 
-      .message-content {
-        .message-text {
+      &:hover {
+        background: rgba(0, 240, 255, 0.05);
+        border-color: @border-glow;
+      }
+
+      .message-text {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.5;
+        width: 230px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        .prison-tag {
+          color: @primary-glow;
+          font-weight: 500;
+        }
+
+        .person-name {
+          color: #fff;
+          font-weight: 500;
+        }
+
+        .action-text {
+          color: #faad14;
+        }
+
+        .time-text {
+          color: rgba(255, 255, 255, 0.5);
           font-size: 10px;
-          color: rgba(255, 255, 255, 0.85);
-          line-height: 1.3;
-          width: 200px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-
-          .prison-tag {
-            color: @primary-glow;
-            font-weight: 500;
-          }
-
-          .person-name {
-            color: #fff;
-            font-weight: 500;
-          }
-
-          .action-text {
-            color: #faad14;
-          }
-
-          .time-text {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 9px;
-            margin-left: 4px;
-          }
+          margin-left: 6px;
         }
       }
     }
@@ -429,42 +450,42 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 
   .chart-header {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 4px;
-    padding-bottom: 4px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
     border-bottom: 1px solid @border-glow;
 
     .chart-title {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       color: @primary-glow;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 500;
 
       .anticon {
-        font-size: 14px;
+        font-size: 18px;
       }
     }
 
     .chart-tabs {
       display: flex;
-      gap: 4px;
+      gap: 6px;
 
       .tab-btn {
-        padding: 2px 8px;
+        padding: 4px 12px;
         background: rgba(0, 0, 0, 0.3);
         border: 1px solid @border-glow;
         border-radius: 4px;
         color: rgba(255, 255, 255, 0.6);
-        font-size: 10px;
+        font-size: 11px;
         cursor: pointer;
+        transition: all 0.2s ease;
 
         &:hover {
           background: rgba(0, 240, 255, 0.1);
@@ -480,22 +501,13 @@
     }
   }
 
-  .chart-content {
+  .chart-area {
     flex: 1;
-    display: flex;
-    flex-direction: column;
     min-height: 0;
-    overflow: hidden;
 
-    .chart-area {
-      flex: 1;
-      min-height: 0;
-      position: relative;
-
-      .echarts-container {
-        width: 100%;
-        height: 100%;
-      }
+    .echarts-container {
+      width: 100%;
+      height: 100%;
     }
   }
 }
