@@ -1,80 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import * as echarts from 'echarts';
 
 const LeftPanel = ({ realtimeData, prisonStats }) => {
-  const pieChartRef = useRef(null);
-
-  useEffect(() => {
-    if (!pieChartRef.current) return;
-
-    const chart = echarts.init(pieChartRef.current);
-
-    const total = realtimeData?.total || 890;
-    const inPrison = prisonStats?.inPrison || 680;
-
-    const option = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(20, 25, 45, 0.9)',
-        borderColor: 'rgba(0, 240, 255, 0.3)',
-        textStyle: { color: '#fff' },
-        formatter: '{b}: {c} ({d}%)'
-      },
-      series: [{
-        type: 'pie',
-        radius: ['50%', '75%'],
-        center: ['50%', '50%'],
-        avoidLabelOverlap: false,
-        label: {
-          show: true,
-          position: 'center',
-          formatter: () => `{val|${total}}`,
-          rich: {
-            val: {
-              fontSize: 28,
-              fontWeight: 'bold',
-              color: '#fff',
-              lineHeight: 36
-            }
-          }
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 28,
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: [
-          {
-            value: inPrison,
-            name: '在监',
-            itemStyle: { color: '#1890ff' }
-          },
-          {
-            value: total - inPrison,
-            name: '其他',
-            itemStyle: { color: 'rgba(255,255,255,0.1)' }
-          }
-        ]
-      }]
-    };
-
-    chart.setOption(option);
-
-    const handleResize = () => chart.resize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.dispose();
-    };
-  }, [realtimeData, prisonStats]);
+  const total = realtimeData?.total || 890;
 
   return (
     <div className="left-panel">
@@ -83,8 +11,15 @@ const LeftPanel = ({ realtimeData, prisonStats }) => {
           <UserOutlined />
           <span>实时在监总人数</span>
         </div>
-        <div className="chart-wrapper">
-          <div ref={pieChartRef} className="echarts-container" />
+        <div className="total-display">
+          <div className="total-circle">
+            <div className="total-value">{total}</div>
+            <div className="total-unit">人</div>
+          </div>
+          <div className="total-decoration">
+            <div className="decoration-line"></div>
+            <div className="decoration-dot"></div>
+          </div>
         </div>
       </div>
 
