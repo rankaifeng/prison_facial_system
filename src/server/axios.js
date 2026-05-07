@@ -7,6 +7,7 @@ import {
     mockPrisoners,
     mockPrisoner,
     mockExitRecords,
+    mockExitRecordsForPrisoner,
     mockRealtimeStatistics,
     mockWorkStatistics,
     mockExitStatistics,
@@ -40,20 +41,24 @@ const mockHandler = (url, params = {}) => {
     // Prisoner Detail
     if (url.includes('prisoner_info_detail')) {
         const id = params.id;
+        const index = parseInt(id?.replace(/[^0-9]/g, '') || '0', 10) || 0;
         return new Promise(resolve => {
-            setTimeout(() => resolve(mockResponse(mockPrisoner(parseInt(id?.slice(-6) || '0', 10) || 0))), delay);
+            setTimeout(() => resolve(mockResponse(mockPrisoner(index % 100))), delay);
         });
     }
 
     // Exit Records
     if (url.includes('exit_record_list')) {
         const { page = 1, limit = 10, prisonerId } = params;
-        let data = mockExitRecords(50);
         if (prisonerId) {
-            data = data.filter(r => r.prisonerDetail === prisonerId);
+            const records = mockExitRecordsForPrisoner(prisonerId, 20);
+            return new Promise(resolve => {
+                setTimeout(() => resolve(mockResponse(records)), delay);
+            });
         }
+        const allRecords = mockExitRecords(30);
         return new Promise(resolve => {
-            setTimeout(() => resolve(mockListResponse(data, page, limit)), delay);
+            setTimeout(() => resolve(mockListResponse(allRecords, page, limit)), delay);
         });
     }
 

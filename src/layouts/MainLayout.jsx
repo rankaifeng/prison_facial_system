@@ -112,7 +112,7 @@ const MainLayout = () => {
             padding: 0,
             background: '#f0f2f5',
             borderRadius: 8,
-            overflow: 'auto',
+            overflow: 'hidden',
             height: 'calc(100vh - 64px - 20px)',
           }}
         >

@@ -89,7 +89,7 @@ export const mockPrisoner = (index) => {
     sentenceEnd: formatDate(sentenceEndDate),
     entryDate: formatDate(sentenceStartDate),
     status: randomElement(STATUSES),
-    photo: `https://via.placeholder.com/200?text=${generateName()}`,
+    photo: '/imgs/face.png',
     prisonId: randomElement(PRISONS.map(p => p.id))
   };
 };
@@ -109,7 +109,7 @@ export const mockExitRecord = (index, prisonerId) => {
     exitTime: formatDateTime(exitDate),
     exitDate: formatDate(exitDate),
     exitReason: randomElement(EXIT_REASONS),
-    hospital: randomBool(),
+    hospital: randomElement(['北京市第一医院', '上海市医院', '广州市医院', '深圳市医院', '杭州市医院']),
     policeConfirm: randomBool(),
     swatConfirm: randomBool(),
     armedPoliceConfirm: randomBool(),
@@ -120,6 +120,10 @@ export const mockExitRecord = (index, prisonerId) => {
     prisonId: randomElement(PRISONS.map(p => p.id)),
     prisonerDetail: prisonerId
   };
+};
+
+export const mockExitRecordsForPrisoner = (prisonerId, count = 20) => {
+  return Array.from({ length: count }, (_, i) => mockExitRecord(i, prisonerId));
 };
 
 export const mockExitRecords = (count = 50) => {

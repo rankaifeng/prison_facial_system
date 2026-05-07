@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Tag, Timeline, Button, Empty } from 'antd';
+import { Card, Row, Col, Tag, Button } from 'antd';
 import {
   ArrowLeftOutlined,
   UserOutlined,
   ManOutlined,
   WomanOutlined,
   CalendarOutlined,
-  EnvironmentOutlined,
   FileTextOutlined,
   LockOutlined,
-  HistoryOutlined,
+  VideoCameraOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons';
 import { prisoner, exitRecord } from '@/api/globApi';
+import TableLayout from '@/components/table-layout';
 
 const PrisonerDetail = () => {
   const { id } = useParams();
@@ -22,6 +22,7 @@ const PrisonerDetail = () => {
   const [detail, setDetail] = useState(null);
   const [exitRecords, setExitRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exitPagination, setExitPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
   useEffect(() => {
     fetchDetail();
@@ -35,7 +36,9 @@ const PrisonerDetail = () => {
         exitRecord.list({ prisonerId: id }),
       ]);
       setDetail(detailData?.data || {});
-      setExitRecords(exitData?.data || []);
+      const records = Array.isArray(exitData) ? exitData : [];
+      setExitRecords(records);
+      setExitPagination(prev => ({ ...prev, total: records.length }));
     } catch (error) {
       console.error('获取详情失败:', error);
     } finally {
@@ -50,9 +53,62 @@ const PrisonerDetail = () => {
     return <Tag color="error" icon={<CloseCircleOutlined />}>未确认</Tag>;
   };
 
+  const exitColumns = [
+    { title: '出监时间', dataIndex: 'exitTime', key: 'exitTime', width: 160 },
+    { title: '出监原因', dataIndex: 'exitReason', key: 'exitReason', width: 120 },
+    { title: '就医医院', dataIndex: 'hospital', key: 'hospital', width: 150 },
+    {
+      title: '民警确认',
+      dataIndex: 'policeConfirm',
+      key: 'policeConfirm',
+      width: 100,
+      render: (val) => getConfirmTag(val)
+    },
+    {
+      title: '特警确认',
+      dataIndex: 'swatConfirm',
+      key: 'swatConfirm',
+      width: 100,
+      render: (val) => getConfirmTag(val)
+    },
+    {
+      title: '武警确认',
+      dataIndex: 'armedPoliceConfirm',
+      key: 'armedPoliceConfirm',
+      width: 100,
+      render: (val) => getConfirmTag(val)
+    },
+    { title: '回监时间', dataIndex: 'returnTime', key: 'returnTime', width: 160 },
+    {
+      title: '监控录像',
+      dataIndex: 'videoRecord',
+      key: 'videoRecord',
+      width: 100,
+      render: (val) => val ? (
+        <Tag color="blue" icon={<VideoCameraOutlined />}>有录像</Tag>
+      ) : (
+        <Tag color="default">无录像</Tag>
+      )
+    },
+  ];
+
+  const exitTableProps = useMemo(() => ({
+    pagination: {
+      current: exitPagination.current,
+      pageSize: exitPagination.pageSize,
+      total: exitPagination.total,
+      showSizeChanger: true,
+      showQuickJumper: true,
+      onChange: (page, pageSize) => {
+        setExitPagination({ current: page, pageSize, total: exitPagination.total });
+      },
+    },
+    dataSource: exitRecords,
+  }), [exitRecords, exitPagination]);
+
   return (
-    <div style={{ padding: '0 0 20px 0', height: '100%', overflow: 'auto' }}>
-      <div style={{ marginBottom: 16 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ marginBottom: 12, flexShrink: 0 }}>
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/prisoners')}
@@ -61,201 +117,170 @@ const PrisonerDetail = () => {
         </Button>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={24} md={24} lg={8} xl={7}>
+      <Row gutter={[16, 16]} style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+        <Col xs={24} sm={24} md={24} lg={10} xl={8} style={{ height: '100%' }}>
           <Card
             loading={loading}
             className="profile-card"
-            style={{ borderRadius: 12, overflow: 'hidden' }}
+            style={{ borderRadius: 12, height: '100%', overflow: 'hidden' }}
+            bodyStyle={{ padding: 0, height: '100%', overflow: 'auto' }}
           >
-            <div className="profile-header">
-              <div className="profile-photo">
-                {detail?.photo ? (
-                  <img src={detail.photo} alt={detail?.name} />
-                ) : (
-                  <div className="photo-placeholder">
-                    <UserOutlined style={{ fontSize: 60, color: '#ccc' }} />
-                  </div>
-                )}
-              </div>
-              <div className="profile-name">
-                <h2>{detail?.name || '未知姓名'}</h2>
-                <Tag color={detail?.gender === '男' ? 'blue' : 'pink'}>
-                  {detail?.gender === '男' ? <ManOutlined /> : <WomanOutlined />}
-                  {' '}{detail?.gender || '未知'}
-                </Tag>
-                <Tag color="purple">{detail?.prisonerNo || '暂无编号'}</Tag>
-              </div>
-            </div>
-            <div className="profile-stats">
-              <div className="stat-item">
-                <span className="stat-label">年龄</span>
-                <span className="stat-value">{detail?.age || '-'}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">刑期</span>
-                <span className="stat-value">{detail?.sentence || '-'}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">民族</span>
-                <span className="stat-value">{detail?.ethnicity || '-'}</span>
+            <div className="profile-banner">
+              <div className="banner-bg"></div>
+              <div className="profile-content">
+                <div className="profile-photo-large">
+                  {detail?.photo ? (
+                    <img src={detail.photo} alt={detail?.name} />
+                  ) : (
+                    <div className="photo-placeholder-large">
+                      <UserOutlined style={{ fontSize: 50, color: '#fff' }} />
+                    </div>
+                  )}
+                </div>
+                <h2 className="profile-title">{detail?.name || '未知姓名'}</h2>
+                <div className="profile-tags">
+                  <Tag color={detail?.gender === '男' ? 'blue' : 'pink'} className="gender-tag">
+                    {detail?.gender === '男' ? <ManOutlined /> : <WomanOutlined />}
+                    {' '}{detail?.gender || '未知'}
+                  </Tag>
+                  <Tag color="gold" className="no-tag">{detail?.prisonerNo || '暂无编号'}</Tag>
+                </div>
               </div>
             </div>
-          </Card>
 
-          <Card
-            loading={loading}
-            title={
-              <span>
-                <FileTextOutlined />基本信息
-              </span>
-            }
-            style={{ borderRadius: 12, marginTop: 16 }}
-          >
-            <div className="info-list">
-              <div className="info-item">
-                <span className="info-label">身份证号</span>
-                <span className="info-value">{detail?.idCard || '-'}</span>
+            <div className="profile-body">
+              <div className="stats-row">
+                <div className="stat-box">
+                  <div className="stat-icon age-icon"><UserOutlined /></div>
+                  <div className="stat-info">
+                    <span className="stat-num">{detail?.age || '-'}</span>
+                    <span className="stat-desc">年龄</span>
+                  </div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-icon sentence-icon"><LockOutlined /></div>
+                  <div className="stat-info">
+                    <span className="stat-num">{detail?.sentence || '-'}</span>
+                    <span className="stat-desc">刑期</span>
+                  </div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-icon ethnic-icon"><FileTextOutlined /></div>
+                  <div className="stat-info">
+                    <span className="stat-num">{detail?.ethnicity || '-'}</span>
+                    <span className="stat-desc">民族</span>
+                  </div>
+                </div>
               </div>
-              <div className="info-item">
-                <span className="info-label">婚姻状况</span>
-                <span className="info-value">{detail?.maritalStatus || '-'}</span>
+
+              <div className="info-group">
+                <div className="info-group-title">
+                  <LockOutlined />服刑信息
+                </div>
+                <div className="info-grid">
+                  <div className="info-cell">
+                    <span className="cell-label">入狱原因</span>
+                    <span className="cell-value">{detail?.incarcerationReason || '-'}</span>
+                  </div>
+                  <div className="info-cell">
+                    <span className="cell-label">入狱日期</span>
+                    <span className="cell-value">{detail?.incarcerationDate || '-'}</span>
+                  </div>
+                  <div className="info-cell">
+                    <span className="cell-label">出狱日期</span>
+                    <span className="cell-value highlight">{detail?.releaseDate || '-'}</span>
+                  </div>
+                </div>
               </div>
-              <div className="info-item">
-                <span className="info-label">籍贯</span>
-                <span className="info-value">{detail?.birthplace || '-'}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">户籍地址</span>
-                <span className="info-value">{detail?.registeredAddress || '-'}</span>
+
+              <div className="info-group">
+                <div className="info-group-title">
+                  <FileTextOutlined />基本信息
+                </div>
+                <div className="info-list">
+                  <div className="info-row">
+                    <span className="info-label">身份证号</span>
+                    <span className="info-value mono">{detail?.idCard || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">婚姻状况</span>
+                    <span className="info-value">{detail?.maritalStatus || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">籍贯</span>
+                    <span className="info-value">{detail?.birthplace || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">户籍地址</span>
+                    <span className="info-value">{detail?.registeredAddress || '-'}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
         </Col>
 
-        <Col xs={24} sm={24} md={24} lg={16} xl={17}>
-          <Card
-            loading={loading}
-            title={
-              <span>
-                <LockOutlined />服刑信息
-              </span>
-            }
-            style={{ borderRadius: 12, marginBottom: 16 }}
-          >
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={8}>
-                <div className="info-card">
-                  <div className="info-card-icon prison">
-                    <LockOutlined />
-                  </div>
-                  <div className="info-card-content">
-                    <span className="info-card-label">入狱原因</span>
-                    <span className="info-card-value">{detail?.incarcerationReason || '-'}</span>
-                  </div>
-                </div>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <div className="info-card">
-                  <div className="info-card-icon date">
-                    <CalendarOutlined />
-                  </div>
-                  <div className="info-card-content">
-                    <span className="info-card-label">入狱日期</span>
-                    <span className="info-card-value">{detail?.incarcerationDate || '-'}</span>
-                  </div>
-                </div>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <div className="info-card">
-                  <div className="info-card-icon release">
-                    <CalendarOutlined />
-                  </div>
-                  <div className="info-card-content">
-                    <span className="info-card-label">出狱日期</span>
-                    <span className="info-card-value">{detail?.releaseDate || '-'}</span>
-                  </div>
-                </div>
-              </Col>
-            </Row>
-          </Card>
-
-          <Card
-            loading={loading}
-            title={
-              <span>
-                <HistoryOutlined />出监记录
-              </span>
-            }
-            style={{ borderRadius: 12 }}
-          >
-            {exitRecords.length > 0 ? (
-              <Timeline
-                items={exitRecords.map((record, index) => ({
-                  color: record.returnTime ? 'green' : 'gray',
-                  key: record.id || index,
-                  children: (
-                    <div className="timeline-item">
-                      <div className="timeline-header">
-                        <Tag color="blue">{record.exitReason || '出监'}</Tag>
-                        <span className="timeline-date">{record.exitTime || '-'}</span>
-                      </div>
-                      <div className="timeline-content">
-                        <div className="timeline-row">
-                          <EnvironmentOutlined />
-                          <span>就医医院：{record.hospital || '-'}</span>
-                        </div>
-                        <div className="timeline-confirms">
-                          <span className="confirm-item">民警 {getConfirmTag(record.policeConfirm)}</span>
-                          <span className="confirm-item">特警 {getConfirmTag(record.swatConfirm)}</span>
-                          <span className="confirm-item">武警 {getConfirmTag(record.armedPoliceConfirm)}</span>
-                        </div>
-                        {record.returnTime && (
-                          <div className="timeline-row return">
-                            <CalendarOutlined />
-                            <span>回监时间：{record.returnTime}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ),
-                }))}
+        <Col xs={24} sm={24} md={24} lg={14} xl={16} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card
+              loading={loading}
+              title={<span><FileTextOutlined />出监记录</span>}
+              style={{ borderRadius: 12, flex: 1, display: 'flex', flexDirection: 'column' }}
+              bodyStyle={{ flex: 1, overflow: 'hidden', padding: 0 }}
+            >
+              <TableLayout
+                tableProps={exitTableProps}
+                loading={loading}
+                columns={exitColumns}
               />
-            ) : (
-              <Empty description="暂无出监记录" />
-            )}
-          </Card>
+            </Card>
         </Col>
       </Row>
 
       <style>{`
         .profile-card {
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          border: none !important;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
         }
 
-        .profile-header {
+        .profile-banner {
+          position: relative;
+          padding: 40px 20px 30px;
           text-align: center;
-          padding: 20px 0;
-          border-bottom: 1px solid #f0f0f0;
-        }
-
-        .profile-photo {
-          width: 140px;
-          height: 180px;
-          margin: 0 auto 16px;
-          border-radius: 8px;
           overflow: hidden;
-          background: #f5f5f5;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .profile-photo img {
+        .banner-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 100px;
+          background: linear-gradient(135deg, #1890ff 0%, #722ed1 50%, #eb2f96 100%);
+          border-radius: 12px 12px 0 0;
+        }
+
+        .profile-content {
+          position: relative;
+          z-index: 1;
+        }
+
+        .profile-photo-large {
+          width: 100px;
+          height: 130px;
+          margin: 0 auto 16px;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+          border: 4px solid #fff;
+        }
+
+        .profile-photo-large img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .photo-placeholder {
+        .photo-placeholder-large {
           width: 100%;
           height: 100%;
           display: flex;
@@ -264,176 +289,184 @@ const PrisonerDetail = () => {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .profile-name h2 {
-          margin: 0 0 8px 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .profile-name .ant-tag {
-          margin: 4px;
-        }
-
-        .profile-stats {
-          display: flex;
-          justify-content: space-around;
-          padding: 16px 0;
-        }
-
-        .profile-stats .stat-item {
-          text-align: center;
-        }
-
-        .profile-stats .stat-label {
-          display: block;
-          font-size: 12px;
-          color: #999;
-          margin-bottom: 4px;
-        }
-
-        .profile-stats .stat-value {
-          font-size: 16px;
-          font-weight: 600;
+        .profile-title {
+          margin: 0 0 12px 0 !important;
+          font-size: 22px !important;
+          font-weight: 700 !important;
           color: #333;
         }
 
-        .info-list {
+        .profile-tags {
           display: flex;
-          flex-direction: column;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .profile-tags .ant-tag {
+          border-radius: 4px;
+          padding: 2px 10px;
+          font-size: 13px;
+        }
+
+        .gender-tag {
+          background: rgba(24, 144, 255, 0.1) !important;
+        }
+
+        .no-tag {
+          background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%) !important;
+          color: #fff !important;
+          border: none !important;
+        }
+
+        .profile-body {
+          padding: 20px;
+        }
+
+        .stats-row {
+          display: flex;
           gap: 12px;
+          margin-bottom: 20px;
         }
 
-        .info-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 8px 0;
-          border-bottom: 1px dashed #f0f0f0;
-        }
-
-        .info-item:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          color: #999;
-          font-size: 13px;
-        }
-
-        .info-value {
-          color: #333;
-          font-size: 13px;
-          font-weight: 500;
-          text-align: right;
-          max-width: 60%;
-          word-break: break-all;
-        }
-
-        .info-card {
+        .stat-box {
+          flex: 1;
           display: flex;
           align-items: center;
-          padding: 16px;
-          background: #fafafa;
-          border-radius: 8px;
-          border: 1px solid #f0f0f0;
+          gap: 10px;
+          padding: 14px 12px;
+          background: linear-gradient(135deg, #f0f5ff 0%, #e6f0ff 100%);
+          border-radius: 10px;
+          border: 1px solid #e6f0ff;
         }
 
-        .info-card-icon {
-          width: 48px;
-          height: 48px;
+        .stat-icon {
+          width: 40px;
+          height: 40px;
           border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
-          margin-right: 12px;
+          font-size: 18px;
         }
 
-        .info-card-icon.prison {
-          background: rgba(24, 144, 255, 0.1);
-          color: #1890ff;
+        .age-icon {
+          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+          color: #fff;
         }
 
-        .info-card-icon.date {
-          background: rgba(82, 196, 26, 0.1);
-          color: #52c41a;
+        .sentence-icon {
+          background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
+          color: #fff;
         }
 
-        .info-card-icon.release {
-          background: rgba(255, 77, 79, 0.1);
-          color: #ff4d4f;
+        .ethnic-icon {
+          background: linear-gradient(135deg, #fa8c16 0%, #ffb732 100%);
+          color: #fff;
         }
 
-        .info-card-content {
+        .stat-info {
           display: flex;
           flex-direction: column;
         }
 
-        .info-card-label {
-          font-size: 12px;
+        .stat-num {
+          font-size: 15px;
+          font-weight: 700;
+          color: #333;
+          line-height: 1.3;
+        }
+
+        .stat-desc {
+          font-size: 11px;
+          color: #999;
+        }
+
+        .info-group {
+          margin-bottom: 20px;
+        }
+
+        .info-group-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid #1890ff;
+          display: inline-block;
+        }
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+        }
+
+        .info-cell {
+          background: #fafafa;
+          padding: 12px;
+          border-radius: 8px;
+          text-align: center;
+        }
+
+        .cell-label {
+          display: block;
+          font-size: 11px;
           color: #999;
           margin-bottom: 4px;
         }
 
-        .info-card-value {
-          font-size: 14px;
+        .cell-value {
+          display: block;
+          font-size: 13px;
           font-weight: 600;
           color: #333;
         }
 
-        .timeline-item {
+        .cell-value.highlight {
+          color: #1890ff;
+        }
+
+        .info-list {
+          background: #fafafa;
+          border-radius: 10px;
           padding: 4px 0;
         }
 
-        .timeline-header {
+        .info-row {
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
+          padding: 10px 14px;
+          border-bottom: 1px solid #f0f0f0;
         }
 
-        .timeline-date {
-          font-size: 12px;
-          color: #999;
+        .info-row:last-child {
+          border-bottom: none;
         }
 
-        .timeline-content {
-          background: #fafafa;
-          padding: 12px;
-          border-radius: 8px;
+        .info-label {
           font-size: 13px;
-        }
-
-        .timeline-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
           color: #666;
-          margin-bottom: 8px;
         }
 
-        .timeline-row:last-child {
-          margin-bottom: 0;
-        }
-
-        .timeline-row.return {
-          color: #52c41a;
+        .info-value {
+          font-size: 13px;
           font-weight: 500;
+          color: #333;
+          max-width: 60%;
+          text-align: right;
+          word-break: break-all;
         }
 
-        .timeline-confirms {
-          display: flex;
-          gap: 16px;
-          flex-wrap: wrap;
-          margin-top: 8px;
-        }
-
-        .confirm-item {
+        .info-value.mono {
+          font-family: 'Courier New', monospace;
           font-size: 12px;
         }
 
         .ant-card-head {
-          min-height: 48px;
+          min-height: 44px;
           padding: 0 16px;
+          border-bottom: 1px solid #f0f0f0;
         }
 
         .ant-card-head-title {
@@ -442,11 +475,10 @@ const PrisonerDetail = () => {
         }
 
         .ant-card-body {
-          padding: 16px;
-        }
-
-        .ant-timeline {
-          padding-top: 8px;
+          padding: 0;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
       `}</style>
     </div>
