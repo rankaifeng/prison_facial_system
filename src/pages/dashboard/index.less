@@ -19,56 +19,82 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 50px;
-    padding: 0 20px;
-    background: linear-gradient(90deg, rgba(20, 25, 45, 0.95) 0%, rgba(30, 40, 65, 0.9) 50%, rgba(20, 25, 45, 0.95) 100%);
-    border-bottom: 1px solid @border-glow;
+    height: 70px;
+    padding: 0 30px;
+    background: linear-gradient(90deg, rgba(10, 15, 35, 0.98) 0%, rgba(20, 30, 55, 0.95) 50%, rgba(10, 15, 35, 0.98) 100%);
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 240, 255, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, @primary-glow, transparent);
+      box-shadow: 0 0 20px @primary-glow;
+    }
 
     .header-left {
       display: flex;
       align-items: center;
+      gap: 15px;
 
       .header-icon {
-        font-size: 22px;
+        font-size: 32px;
         color: @primary-glow;
-        margin-right: 10px;
-        filter: drop-shadow(0 0 8px @primary-glow);
+        filter: drop-shadow(0 0 12px @primary-glow);
+        animation: pulse-glow-icon 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse-glow-icon {
+        0%, 100% { filter: drop-shadow(0 0 12px @primary-glow); }
+        50% { filter: drop-shadow(0 0 20px @primary-glow); }
       }
 
       .header-title {
         margin: 0;
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 24px;
+        font-weight: 700;
         background: linear-gradient(90deg, #fff 0%, @primary-glow 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        letter-spacing: 2px;
+        letter-spacing: 4px;
+        text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
       }
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 16px;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 12px;
+      gap: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
 
       .current-time {
-        margin-right: 8px;
+        padding: 8px 16px;
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        border-radius: 6px;
+        letter-spacing: 1px;
       }
 
       .nav-icon, .user-icon {
-        font-size: 18px;
+        font-size: 22px;
         color: @primary-glow;
         cursor: pointer;
-        padding: 8px;
+        padding: 10px;
         background: rgba(0, 240, 255, 0.1);
-        border-radius: 4px;
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        border-radius: 8px;
         transition: all 0.3s ease;
 
         &:hover {
-          background: rgba(0, 240, 255, 0.2);
+          background: rgba(0, 240, 255, 0.25);
+          border-color: @primary-glow;
+          box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
         }
       }
     }
