@@ -161,7 +161,7 @@ export const mockWorkStatistics = () => {
     month,
     prisons: PRISONS.map(prison => ({
       name: prison.name,
-      values: Array.from({ length: 7 }, () => randomInt(10, 100))
+      value: randomInt(50, 200)
     }))
   }));
 };

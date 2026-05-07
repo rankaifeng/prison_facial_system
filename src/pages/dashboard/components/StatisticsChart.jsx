@@ -13,41 +13,63 @@ const StatisticsChart = ({ data }) => {
     const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
     const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
 
-    const prisons = data?.length > 0 ? data : [
-      { month: '01', prisons: [{ name: '北京第一监狱', values: [65, 72, 68, 75, 80, 78, 82, 85, 79, 83, 88, 90] }, { name: '上海浦东监狱', values: [58, 62, 65, 70, 72, 75, 78, 80, 76, 82, 85, 88] }, { name: '广州番禺监狱', values: [70, 68, 72, 78, 82, 85, 88, 90, 87, 92, 95, 98] }] }
+    const defaultData = [
+      { month: '01', prisons: [{ name: '北京第一监狱', value: 85 }, { name: '上海浦东监狱', value: 72 }, { name: '广州番禺监狱', value: 95 }, { name: '深圳南山监狱', value: 68 }] },
+      { month: '02', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 78 }, { name: '广州番禺监狱', value: 88 }, { name: '深圳南山监狱', value: 75 }] },
+      { month: '03', prisons: [{ name: '北京第一监狱', value: 88 }, { name: '上海浦东监狱', value: 82 }, { name: '广州番禺监狱', value: 92 }, { name: '深圳南山监狱', value: 72 }] },
+      { month: '04', prisons: [{ name: '北京第一监狱', value: 90 }, { name: '上海浦东监狱', value: 85 }, { name: '广州番禺监狱', value: 96 }, { name: '深圳南山监狱', value: 78 }] },
+      { month: '05', prisons: [{ name: '北京第一监狱', value: 95 }, { name: '上海浦东监狱', value: 88 }, { name: '广州番禺监狱', value: 98 }, { name: '深圳南山监狱', value: 82 }] },
+      { month: '06', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 90 }, { name: '广州番禺监狱', value: 95 }, { name: '深圳南山监狱', value: 80 }] },
+      { month: '07', prisons: [{ name: '北京第一监狱', value: 98 }, { name: '上海浦东监狱', value: 92 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 85 }] },
+      { month: '08', prisons: [{ name: '北京第一监狱', value: 95 }, { name: '上海浦东监狱', value: 90 }, { name: '广州番禺监狱', value: 98 }, { name: '深圳南山监狱', value: 88 }] },
+      { month: '09', prisons: [{ name: '北京第一监狱', value: 92 }, { name: '上海浦东监狱', value: 88 }, { name: '广州番禺监狱', value: 96 }, { name: '深圳南山监狱', value: 85 }] },
+      { month: '10', prisons: [{ name: '北京第一监狱', value: 96 }, { name: '上海浦东监狱', value: 92 }, { name: '广州番禺监狱', value: 99 }, { name: '深圳南山监狱', value: 90 }] },
+      { month: '11', prisons: [{ name: '北京第一监狱', value: 98 }, { name: '上海浦东监狱', value: 95 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 92 }] },
+      { month: '12', prisons: [{ name: '北京第一监狱', value: 100 }, { name: '上海浦东监狱', value: 98 }, { name: '广州番禺监狱', value: 100 }, { name: '深圳南山监狱', value: 95 }] }
     ];
 
+    const chartData = data?.length > 0 ? data : defaultData;
     const colors = ['#00f0ff', '#1877ff', '#52c41a', '#ff4d4f', '#faad14', '#722ed1', '#00cec8'];
 
     const xData = chartType === 'month' ? months : quarters;
-    const seriesData = prisons.map((monthData, idx) => ({
-      name: monthData.prison?.name || `监狱${idx + 1}`,
-      type: 'line',
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: 6,
-      lineStyle: {
-        width: 2,
-        color: colors[idx % colors.length]
-      },
-      itemStyle: {
-        color: colors[idx % colors.length]
-      },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: colors[idx % colors.length] + '40' },
-          { offset: 1, color: colors[idx % colors.length] + '05' }
-        ])
-      },
-      data: chartType === 'month'
-        ? (monthData.prison?.values || Array(12).fill(0))
-        : [
-            (monthData.prison?.values?.[0] + monthData.prison?.values?.[1] + monthData.prison?.values?.[2]) / 3,
-            (monthData.prison?.values?.[3] + monthData.prison?.values?.[4] + monthData.prison?.values?.[5]) / 3,
-            (monthData.prison?.values?.[6] + monthData.prison?.values?.[7] + monthData.prison?.values?.[8]) / 3,
-            (monthData.prison?.values?.[9] + monthData.prison?.values?.[10] + monthData.prison?.values?.[11]) / 3
-          ].map(v => Math.round(v))
-    }));
+
+    const prisonNames = chartData[0]?.prisons?.map(p => p.name) || ['北京第一监狱', '上海浦东监狱', '广州番禺监狱', '深圳南山监狱'];
+
+    const seriesData = prisonNames.map((prisonName, idx) => {
+      const monthlyValues = chartData.map(monthData => {
+        const prison = monthData.prisons?.find(p => p.name === prisonName);
+        return prison?.value || 0;
+      });
+
+      const quarterlyValues = [
+        (monthlyValues[0] + monthlyValues[1] + monthlyValues[2]) / 3,
+        (monthlyValues[3] + monthlyValues[4] + monthlyValues[5]) / 3,
+        (monthlyValues[6] + monthlyValues[7] + monthlyValues[8]) / 3,
+        (monthlyValues[9] + monthlyValues[10] + monthlyValues[11]) / 3
+      ].map(v => Math.round(v));
+
+      return {
+        name: prisonName,
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          width: 2,
+          color: colors[idx % colors.length]
+        },
+        itemStyle: {
+          color: colors[idx % colors.length]
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: colors[idx % colors.length] + '40' },
+            { offset: 1, color: colors[idx % colors.length] + '05' }
+          ])
+        },
+        data: chartType === 'month' ? monthlyValues : quarterlyValues
+      };
+    });
 
     const option = {
       backgroundColor: 'transparent',
@@ -71,6 +93,7 @@ const StatisticsChart = ({ data }) => {
       },
       xAxis: {
         type: 'category',
+        boundaryGap: false,
         data: xData,
         axisLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.3)' } },
         axisLabel: { color: 'rgba(255,255,255,0.6)' }
