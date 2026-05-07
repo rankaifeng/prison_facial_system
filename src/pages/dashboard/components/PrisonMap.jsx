@@ -37,28 +37,7 @@ const PrisonMap = () => {
         const option = {
           backgroundColor: 'transparent',
           tooltip: {
-            trigger: 'item',
-            backgroundColor: 'rgba(20, 25, 45, 0.95)',
-            borderColor: 'rgba(0, 240, 255, 0.3)',
-            borderWidth: 1,
-            padding: [12, 16],
-            textStyle: { color: '#fff', fontSize: 13 },
-            formatter: (params) => {
-              if (params.data) {
-                return `
-                  <div style="font-weight: 600; margin-bottom: 8px; color: #00f0ff;">${params.data.name}</div>
-                  <div style="display: flex; justify-content: space-between; gap: 20px;">
-                    <span style="color: rgba(255,255,255,0.7);">总人数:</span>
-                    <span style="font-weight: 600;">${params.data.totalCount}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; gap: 20px;">
-                    <span style="color: rgba(255,255,255,0.7);">出工:</span>
-                    <span style="font-weight: 600; color: #52c41a;">${params.data.workCount}</span>
-                  </div>
-                `;
-              }
-              return params.name;
-            },
+            show: false,
           },
           geo: {
             map: 'prison-map',
@@ -120,7 +99,7 @@ series: [
               label: {
                 show: true,
                 position: 'top',
-                formatter: (params) => `${params.data.name}\n总:${params.data.totalCount} 出:${params.data.workCount}`,
+                formatter: (params) => `${params.data.name}\n总人数:${params.data.totalCount} 出监人数ß:${params.data.workCount}`,
                 fontSize: 11,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',
