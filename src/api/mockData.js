@@ -58,7 +58,7 @@ export const mockPrisons = () => {
     ...prison,
     totalCount: randomInt(300, 800),
     workCount: randomInt(50, 200),
-    imageUrl: `https://via.placeholder.com/200?text=${prison.name}`
+    imageUrl: '/imgs/jy.png'
   }));
 };
 
