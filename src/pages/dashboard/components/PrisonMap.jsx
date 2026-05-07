@@ -34,6 +34,30 @@ const PrisonMap = () => {
 
         echarts.registerMap('prison-map', mapData);
 
+        const provinceCenters = {};
+        filteredFeatures.forEach(feature => {
+          const name = feature.properties.name;
+          const coords = feature.geometry.coordinates;
+          let allCoords = [];
+          if (feature.geometry.type === 'Polygon') {
+            allCoords = coords[0];
+          } else if (feature.geometry.type === 'MultiPolygon') {
+            coords.forEach(p => allCoords = allCoords.concat(p[0]));
+          }
+          if (allCoords.length > 0) {
+            const sumX = allCoords.reduce((sum, c) => sum + c[0], 0);
+            const sumY = allCoords.reduce((sum, c) => sum + c[1], 0);
+            provinceCenters[name] = [sumX / allCoords.length, sumY / allCoords.length];
+          }
+        });
+
+        prisons.forEach(p => {
+          const center = provinceCenters[p.province + '省'] || provinceCenters[p.province];
+          if (center) {
+            p.coordinates = center;
+          }
+        });
+
         const option = {
           backgroundColor: 'transparent',
           tooltip: {
@@ -99,7 +123,7 @@ series: [
               label: {
                 show: true,
                 position: 'top',
-                formatter: (params) => `${params.data.name}\n总人数:${params.data.totalCount} 出监人数ß:${params.data.workCount}`,
+                formatter: (params) => `${params.data.name}\n总人数: ${params.data.totalCount}\n出监人数: ${params.data.workCount}`,
                 fontSize: 11,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',
