@@ -6,6 +6,7 @@ import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 import StatisticsChart from './components/StatisticsChart';
 import StatusPieChart from './components/StatusPieChart';
+import PrisonMap from './components/PrisonMap';
 import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
@@ -116,7 +117,7 @@ const Dashboard = () => {
         <div className="center-area">
           <div className="prisons-section">
             <div className="section-title">监狱概览</div>
-            <div className="prison-img-container" />
+<PrisonMap />
           </div>
 
           <div className="chart-section">
