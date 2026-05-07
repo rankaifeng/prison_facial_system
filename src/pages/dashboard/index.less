@@ -87,8 +87,10 @@
       overflow: hidden;
 
       .prisons-section {
-        flex-shrink: 0;
-        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
 
         .section-title {
           font-size: 13px;
@@ -96,13 +98,16 @@
           margin-bottom: 8px;
           padding-left: 8px;
           border-left: 3px solid @primary-glow;
+          flex-shrink: 0;
         }
 
         .prisons-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 12px;
-          overflow: hidden;
+          flex: 1;
+          min-height: 0;
+          align-content: start;
 
           .prison-card {
             background: @card-bg;
@@ -110,6 +115,9 @@
             border: 1px solid @border-glow;
             overflow: hidden;
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 120px;
 
             &:hover {
               transform: translateY(-3px);
@@ -118,8 +126,9 @@
             }
 
             .prison-image {
+              flex: 1;
               position: relative;
-              height: 80px;
+              min-height: 0;
               background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
               overflow: hidden;
 
@@ -128,31 +137,36 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
-                position: relative;
-                z-index: 1;
+              }
+            }
+
+            .prison-info {
+              flex-shrink: 0;
+              background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
+              padding: 8px;
+              border-top: 1px solid @border-glow;
+
+              .prison-name {
+                text-align: center;
+                font-size: 12px;
+                font-weight: 500;
+                color: #fff;
+                margin-bottom: 6px;
               }
 
-              .prison-overlay {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 40px;
-                background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
-                padding: 6px;
-                z-index: 2;
-
-                .prison-stats {
-                  display: flex;
-                  justify-content: space-around;
-                }
+              .prison-stats {
+                display: flex;
+                justify-content: space-around;
 
                 .stat-item {
                   display: flex;
                   flex-direction: column;
                   align-items: center;
-                  font-size: 9px;
-                  color: rgba(255, 255, 255, 0.8);
+
+                  .stat-label {
+                    font-size: 9px;
+                    color: rgba(255, 255, 255, 0.6);
+                  }
 
                   .stat-value {
                     font-size: 14px;
@@ -166,27 +180,16 @@
                 }
               }
             }
-
-            .prison-name {
-              padding: 8px;
-              text-align: center;
-              font-size: 12px;
-              font-weight: 500;
-              color: #fff;
-              background: rgba(0, 0, 0, 0.3);
-              border-top: 1px solid @border-glow;
-            }
           }
         }
       }
 
       .chart-section {
-        flex: 1;
-        min-height: 0;
+        flex: 0 0 350px;
         background: @card-bg;
         border-radius: 10px;
         border: 1px solid @border-glow;
-        padding: 12px;
+        padding: 10px;
         display: flex;
         flex-direction: column;
         overflow: hidden;

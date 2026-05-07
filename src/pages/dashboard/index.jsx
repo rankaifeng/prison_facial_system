@@ -66,20 +66,20 @@ const Dashboard = () => {
                   <div key={p.id || index} className="prison-card">
                     <div className="prison-image">
                       <img src={p.imageUrl || '/imgs/jy.png'} alt={p.name} />
-                      <div className="prison-overlay">
-                        <div className="prison-stats">
-                          <div className="stat-item">
-                            <span className="stat-value">{p.totalCount || 0}</span>
-                            <span>总人数</span>
-                          </div>
-                          <div className="stat-item highlight">
-                            <span className="stat-value">{p.workCount || 0}</span>
-                            <span>出工</span>
-                          </div>
+                    </div>
+                    <div className="prison-info">
+                      <div className="prison-name">{p.name || `监狱${index + 1}`}</div>
+                      <div className="prison-stats">
+                        <div className="stat-item">
+                          <span className="stat-value">{p.totalCount || 0}</span>
+                          <span className="stat-label">总人数</span>
+                        </div>
+                        <div className="stat-item highlight">
+                          <span className="stat-value">{p.workCount || 0}</span>
+                          <span className="stat-label">出工</span>
                         </div>
                       </div>
                     </div>
-                    <div className="prison-name">{p.name || `监狱${index + 1}`}</div>
                   </div>
                 ))
               ) : (
@@ -87,20 +87,20 @@ const Dashboard = () => {
                   <div key={index} className="prison-card">
                     <div className="prison-image">
                       <img src="/imgs/jy.png" alt={name} />
-                      <div className="prison-overlay">
-                        <div className="prison-stats">
-                          <div className="stat-item">
-                            <span className="stat-value">{Math.floor(Math.random() * 500) + 200}</span>
-                            <span>总人数</span>
-                          </div>
-                          <div className="stat-item highlight">
-                            <span className="stat-value">{Math.floor(Math.random() * 300) + 100}</span>
-                            <span>出工</span>
-                          </div>
+                    </div>
+                    <div className="prison-info">
+                      <div className="prison-name">{name}</div>
+                      <div className="prison-stats">
+                        <div className="stat-item">
+                          <span className="stat-value">{Math.floor(Math.random() * 500) + 200}</span>
+                          <span className="stat-label">总人数</span>
+                        </div>
+                        <div className="stat-item highlight">
+                          <span className="stat-value">{Math.floor(Math.random() * 300) + 100}</span>
+                          <span className="stat-label">出工</span>
                         </div>
                       </div>
                     </div>
-                    <div className="prison-name">{name}</div>
                   </div>
                 ))
               )}
