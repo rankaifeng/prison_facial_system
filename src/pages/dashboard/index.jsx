@@ -4,6 +4,7 @@ import { SafetyOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 import StatisticsChart from './components/StatisticsChart';
+import StatusPieChart from './components/StatusPieChart';
 import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
 import './index.less';
 
@@ -113,6 +114,7 @@ const Dashboard = () => {
         </div>
 
         <div className="right-area">
+          <StatusPieChart data={prisonStats} />
           <RightPanel messages={messages} />
         </div>
       </div>
