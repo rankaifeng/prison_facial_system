@@ -123,7 +123,7 @@ series: [
               label: {
                 show: true,
                 position: 'top',
-                formatter: (params) => `${params.data.name}\n总人数: ${params.data.totalCount}\n出监人数: ${params.data.workCount}`,
+                formatter: (params) => `📍 ${params.data.name}\n👥 总人数: ${params.data.totalCount}\n🚶 出监人数: ${params.data.workCount}`,
                 fontSize: 11,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',
