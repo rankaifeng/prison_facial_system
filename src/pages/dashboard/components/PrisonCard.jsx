@@ -1,19 +1,11 @@
 import React from 'react';
-import { EnvironmentOutlined, TeamOutlined } from '@ant-design/icons';
-import './index.less';
+import { TeamOutlined } from '@ant-design/icons';
 
 const PrisonCard = ({ name, totalCount, workCount, imageUrl }) => {
   return (
     <div className="prison-card">
       <div className="prison-image">
-        {imageUrl ? (
-          <img src={imageUrl} alt={name} />
-        ) : (
-          <div className="prison-placeholder">
-            <EnvironmentOutlined />
-            <span>监狱</span>
-          </div>
-        )}
+        <img src={imageUrl || '/imgs/jy.png'} alt={name} />
         <div className="prison-overlay">
           <div className="prison-stats">
             <div className="stat-item">

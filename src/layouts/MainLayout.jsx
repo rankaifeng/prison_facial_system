@@ -70,7 +70,7 @@ const MainLayout = () => {
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
-      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'margin-left 0.2s' }}>
+      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'margin-left 0.2s', height: '100vh', overflow: 'hidden' }}>
         <Header
           style={{
             padding: '0 16px',
@@ -82,6 +82,7 @@ const MainLayout = () => {
             position: 'sticky',
             top: 0,
             zIndex: 100,
+            height: 64,
           }}
         >
           <Space>
@@ -108,12 +109,13 @@ const MainLayout = () => {
         </Header>
         <Content
           style={{
-            margin: 10,
+            margin: 0,
             padding: 0,
-            background: '#f0f2f5',
-            borderRadius: 8,
+            background: 'transparent',
+            borderRadius: 0,
             overflow: 'hidden',
-            height: 'calc(100vh - 64px - 20px)',
+            height: 'calc(100vh - 64px)',
+            flex: 1,
           }}
         >
           <Outlet />

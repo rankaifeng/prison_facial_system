@@ -45,7 +45,7 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <SafetyOutlined className="header-icon" />
-          <Title level={3} className="header-title">监狱人脸识别监控平台</Title>
+          <Title level={3} className="header-title">监狱关押罪犯出入管控平台</Title>
         </div>
         <div className="header-right">
           <ClockCircleOutlined />

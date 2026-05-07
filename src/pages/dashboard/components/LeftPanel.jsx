@@ -1,6 +1,5 @@
 import React from 'react';
 import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import './index.less';
 
 const LeftPanel = ({ realtimeData, prisonStats }) => {
   return (

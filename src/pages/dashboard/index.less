@@ -1,116 +1,501 @@
+@primary-glow: #00f0ff;
+@card-bg: rgba(20, 25, 45, 0.85);
+@border-glow: rgba(0, 240, 255, 0.3);
+
 .dashboard {
   width: 100%;
-  height: calc(100vh - 32px - 64px);
-  background: linear-gradient(135deg, #0a0f1c 0%, #1a1f3a 50%, #0d1b2a 100%);
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.dashboard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='none' stroke='rgba(24,144,255,0.05)' stroke-width='0.5' width='100' height='100'/%3E%3C/svg%3E");
-  background-size: 50px 50px;
-  pointer-events: none;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 32px;
-  background: rgba(0, 10, 40, 0.5);
-  border-bottom: 1px solid rgba(24, 144, 255, 0.2);
-  position: relative;
-  z-index: 1;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-icon {
-  font-size: 28px;
-  color: #1890ff;
-}
-
-.header-title {
-  margin: 0 !important;
-  color: #fff !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-  text-shadow: 0 0 20px rgba(24, 144, 255, 0.5);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-}
-
-.dashboard-content {
-  flex: 1;
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.left-area {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.center-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.prisons-grid {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  padding: 20px;
-  background: rgba(0, 10, 40, 0.4);
-  border-radius: 12px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
-}
-
-.bottom-area {
-  flex: 1;
-  min-height: 250px;
-}
-
-.bottom-area > * {
   height: 100%;
+  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0d1117 100%);
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #e4e7eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+
+  .dashboard-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 45px;
+    padding: 0 12px;
+    background: linear-gradient(90deg, rgba(20, 25, 45, 0.95) 0%, rgba(30, 40, 65, 0.9) 50%, rgba(20, 25, 45, 0.95) 100%);
+    border-bottom: 1px solid @border-glow;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+
+      .header-icon {
+        font-size: 18px;
+        color: @primary-glow;
+        margin-right: 8px;
+        filter: drop-shadow(0 0 6px @primary-glow);
+      }
+
+      .header-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(90deg, #fff 0%, @primary-glow 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: 2px;
+      }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+
+      .anticon {
+        margin-right: 4px;
+        color: @primary-glow;
+      }
+    }
+  }
+
+  .dashboard-content {
+    flex: 1;
+    display: flex;
+    padding: 6px;
+    gap: 6px;
+    min-height: 0;
+    overflow: hidden;
+
+    .left-area {
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .center-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+
+      .prisons-grid {
+        flex-shrink: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        max-height: 160px;
+        overflow: hidden;
+      }
+
+      .bottom-area {
+        flex: 1;
+        min-height: 0;
+        background: @card-bg;
+        border-radius: 6px;
+        border: 1px solid @border-glow;
+        padding: 6px;
+        overflow: hidden;
+      }
+    }
+
+    .right-area {
+      width: 240px;
+      flex-shrink: 0;
+      min-height: 0;
+    }
+  }
 }
 
-.bottom-area .statistics-chart {
-  width: 100%;
-  height: 100%;
-}
-
-.right-area {
+.prison-card {
+  width: 100px;
+  background: @card-bg;
+  border-radius: 6px;
+  border: 1px solid @border-glow;
+  overflow: hidden;
   flex-shrink: 0;
+
+  .prison-image {
+    position: relative;
+    height: 60px;
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #1a237e 100%);
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .prison-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+      padding: 3px;
+
+      .prison-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 8px;
+        color: rgba(255, 255, 255, 0.8);
+
+        .stat-label {
+          display: flex;
+          align-items: center;
+          gap: 1px;
+          font-size: 8px;
+        }
+
+        .stat-value {
+          font-weight: 600;
+          font-size: 10px;
+        }
+
+        &.highlight .stat-value {
+          color: #52c41a;
+        }
+      }
+    }
+  }
+
+  .prison-name {
+    padding: 4px 3px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid @border-glow;
+  }
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+
+  .panel-section {
+    background: @card-bg;
+    border-radius: 6px;
+    border: 1px solid @border-glow;
+    padding: 8px;
+  }
+
+  .total-section {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(24, 119, 255, 0.2) 0%, rgba(20, 25, 45, 0.9) 100%);
+    border-color: rgba(24, 119, 255, 0.4);
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 2px;
+      color: @primary-glow;
+      font-size: 11px;
+
+      .anticon {
+        font-size: 12px;
+      }
+    }
+
+    .total-number {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(180deg, #fff 0%, @primary-glow 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+  }
+
+  .stats-section {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid @border-glow;
+      color: @primary-glow;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+    }
+
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+
+      .stat-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+
+        &.in-prison {
+          background: rgba(24, 119, 255, 0.2);
+          color: #1890ff;
+        }
+        &.working {
+          background: rgba(82, 196, 26, 0.2);
+          color: #52c41a;
+        }
+        &.hospital {
+          background: rgba(255, 77, 79, 0.2);
+          color: #ff4d4f;
+        }
+        &.isolated {
+          background: rgba(255, 154, 38, 0.2);
+          color: #faad14;
+        }
+        &.quarantine {
+          background: rgba(139, 92, 246, 0.2);
+          color: #8b5cf6;
+        }
+        &.visiting {
+          background: rgba(0, 206, 200, 0.2);
+          color: #00cec8;
+        }
+        &.punishment {
+          background: rgba(255, 138, 0, 0.2);
+          color: #ff8a00;
+        }
+      }
+
+      .stat-content {
+        flex: 1;
+        min-width: 0;
+
+        .stat-label {
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 0;
+        }
+
+        .stat-number {
+          font-size: 12px;
+          font-weight: 600;
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+.right-panel {
+  height: 100%;
+  background: @card-bg;
+  border-radius: 6px;
+  border: 1px solid @border-glow;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+
+  .panel-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid @border-glow;
+    background: linear-gradient(90deg, rgba(24, 119, 255, 0.1) 0%, transparent 100%);
+    color: @primary-glow;
+    font-size: 12px;
+    font-weight: 500;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .anticon {
+        font-size: 14px;
+      }
+    }
+
+    .detail-btn {
+      padding: 0;
+      font-size: 10px;
+      color: @primary-glow;
+      height: auto;
+    }
+  }
+
+  .message-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: @border-glow;
+      border-radius: 2px;
+    }
+
+    .message-item {
+      padding: 6px;
+      margin-bottom: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+
+      .message-content {
+        .message-text {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.85);
+          line-height: 1.3;
+          width: 200px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          .prison-tag {
+            color: @primary-glow;
+            font-weight: 500;
+          }
+
+          .person-name {
+            color: #fff;
+            font-weight: 500;
+          }
+
+          .action-text {
+            color: #faad14;
+          }
+
+          .time-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 9px;
+            margin-left: 4px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.statistics-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .chart-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid @border-glow;
+
+    .chart-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: @primary-glow;
+      font-size: 12px;
+      font-weight: 500;
+
+      .anticon {
+        font-size: 14px;
+      }
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+
+      .tab-btn {
+        padding: 2px 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid @border-glow;
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 10px;
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(0, 240, 255, 0.1);
+          color: @primary-glow;
+        }
+
+        &.active {
+          background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%);
+          border-color: @primary-glow;
+          color: @primary-glow;
+        }
+      }
+    }
+  }
+
+  .chart-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+
+    .chart-area {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+
+      .echarts-container {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
 }
