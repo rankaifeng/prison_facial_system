@@ -162,6 +162,16 @@
         flex-shrink: 0;
       }
 
+      .prison-img-container {
+        flex: 1;
+        background: url('../../imgs/map.png') center center no-repeat;
+        background-size: contain;
+        background-color: @card-bg;
+        border-radius: 10px;
+        border: 1px solid @border-glow;
+        overflow: hidden;
+      }
+
       .prisons-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -302,11 +312,9 @@
 
   .total-section {
     flex-shrink: 0;
-    background: @card-bg;
     border-radius: 10px;
     border: 1px solid @border-glow;
     padding: 12px;
-    background: linear-gradient(135deg, rgba(24, 119, 255, 0.15) 0%, rgba(20, 25, 45, 0.9) 100%);
     border-color: rgba(24, 119, 255, 0.4);
 
     .chart-header {
