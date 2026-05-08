@@ -114,7 +114,11 @@ const StatisticsChart = ({ data }) => {
     chart.setOption(option);
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
-   
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.dispose();
+    };
   }, [data, chartType]);
 
   return (
