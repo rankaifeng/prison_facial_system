@@ -57,8 +57,6 @@ const Dashboard = () => {
 
   const userMenu = {
     items: [
-      { key: 'changePwd', icon: <SettingOutlined />, label: '修改密码' },
-      { type: 'divider' },
       { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' },
     ],
     onClick: ({ key }) => {
@@ -117,7 +115,7 @@ const Dashboard = () => {
         <div className="center-area">
           <div className="prisons-section">
             <div className="section-title">监狱概览</div>
-<PrisonMap />
+            <PrisonMap />
           </div>
 
           <div className="chart-section">

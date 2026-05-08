@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Space, theme } from 'antd';
-import { UserOutlined, SettingOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons';
+import { UserOutlined, SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { allMenus } from '@/router/menus';
@@ -23,14 +23,6 @@ const MainLayout = () => {
 
   const userMenu = {
     items: [
-      {
-        key: 'changePwd',
-        icon: <SettingOutlined />,
-        label: '修改密码',
-      },
-      {
-        type: 'divider',
-      },
       {
         key: 'logout',
         icon: <LogoutOutlined />,
@@ -107,9 +99,9 @@ const MainLayout = () => {
             <Space>
               <span
                 onClick={() => setCollapsed(!collapsed)}
-                style={{ fontSize: 18, cursor: 'pointer' }}
+                style={{ fontSize: 14, cursor: 'pointer', color: '#8c8c8c' }}
               >
-                {collapsed ? '☰' : '✕'}
+                {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               </span>
               <Breadcrumb />
             </Space>

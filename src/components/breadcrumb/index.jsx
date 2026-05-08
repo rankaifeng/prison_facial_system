@@ -1,5 +1,5 @@
 import { Breadcrumb } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
 
 const BreadcrumbMenu = () => {
@@ -11,17 +11,13 @@ const BreadcrumbMenu = () => {
     const name = getNameFromPath(snippet);
     return {
       key: url,
-      title: <Link to={url}>{name}</Link>,
+      title: name,
     };
   });
 
   const breadcrumbItems = [
     {
-      title: (
-        <Link to="/">
-          <HomeOutlined />
-        </Link>
-      ),
+      title: <HomeOutlined />,
       key: 'home',
     },
     ...extraBreadcrumbItems,
@@ -35,7 +31,7 @@ const getNameFromPath = (path) => {
     dashboard: '首页大屏',
     prisoners: '档案库',
     statistics: '进出统计',
-    exitRecords: '出狱信息',
+    'exit-records': '出狱信息',
     permission: '权限管理',
     list: '列表',
     detail: '详情',

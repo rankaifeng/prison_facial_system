@@ -112,32 +112,9 @@ const StatisticsChart = ({ data }) => {
     };
 
     chart.setOption(option);
-
-    let phase = 0;
-    const animate = () => {
-      phase += 0.08;
-      const animatedSeries = seriesData.map((s, idx) => ({
-        ...s,
-        symbolSize: 6 + Math.sin(phase + idx * 0.5) * 4,
-        itemStyle: {
-          color: s.itemStyle.color,
-          shadowBlur: 8 + Math.sin(phase + idx * 0.5) * 6,
-          shadowColor: s.lineStyle.color
-        }
-      }));
-      chart.setOption({ series: animatedSeries });
-      requestAnimationFrame(animate);
-    };
-
-    requestAnimationFrame(animate);
-
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.dispose();
-    };
+   
   }, [data, chartType]);
 
   return (

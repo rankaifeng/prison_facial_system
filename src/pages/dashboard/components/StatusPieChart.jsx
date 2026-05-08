@@ -83,42 +83,9 @@ const StatusPieChart = ({ data }) => {
         }))
       }]
     };
-
     chart.setOption(option);
-
-    let phase = 0;
-    const updateAnimation = () => {
-      phase += 0.03;
-      const animatedData = chartData.map((item, index) => {
-        const offset = Math.sin(phase + index * 0.8) * 0.1;
-        return {
-          ...item,
-          itemStyle: {
-            color: colors[index % colors.length],
-            borderWidth: 3 + offset * 5,
-            shadowBlur: 20 + offset * 20
-          }
-        };
-      });
-      chart.setOption({
-        series: [{
-          data: animatedData
-        }]
-      });
-      requestAnimationFrame(updateAnimation);
-    };
-
-    setTimeout(() => {
-      requestAnimationFrame(updateAnimation);
-    }, 2000);
-
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.dispose();
-    };
   }, [data]);
 
   return (
