@@ -10,26 +10,22 @@ const StatusPieChart = ({ data }) => {
     const chart = echarts.init(chartRef.current);
 
     const defaultData = [
-      { name: '在监', value: 680 },
-      { name: '出工', value: 120 },
-      { name: '住院', value: 25 },
-      { name: '禁闭', value: 15 },
-      { name: '隔离', value: 20 },
-      { name: '探亲', value: 18 },
-      { name: '惩戒', value: 12 }
+      { name: '刑满释放', value: 680 },
+      { name: '外出就医', value: 120 },
+      { name: '外出教育', value: 25 },
+      { name: '离监探亲', value: 15 },
+      { name: '押回重审', value: 20 }
     ];
 
     const chartData = data && Object.keys(data).length > 0 ? [
-      { name: '在监', value: data.inPrison || 0 },
-      { name: '出工', value: data.working || 0 },
-      { name: '住院', value: data.hospital || 0 },
-      { name: '禁闭', value: data.isolated || 0 },
-      { name: '隔离', value: data.quarantine || 0 },
-      { name: '探亲', value: data.visiting || 0 },
-      { name: '惩戒', value: data.punishment || 0 }
+      { name: '刑满释放', value: data.inPrison || 0 },
+      { name: '外出就医', value: data.working || 0 },
+      { name: '外出教育', value: data.hospital || 0 },
+      { name: '离监探亲', value: data.isolated || 0 },
+      { name: '押回重审', value: data.quarantine || 0 },
     ] : defaultData;
 
-    const colors = ['#1890ff', '#52c41a', '#ff4d4f', '#faad14', '#722ed1', '#00cec8', '#ff8a00'];
+    const colors = ['#1890ff', '#52c41a', '#ff4d4f', '#faad14', '#722ed1'];
 
     const option = {
       backgroundColor: 'transparent',

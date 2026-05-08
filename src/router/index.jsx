@@ -18,7 +18,7 @@ const routes = [
       { path: '/prisoners', element: <PrisonerList /> },
       { path: '/prisoners/:id', element: <PrisonerDetail /> },
       { path: '/statistics', element: <Statistics /> },
-      { path: '/exit-records', element: <ExitRecords /> },
+      // { path: '/exit-records', element: <ExitRecords /> },
       { path: '/permission', element: <Permission /> },
     ],
   },

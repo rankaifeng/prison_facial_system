@@ -21,11 +21,11 @@ export const allMenus = [
     icon: <FileTextOutlined />,
     label: "进出统计",
   },
-  {
-    key: "/exit-records",
-    icon: <FileTextOutlined />,
-    label: "出狱信息",
-  },
+  // {
+  //   key: "/exit-records",
+  //   icon: <FileTextOutlined />,
+  //   label: "出狱信息",
+  // },
   {
     key: "/permission",
     icon: <SafetyCertificateOutlined />,

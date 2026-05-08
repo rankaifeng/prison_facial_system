@@ -31,6 +31,9 @@ const PrisonerList = () => {
     },
     { title: '入监日期', dataIndex: 'entryDate', key: 'entryDate', width: 120 },
     { title: '出监日期', dataIndex: 'releaseDate', key: 'releaseDate', width: 120 },
+    { title: '刑满时间', dataIndex: 'releaseDate', key: 'releaseDate', width: 120 },
+    { title: '刑期变动', dataIndex: 'releaseDate', key: 'releaseDate', width: 120 },
+    { title: '亲属信息', dataIndex: 'releaseDate', key: 'releaseDate', width: 120 },
     {
       title: '操作',
       key: 'action',
