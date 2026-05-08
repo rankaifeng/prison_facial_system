@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Dropdown, ConfigProvider, theme } from 'antd';
-import { SafetyOutlined, MenuOutlined, UserOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Typography, Dropdown, ConfigProvider, theme, Modal } from 'antd';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -55,16 +55,17 @@ const Dashboard = () => {
     onClick: ({ key }) => navigate(key),
   };
 
-  const userMenu = {
-    items: [
-      { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' },
-    ],
-    onClick: ({ key }) => {
-      if (key === 'logout') {
+  const handleLogout = () => {
+    Modal.confirm({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: () => {
         cache.clearVal();
         navigate('/login');
-      }
-    },
+      },
+    });
   };
 
   return (
@@ -100,9 +101,7 @@ const Dashboard = () => {
             <Dropdown menu={navMenu} trigger={['click']}>
               <MenuOutlined className="nav-icon" />
             </Dropdown>
-            <Dropdown menu={userMenu} trigger={['click']}>
-              <UserOutlined className="user-icon" />
-            </Dropdown>
+            <LogoutOutlined className="user-icon" onClick={handleLogout} />
           </ConfigProvider>
         </div>
       </div>

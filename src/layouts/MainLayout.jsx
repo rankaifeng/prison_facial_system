@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Space, theme } from 'antd';
-import { UserOutlined, SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Layout, Menu, Space, theme, Modal } from 'antd';
+import { SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { allMenus } from '@/router/menus';
@@ -21,20 +21,17 @@ const MainLayout = () => {
   const selectedKey = location.pathname;
   const isDashboard = location.pathname === '/dashboard';
 
-  const userMenu = {
-    items: [
-      {
-        key: 'logout',
-        icon: <LogoutOutlined />,
-        label: '退出登录',
-      },
-    ],
-    onClick: ({ key }) => {
-      if (key === 'logout') {
+  const handleLogout = () => {
+    Modal.confirm({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: () => {
         cache.clearVal();
         navigate('/login');
-      }
-    },
+      },
+    });
   };
 
   const navMenu = {
@@ -106,15 +103,9 @@ const MainLayout = () => {
               <Breadcrumb />
             </Space>
             <Space size={16}>
-              <Dropdown menu={userMenu}>
-                <Space style={{ cursor: 'pointer' }}>
-                  <Avatar style={{ background: '#1890ff' }} icon={<UserOutlined />} />
-                  <span>{cache.getVal("userName") || '管理员'}</span>
-                </Space>
-              </Dropdown>
-              <SettingOutlined
-                style={{ cursor: 'pointer', fontSize: 16 }}
-                onClick={() => setDrawerOpen(true)}
+              <LogoutOutlined
+                style={{ cursor: 'pointer', fontSize: 16, color: '#8c8c8c' }}
+                onClick={handleLogout}
               />
             </Space>
           </Header>
