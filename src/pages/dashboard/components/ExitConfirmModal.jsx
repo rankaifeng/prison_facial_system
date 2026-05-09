@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
 import './ExitConfirmModal.less';
@@ -94,7 +94,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const renderStep1 = () => (
-    <div className="step-content">
+    <div className="step-content step-form">
       <Form
         form={form}
         layout="vertical"
@@ -245,31 +245,47 @@ const renderStep4 = () => (
   ];
 
   return (
-    <Modal
-      title="出监确认"
-      open={open}
-      onCancel={handleReset}
-      width={600}
-      footer={[
-        <Button key="cancel" onClick={handleReset}>
-          取消
-        </Button>,
-        current > 0 && (
-          <Button key="back" onClick={handleBack}>
-            上一步
-          </Button>
-        ),
-        <Button key="next" type="primary" onClick={handleNext}>
-          {current === 3 ? '确认提交' : '下一步'}
-        </Button>,
-      ].filter(Boolean)}
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#00f0ff',
+          colorBgElevated: 'rgba(20, 25, 45, 0.98)',
+          colorBgContainer: 'rgba(10, 15, 30, 0.98)',
+          colorBorder: 'rgba(0, 240, 255, 0.3)',
+          colorText: '#fff',
+          colorTextPlaceholder: 'rgba(255, 255, 255, 0.5)',
+          borderRadius: 8,
+        },
+      }}
     >
-      <Steps current={current} items={steps} className="exit-steps" />
-      {current === 0 && renderStep1()}
-      {current === 1 && renderStep2()}
-      {current === 2 && renderStep3()}
-      {current === 3 && renderStep4()}
-    </Modal>
+      <Modal
+        title="出监确认"
+        open={open}
+        onCancel={handleReset}
+        width={600}
+        className="exit-confirm-modal"
+        footer={[
+          <Button key="cancel" onClick={handleReset}>
+            取消
+          </Button>,
+          current > 0 && (
+            <Button key="back" onClick={handleBack}>
+              上一步
+            </Button>
+          ),
+          <Button key="next" type="primary" onClick={handleNext}>
+            {current === 3 ? '确认提交' : '下一步'}
+          </Button>,
+        ].filter(Boolean)}
+      >
+        <Steps current={current} items={steps} className="exit-steps" />
+        {current === 0 && renderStep1()}
+        {current === 1 && renderStep2()}
+        {current === 2 && renderStep3()}
+        {current === 3 && renderStep4()}
+      </Modal>
+    </ConfigProvider>
   );
 };
 
