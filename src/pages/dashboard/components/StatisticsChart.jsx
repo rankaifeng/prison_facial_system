@@ -91,7 +91,7 @@ const StatisticsChart = ({ data }) => {
         top: 0
       },
       grid: {
-        left: '5%',
+        left: 0,
         right: '5%',
         bottom: '10%',
         top: '25%',
