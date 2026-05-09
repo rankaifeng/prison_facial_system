@@ -263,7 +263,7 @@ const renderStep4 = () => (
         title="出监确认"
         open={open}
         onCancel={handleReset}
-        width={600}
+        width={680}
         className="exit-confirm-modal"
         footer={[
           <Button key="cancel" onClick={handleReset}>
