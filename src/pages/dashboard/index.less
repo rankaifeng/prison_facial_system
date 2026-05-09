@@ -205,8 +205,23 @@
         box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 8px rgba(0, 240, 255, 0.1);
       }
 
-      .nav-icon,
-      .user-icon {
+.exit-btn {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%) !important;
+    border: 1px solid rgba(0, 240, 255, 0.5) !important;
+    color: #00f0ff !important;
+    font-weight: 500;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.35) 0%, rgba(24, 119, 255, 0.35) 100%) !important;
+      border-color: #00f0ff !important;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
+  .nav-icon,
+  .user-icon {
         font-size: 20px;
         color: @primary-glow;
         cursor: pointer;

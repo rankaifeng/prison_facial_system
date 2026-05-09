@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Dropdown, ConfigProvider, theme, Modal } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 import StatisticsChart from './components/StatisticsChart';
 import StatusPieChart from './components/StatusPieChart';
 import PrisonMap from './components/PrisonMap';
+import ExitConfirmModal from './components/ExitConfirmModal';
 import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [prisonStats, setPrisonStats] = useState({});
   const [workData, setWorkData] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [exitModalOpen, setExitModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,6 +77,14 @@ const Dashboard = () => {
           <Title level={3} className="header-title">监狱关押罪犯出入管控平台</Title>
         </div>
         <div className="header-right">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setExitModalOpen(true)}
+            className="exit-btn"
+          >
+            出监确认
+          </Button>
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <ConfigProvider
             theme={{
@@ -141,6 +151,12 @@ const Dashboard = () => {
           <RightPanel messages={messages} />
         </div>
       </div>
+
+      <ExitConfirmModal
+        open={exitModalOpen}
+        onCancel={() => setExitModalOpen(false)}
+        onOk={() => setExitModalOpen(false)}
+      />
     </div>
   );
 };
