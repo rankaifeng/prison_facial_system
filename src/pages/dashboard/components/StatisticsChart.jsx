@@ -124,9 +124,15 @@ const StatisticsChart = ({ data }) => {
   return (
     <div className="statistics-chart">
       <div className="chart-header">
-        <div className="chart-title">
+        <div className="header-content">
           <LineChartOutlined />
           <span>出工统计</span>
+        </div>
+        <div className="header-line"></div>
+        <div className="header-decor">
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
         </div>
         <div className="chart-tabs">
           <button

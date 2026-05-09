@@ -1,5 +1,5 @@
 import React from 'react';
-import { ManOutlined, WomanOutlined } from '@ant-design/icons';
+import { ManOutlined, WomanOutlined, PieChartOutlined } from '@ant-design/icons';
 
 const GenderRatio = ({ maleCount = 680, femaleCount = 210 }) => {
   const total = maleCount + femaleCount;
@@ -9,7 +9,16 @@ const GenderRatio = ({ maleCount = 680, femaleCount = 210 }) => {
   return (
     <div className="gender-ratio-section">
       <div className="section-header">
-        <span>性别比例分析</span>
+        <div className="header-content">
+          <PieChartOutlined />
+          <span>性别比例分析</span>
+        </div>
+        <div className="header-line"></div>
+        <div className="header-decor">
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+        </div>
       </div>
 
       <div className="gender-row">

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { PieChartOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 
 const StatusPieChart = ({ data }) => {
@@ -91,7 +92,18 @@ const StatusPieChart = ({ data }) => {
 
   return (
     <div className="status-pie-chart">
-      <div className="chart-title">罪犯状态分布</div>
+      <div className="chart-title">
+        <div className="title-content">
+          <PieChartOutlined />
+          <span>罪犯状态分布</span>
+        </div>
+        <div className="title-line"></div>
+        <div className="title-decor">
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+        </div>
+      </div>
       <div className="chart-wrapper">
         <div ref={chartRef} className="echarts-container" />
       </div>

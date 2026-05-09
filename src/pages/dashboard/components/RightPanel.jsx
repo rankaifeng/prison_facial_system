@@ -15,6 +15,12 @@ const RightPanel = ({ messages }) => {
           <BellOutlined />
           <span>监狱消息</span>
         </div>
+        <div className="header-line"></div>
+        <div className="header-decor">
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+          <span className="decor-dot"></span>
+        </div>
         <Button
           type="link"
           size="small"
