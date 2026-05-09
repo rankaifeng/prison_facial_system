@@ -102,11 +102,11 @@ series: [
                 const count = val[2];
                 return Math.max(15, Math.min(30, count / 20));
               },
-              showEffectOn: 'emphasis',
+              showEffectOn: 'render',
               rippleEffect: {
-                period: 4,
-                scale: 1.5,
-                brushType: 'stroke',
+                period: 2,
+                scale: 2.5,
+                brushType: 'fill',
                 color: '#00f0ff',
               },
               itemStyle: {
