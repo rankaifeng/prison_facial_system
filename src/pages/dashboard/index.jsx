@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -21,7 +21,26 @@ const Dashboard = () => {
   const [workData, setWorkData] = useState([]);
   const [messages, setMessages] = useState([]);
   const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -86,6 +105,12 @@ const Dashboard = () => {
             出监确认
           </Button>
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
+          <span
+            className="fullscreen-btn"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+          </span>
           <ConfigProvider
             theme={{
               algorithm: theme.darkAlgorithm,

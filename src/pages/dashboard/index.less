@@ -220,6 +220,28 @@
     }
   }
 
+  .fullscreen-btn {
+    font-size: 20px;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 100, 150, 0.1) 100%);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    border-radius: 8px;
+    color: @primary-glow;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(0, 150, 200, 0.2) 100%);
+      border-color: @primary-glow;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
   .nav-icon,
   .user-icon {
         font-size: 20px;
