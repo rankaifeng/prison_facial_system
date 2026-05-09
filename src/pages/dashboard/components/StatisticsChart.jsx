@@ -54,8 +54,7 @@ const StatisticsChart = ({ data }) => {
         name: prisonName,
         type: 'line',
         smooth: true,
-        symbol: 'circle',
-        symbolSize: 8,
+        symbol: 'none',
         lineStyle: {
           width: 2,
           color: color
@@ -79,9 +78,12 @@ const StatisticsChart = ({ data }) => {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(20, 25, 45, 0.9)',
-        borderColor: 'rgba(0, 240, 255, 0.3)',
-        textStyle: { color: '#fff' }
+        backgroundColor: 'rgba(20, 25, 45, 0.95)',
+        borderColor: 'rgba(0, 240, 255, 0.5)',
+        borderWidth: 1,
+        textStyle: { color: '#fff' },
+        zlevel: 1000,
+        z: 1000
       },
       legend: {
         data: seriesData.map(s => s.name),
@@ -100,12 +102,13 @@ const StatisticsChart = ({ data }) => {
         boundaryGap: false,
         data: xData,
         axisLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.3)' } },
-        axisLabel: { color: 'rgba(255,255,255,0.6)' }
+        axisLabel: { color: 'rgba(255,255,255,0.6)' },
+        splitLine: { show: false }
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+        splitLine: { show: false },
         axisLabel: { color: 'rgba(255,255,255,0.6)' }
       },
       series: seriesData
