@@ -116,7 +116,18 @@ const Dashboard = () => {
 
         <div className="center-area">
           <div className="prisons-section">
-            <div className="section-title">监狱概览</div>
+            <div className="section-title">
+              <div className="title-content">
+                <SafetyOutlined />
+                <span>监狱概览</span>
+              </div>
+              <div className="title-line"></div>
+              <div className="title-decor">
+                <span className="decor-dot"></span>
+                <span className="decor-dot"></span>
+                <span className="decor-dot"></span>
+              </div>
+            </div>
             <PrisonMap />
           </div>
 
