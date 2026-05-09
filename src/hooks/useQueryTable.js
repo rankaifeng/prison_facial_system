@@ -23,7 +23,7 @@ const useQueryTable = (options) => {
 
     const antdTable = useAntdTable(getTableData, {
         form,
-        defaultParams: [{ current: 1, pageSize: defaultPageSize }, {}],
+        defaultParams: [{ current: 1, pageSize: defaultPageSize }, defaultParams],
         manual,
     });
 

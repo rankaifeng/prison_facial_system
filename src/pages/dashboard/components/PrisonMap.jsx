@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as echarts from 'echarts';
 
 const PrisonMap = () => {
   const chartRef = useRef(null);
+  const navigate = useNavigate();
 
   const prisons = [
     { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 456, workCount: 320 },
@@ -138,6 +140,12 @@ series: [
         };
 
         chart.setOption(option);
+
+        chart.on('click', (params) => {
+          if (params.name) {
+            navigate(`/statistics?prisonName=${encodeURIComponent(params.name)}`);
+          }
+        });
       })
       .catch(err => console.error('Failed to load map:', err));
 

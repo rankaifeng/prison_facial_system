@@ -64,9 +64,13 @@ const mockHandler = (url, params = {}) => {
 
     // Exit Statistics
     if (url.includes('exit_statistics_list')) {
-        const { page = 1, limit = 10 } = params;
+        const { page = 1, limit = 10, prisonName } = params;
+        let allData = mockExitStatistics(50);
+        if (prisonName) {
+            allData = allData.filter(item => item.prisonName === prisonName);
+        }
         return new Promise(resolve => {
-            setTimeout(() => resolve(mockListResponse(mockExitStatistics(50), page, limit)), delay);
+            setTimeout(() => resolve(mockListResponse(allData, page, limit)), delay);
         });
     }
 

@@ -1,16 +1,21 @@
 import React, { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 
 const Statistics = () => {
+  const [searchParams] = useSearchParams();
+  const prisonNameParam = searchParams.get('prisonName');
+
   const { tableProps, loading, form, search } = useQueryTable({
     url: '/prison_manage/exit_statistics/exit_statistics_list',
     rowKey: 'id',
+    defaultParams: prisonNameParam ? { prisonName: prisonNameParam } : {},
   });
 
   const columns = [
-    { title: '监狱名称', dataIndex: 'prisonName', key: 'prisonName', width: 150 },
+    { title: '分监区', dataIndex: 'prisonName', key: 'prisonName', width: 150 },
     { title: '罪犯姓名', dataIndex: 'prisonerName', key: 'prisonerName', width: 100 },
     { title: '罪犯编号', dataIndex: 'prisonerNo', key: 'prisonerNo', width: 120 },
     { title: '出监时间', dataIndex: 'exitTime', key: 'exitTime', width: 160 },
@@ -43,10 +48,10 @@ const Statistics = () => {
 
   const searchItems = useMemo(() => [
     {
-      label: '监狱名称',
+      label: '分监区',
       name: 'prisonName',
       type: 'input',
-      props: { placeholder: '请输入监狱名称' }
+      props: { placeholder: '请输入分监区名称' }
     },
     {
       label: '罪犯姓名',
@@ -79,7 +84,9 @@ const Statistics = () => {
       <TableLayout
         haderLayout={
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 500 }}>监狱进出统计</span>
+            <span style={{ fontSize: 16, fontWeight: 500 }}>
+              {prisonNameParam ? `${prisonNameParam} - 进出统计` : '监狱进出统计'}
+            </span>
           </div>
         }
         tableProps={tableProps}
