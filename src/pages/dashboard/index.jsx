@@ -50,7 +50,7 @@ const Dashboard = () => {
     items: [
       { key: '/dashboard', label: '首页大屏' },
       { key: '/prisoners', label: '档案库' },
-      { key: '/statistics', label: '统计信息' },
+      { key: '/statistics', label: '进出统计' },
       { key: '/permission', label: '权限管理' },
     ],
     onClick: ({ key }) => navigate(key),

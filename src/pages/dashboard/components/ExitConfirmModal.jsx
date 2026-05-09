@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, Space, message } from 'antd';
-import { UserOutlined, SafetyOutlined, TeamOutlined, EditOutlined } from '@ant-design/icons';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message } from 'antd';
+import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
+import SignatureCanvas from './SignatureCanvas';
 import './ExitConfirmModal.less';
 
 const { RangePicker } = DatePicker;
@@ -58,7 +59,10 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
       setSwatImage('/imgs/face.png');
       setCurrent(3);
     } else {
-      setArmedPoliceSignature('/imgs/face.png');
+      if (!armedPoliceSignature) {
+        message.warning('请先签字确认');
+        return;
+      }
       handleSubmit();
     }
   };
@@ -218,21 +222,18 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     </div>
   );
 
-  const renderStep4 = () => (
+const renderStep4 = () => (
     <div className="step-content confirm-step">
-      <div className="confirm-image signature">
+      <div className="signature-wrapper">
         {armedPoliceSignature ? (
-          <img src={armedPoliceSignature} alt="签字" />
+          <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
         ) : (
-          <div className="image-placeholder">
-            <EditOutlined />
-            <span>等待签字</span>
-          </div>
+          <SignatureCanvas
+            onSave={(data) => setArmedPoliceSignature(data)}
+            onClear={() => setArmedPoliceSignature(null)}
+          />
         )}
       </div>
-      <Button type="primary" onClick={() => setArmedPoliceSignature('/imgs/face.png')}>
-        录入签字
-      </Button>
     </div>
   );
 
