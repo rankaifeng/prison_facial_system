@@ -436,11 +436,14 @@
   min-height: 0;
 
   .total-section {
-    flex-shrink: 0;
+    flex: 0.6;
     border-radius: 10px;
     border: none;
     padding: 10px;
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 
     .chart-header {
       display: flex;
@@ -518,7 +521,7 @@
   }
 
   .stats-section {
-    flex: 1;
+    flex: 1.2;
     background: @card-bg;
     border-radius: 10px;
     border: none;
@@ -811,19 +814,20 @@
 }
 
 .gender-ratio-section {
+  flex: 0.5;
   background: @card-bg;
   border-radius: 10px;
-  padding: 15px 12px;
-  min-height: 120px;
+  padding: 10px;
+  min-height: 0;
   box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  display: flex;
+  flex-direction: column;
 
   .section-header {
     display: flex;
-    align-items: center;
     gap: 6px;
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
     color: @primary-glow;
     font-size: 12px;
     font-weight: 500;
@@ -833,6 +837,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 100%;
     gap: 15px;
   }
 
@@ -842,9 +847,7 @@
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    background: rgba(0, 0, 0, 0.3);
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.3s ease;
 
     &:hover {
