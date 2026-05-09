@@ -107,7 +107,11 @@ const Dashboard = () => {
 
       <div className="dashboard-content">
         <div className="left-area">
-          <LeftPanel realtimeData={realtimeData} prisonStats={prisonStats} />
+          <LeftPanel
+            realtimeData={realtimeData}
+            prisonStats={prisonStats}
+            genderData={{ male: 680, female: 210 }}
+          />
         </div>
 
         <div className="center-area">

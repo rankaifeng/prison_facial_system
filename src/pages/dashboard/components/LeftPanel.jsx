@@ -1,7 +1,8 @@
 import React from 'react';
 import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import GenderRatio from './GenderRatio';
 
-const LeftPanel = ({ realtimeData, prisonStats }) => {
+const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
   const total = realtimeData?.total || 890;
 
   return (
@@ -22,6 +23,11 @@ const LeftPanel = ({ realtimeData, prisonStats }) => {
           </div>
         </div>
       </div>
+
+      <GenderRatio
+        maleCount={genderData?.male || 680}
+        femaleCount={genderData?.female || 210}
+      />
 
       <div className="panel-section stats-section">
         <div className="section-header">
