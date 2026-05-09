@@ -64,6 +64,7 @@ const TableLayout = (props) => {
 
     return (
         <div className='table-layout'>
+            {haderLayout && <div className="table-header">{haderLayout}</div>}
             <Table
                 bordered
                 {...restTableProps}

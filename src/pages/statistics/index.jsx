@@ -1,8 +1,11 @@
 import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Button, message } from 'antd';
+import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
+import exportToCSV from '@/utils/export';
 
 const Statistics = () => {
   const [searchParams] = useSearchParams();
@@ -13,6 +16,15 @@ const Statistics = () => {
     rowKey: 'id',
     defaultParams: prisonNameParam ? { prisonName: prisonNameParam } : {},
   });
+
+  const handleExport = () => {
+    const data = tableProps.dataSource || [];
+    if (data.length === 0) {
+      message.warning('没有可导出的数据');
+      return;
+    }
+    exportToCSV(data, columns, '进出统计');
+  };
 
   const columns = [
     { title: '分监区', dataIndex: 'prisonName', key: 'prisonName', width: 150 },
@@ -87,6 +99,14 @@ const Statistics = () => {
             <span style={{ fontSize: 16, fontWeight: 500 }}>
               {prisonNameParam ? `${prisonNameParam} - 进出统计` : '监狱进出统计'}
             </span>
+            <Button
+              type="primary"
+              icon={<ExportOutlined />}
+              onClick={handleExport}
+              style={{ background: '#1890ff', borderColor: '#1890ff' }}
+            >
+              导出
+            </Button>
           </div>
         }
         tableProps={tableProps}

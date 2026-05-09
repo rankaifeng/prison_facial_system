@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
-import { Button } from 'antd';
-import { EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, message } from 'antd';
+import { EyeOutlined, PlusOutlined, ExportOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
+import exportToCSV from '@/utils/export';
 
 const PrisonerList = () => {
   const navigate = useNavigate();
@@ -13,6 +14,15 @@ const PrisonerList = () => {
     url: '/prison_manage/prisoner_info/prisoner_info_list',
     rowKey: 'id',
   });
+
+  const handleExport = () => {
+    const data = tableProps.dataSource || [];
+    if (data.length === 0) {
+      message.warning('没有可导出的数据');
+      return;
+    }
+    exportToCSV(data, columns.filter(col => col.key !== 'action'), '罪犯档案');
+  };
 
   const columns = [
     { title: '姓名', dataIndex: 'name', key: 'name', width: 100 },
@@ -92,8 +102,10 @@ const PrisonerList = () => {
       />
       <TableLayout
         haderLayout={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-            <Button type='primary' icon={<PlusOutlined />}>新增罪犯</Button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10, gap: 12 }}>
+            <Button type="primary" icon={<ExportOutlined />} onClick={handleExport}>
+              导出
+            </Button>
           </div>
         }
         tableProps={tableProps}
