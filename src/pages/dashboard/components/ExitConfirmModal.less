@@ -1,4 +1,8 @@
 .exit-confirm-modal {
+  .ant-modal-footer {
+    padding-top: 20px;
+  }
+
   .ant-modal-content {
     background: linear-gradient(145deg, rgba(5, 10, 25, 0.98) 0%, rgba(15, 25, 50, 0.98) 50%, rgba(10, 20, 40, 0.98) 100%) !important;
     backdrop-filter: blur(20px);
@@ -18,13 +22,11 @@
       right: 0;
       bottom: 0;
       background:
-        repeating-linear-gradient(
-          0deg,
+        repeating-linear-gradient(0deg,
           transparent,
           transparent 2px,
           rgba(0, 240, 255, 0.02) 2px,
-          rgba(0, 240, 255, 0.02) 4px
-        );
+          rgba(0, 240, 255, 0.02) 4px);
       pointer-events: none;
     }
   }
@@ -87,7 +89,6 @@
 }
 
 .exit-steps {
-  margin-bottom: 28px;
   padding: 0 40px;
   position: relative;
 
@@ -99,10 +100,9 @@
     right: 60px;
     height: 2px;
     background: linear-gradient(90deg,
-      rgba(0, 240, 255, 0.6) 0%,
-      rgba(0, 240, 255, 0.2) 50%,
-      rgba(0, 240, 255, 0.1) 100%
-    );
+        rgba(0, 240, 255, 0.6) 0%,
+        rgba(0, 240, 255, 0.2) 50%,
+        rgba(0, 240, 255, 0.1) 100%);
     z-index: 0;
   }
 
@@ -184,11 +184,14 @@
 }
 
 @keyframes step-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow:
       0 0 25px rgba(0, 240, 255, 0.6),
       0 0 50px rgba(0, 240, 255, 0.3);
   }
+
   50% {
     box-shadow:
       0 0 35px rgba(0, 240, 255, 0.8),
@@ -249,12 +252,15 @@
 }
 
 @keyframes icon-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow:
       0 0 40px rgba(0, 240, 255, 0.6),
       0 0 80px rgba(0, 240, 255, 0.3),
       inset 0 -5px 20px rgba(0, 0, 0, 0.3);
   }
+
   50% {
     box-shadow:
       0 0 50px rgba(0, 240, 255, 0.8),
@@ -264,8 +270,13 @@
 }
 
 @keyframes ring-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .confirm-title {
@@ -424,7 +435,7 @@
   :global(.ant-form-item-label) {
     padding-bottom: 6px;
 
-    > label {
+    >label {
       color: rgba(255, 255, 255, 0.85) !important;
       font-size: 13px;
       letter-spacing: 1px;
@@ -501,7 +512,7 @@
     padding: 0 12px !important;
     height: 42px;
 
-    &-input > input {
+    &-input>input {
       color: #fff !important;
     }
   }
