@@ -142,7 +142,7 @@ series: [
         chart.setOption(option);
 
         chart.on('click', (params) => {
-          if (params.name) {
+          if (params.seriesType === 'effectScatter' && params.name) {
             navigate(`/statistics?prisonName=${encodeURIComponent(params.name)}`);
           }
         });
