@@ -110,12 +110,6 @@ const Permission = () => {
         onReset={search.reset}
       />
       <TableLayout
-        haderLayout={
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 500 }}>人员账号管理</span>
-            <Button type='primary' icon={<PlusOutlined />}>新增账号</Button>
-          </div>
-        }
         tableProps={tableProps}
         loading={loading}
         columns={columns}

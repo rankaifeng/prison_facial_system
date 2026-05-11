@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as echarts from 'echarts';
 //center: [114, 23], { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 510, workCount: 395 },
+
+//用户表 档案表 出入记录表
 const PrisonMap = () => {
   const chartRef = useRef(null);
   const navigate = useNavigate();

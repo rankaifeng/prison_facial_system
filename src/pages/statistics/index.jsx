@@ -95,16 +95,8 @@ const Statistics = () => {
       />
       <TableLayout
         haderLayout={
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 500 }}>
-              {prisonNameParam ? `${prisonNameParam} - 进出统计` : '监狱进出统计'}
-            </span>
-            <Button
-              type="primary"
-              icon={<ExportOutlined />}
-              onClick={handleExport}
-              style={{ background: '#1890ff', borderColor: '#1890ff' }}
-            >
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10, gap: 12 }}>
+            <Button type="primary" icon={<ExportOutlined />} onClick={handleExport}>
               导出
             </Button>
           </div>
