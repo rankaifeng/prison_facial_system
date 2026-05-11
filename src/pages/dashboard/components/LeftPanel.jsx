@@ -32,10 +32,10 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
         </div>
       </div>
 
-      <GenderRatio
+      {/* <GenderRatio
         maleCount={genderData?.male || 680}
         femaleCount={genderData?.female || 210}
-      />
+      /> */}
 
       <div className="panel-section stats-section">
         <div className="section-header">
