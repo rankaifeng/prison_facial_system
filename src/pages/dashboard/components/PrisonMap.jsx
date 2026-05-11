@@ -14,6 +14,7 @@ const PrisonMap = () => {
     { name: '分监区五', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 445, workCount: 360 },
     { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 510, workCount: 395 },
     { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 389, workCount: 298 },
+    { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, workCount: 0 },
   ];
 
   useEffect(() => {
@@ -54,7 +55,7 @@ const PrisonMap = () => {
         });
 
         prisons.forEach(p => {
-          const center = provinceCenters[p.province + '省'] || provinceCenters[p.province];
+          const center = provinceCenters[p.province + '省'] || provinceCenters[p.province + '市'] || provinceCenters[p.province + '自治区'] || provinceCenters[p.province];
           if (center) {
             p.coordinates = center;
           }
@@ -87,7 +88,7 @@ const PrisonMap = () => {
               label: { show: false },
             },
           },
-series: [
+          series: [
             {
               name: '监狱',
               type: 'effectScatter',
