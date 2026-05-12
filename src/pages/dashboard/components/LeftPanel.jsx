@@ -21,7 +21,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
           </div>
         </div>
         <div className="total-display">
-          <div className="total-circle">
+          <div className="total-circle" style={{ marginTop: 20 }}>
             <div className="total-value">{total}</div>
             <div className="total-unit">人</div>
           </div>
