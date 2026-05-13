@@ -115,10 +115,21 @@ const PrisonerDetail = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ marginBottom: 12, flexShrink: 0 }}>
+      <div style={{
+        marginBottom: 16,
+        marginTop: 8,
+        flexShrink: 0,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+      }}>
         <Button
+          type="primary"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/prisoners')}
+          style={{ borderRadius: 6 }}
         >
           返回列表
         </Button>
