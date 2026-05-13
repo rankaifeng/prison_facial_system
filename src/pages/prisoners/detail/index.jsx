@@ -10,8 +10,6 @@ import {
   FileTextOutlined,
   LockOutlined,
   VideoCameraOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined
 } from '@ant-design/icons';
 import { prisoner, exitRecord } from '@/api/globApi';
 import TableLayout from '@/components/table-layout';
@@ -46,13 +44,6 @@ const PrisonerDetail = () => {
     }
   };
 
-  const getConfirmTag = (confirmed) => {
-    if (confirmed) {
-      return <Tag color="success" icon={<CheckCircleOutlined />}>已确认</Tag>;
-    }
-    return <Tag color="error" icon={<CloseCircleOutlined />}>未确认</Tag>;
-  };
-
   const exitColumns = [
     { title: '出监时间', dataIndex: 'exitTime', key: 'exitTime', width: 160 },
     { title: '出监原因', dataIndex: 'exitReason', key: 'exitReason', width: 120 },
@@ -62,33 +53,49 @@ const PrisonerDetail = () => {
       dataIndex: 'policeConfirm',
       key: 'policeConfirm',
       width: 100,
-      render: (val) => getConfirmTag(val)
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     {
       title: '特警确认',
       dataIndex: 'swatConfirm',
       key: 'swatConfirm',
       width: 100,
-      render: (val) => getConfirmTag(val)
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     {
       title: '武警确认',
       dataIndex: 'armedPoliceConfirm',
       key: 'armedPoliceConfirm',
       width: 100,
-      render: (val) => getConfirmTag(val)
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     { title: '回监时间', dataIndex: 'returnTime', key: 'returnTime', width: 160 },
     {
       title: '监控录像',
       dataIndex: 'videoRecord',
       key: 'videoRecord',
-      width: 100,
+      width: 120,
       render: (val) => val ? (
-        <Tag color="blue" icon={<VideoCameraOutlined />}>有录像</Tag>
+        <video
+          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          controls
+          style={{ width: 100, height: 50, objectFit: 'cover', borderRadius: 4 }}
+        />
       ) : (
-        <Tag color="default">无录像</Tag>
-      )
+        <Tag color="default" icon={<VideoCameraOutlined />}>无录像</Tag>
+      ),
     },
   ];
 

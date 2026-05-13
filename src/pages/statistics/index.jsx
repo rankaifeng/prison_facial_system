@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, message } from 'antd';
-import { ExportOutlined } from '@ant-design/icons';
+import { Button, message, Tag } from 'antd';
+import { ExportOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
@@ -38,24 +38,50 @@ const Statistics = () => {
       dataIndex: 'policeConfirm',
       key: 'policeConfirm',
       width: 100,
-      render: (val) => val ? '✓' : '✗',
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     {
       title: '特警确认',
       dataIndex: 'swatConfirm',
       key: 'swatConfirm',
       width: 100,
-      render: (val) => val ? '✓' : '✗',
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     {
       title: '武警确认',
       dataIndex: 'armedPoliceConfirm',
       key: 'armedPoliceConfirm',
       width: 100,
-      render: (val) => val ? '✓' : '✗',
+      render: (val) => val ? (
+        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+      ),
     },
     { title: '回监时间', dataIndex: 'returnTime', key: 'returnTime', width: 160 },
-    { title: '监控录像', dataIndex: 'videoRecord', key: 'videoRecord', ellipsis: true },
+    {
+      title: '监控录像',
+      dataIndex: 'videoRecord',
+      key: 'videoRecord',
+      width: 120,
+      render: (val) => val ? (
+        <video
+          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          controls
+          style={{ width: 100, height: 50, objectFit: 'cover', borderRadius: 4 }}
+        />
+      ) : (
+        <Tag color="default" icon={<VideoCameraOutlined />}>无录像</Tag>
+      ),
+    },
   ];
 
   const searchItems = useMemo(() => [
