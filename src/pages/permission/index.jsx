@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button, message, Modal, Form, Input, Select } from 'antd';
-import { LockOutlined, ExclamationCircleOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
@@ -31,35 +31,23 @@ const AccountManagement = () => {
   });
 
   const columns = [
-    { title: '账号', dataIndex: 'username', key: 'username', width: 150 },
-    { title: '所属分监区', dataIndex: 'prison_name', key: 'prison_name', width: 120 },
-    {
-      title: '密码',
-      dataIndex: 'password',
-      key: 'password',
-      width: 150,
-      render: () => '********',
-    },
+    { title: '账号', dataIndex: 'username', key: 'username'},
+    { title: '所属分监区', dataIndex: 'prison_name', key: 'prison_name'},
     {
       title: '操作',
-      key: 'action',
-      width: 100,
       fixed: 'right',
+      width: 120,
       render: (_, record) => {
         const isAdmin = record.role === 'admin' || record.role_name === '管理员';
-        const isSelf = record.name === currentUser;
-
         return (
-          <>
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              disabled={isAdmin}
-              onClick={() => handleEdit(record)}
-            >
-              编辑
-            </Button>
-          </>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            disabled={isAdmin}
+            onClick={() => handleEdit(record)}
+          >
+            编辑
+          </Button>
         );
       },
     },
@@ -125,27 +113,6 @@ const AccountManagement = () => {
     }
   };
 
-  const handleResetPassword = (record) => {
-    confirm({
-      title: '确认重置密码',
-      icon: <ExclamationCircleOutlined />,
-      content: `确定要重置 ${record.name} 的密码吗？重置后密码将恢复为默认密码：123456`,
-      okText: '确认',
-      cancelText: '取消',
-      onOk: async () => {
-        setLoading(true);
-        try {
-          await http.post('/prison_manage/account/reset_password', { id: record.id });
-          message.success('密码重置成功');
-          refresh();
-        } catch (error) {
-          message.error('重置失败');
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-  };
 
   return (
     <div>

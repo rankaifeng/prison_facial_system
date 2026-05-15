@@ -62,6 +62,9 @@ const TableLayout = (props) => {
         return [indexColumn, ...processedColumns];
     }, [columns, pagination, isTreeData]);
 
+    console.log(customizedPagination?.total);
+    //scroll={{ x: 'max-content', y: 'calc(100vh - 320px)' }}
+    //scroll={customizedPagination?.total > 0 ? { x: 'max-content', y: width >= 1920 ? 'calc(100vh - 200px)' : 'calc(100vh - 350px)' } : false}
     return (
         <div className='table-layout'>
             {headerLayout && <div className="table-header">{headerLayout}</div>}
