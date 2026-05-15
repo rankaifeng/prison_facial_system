@@ -32,7 +32,8 @@ const getNameFromPath = (path) => {
     prisoners: '档案库',
     statistics: '进出统计',
     'exit-records': '出狱信息',
-    permission: '权限管理',
+    permission: '账号管理',
+    'type-management': '类型管理',
     list: '列表',
     detail: '详情',
   };
