@@ -1,16 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Button, message, Modal, Form, Input, Select } from 'antd';
-import { ExclamationCircleOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, message, Modal, Form, Input, Select, Popconfirm } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import http from '@/server/axios';
-import cache from '@/utils/cache';
-
-const { confirm } = Modal;
 
 const AccountManagement = () => {
-  const currentUser = cache.getVal("userName");
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -40,14 +36,30 @@ const AccountManagement = () => {
       render: (_, record) => {
         const isAdmin = record.role === 'admin' || record.role_name === '管理员';
         return (
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            disabled={isAdmin}
-            onClick={() => handleEdit(record)}
+          <Popconfirm
+            title="确认删除"
+            description={`确定要删除账号"${record.username}"吗？`}
+            onConfirm={async () => {
+              try {
+                await http.post('/prison_manage/account/account_delete', { id: record.id });
+                message.success('删除成功');
+                refresh();
+              } catch (error) {
+                message.error('删除失败');
+              }
+            }}
+            okText="确认"
+            cancelText="取消"
           >
-            编辑
-          </Button>
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              disabled={isAdmin}
+            >
+              删除
+            </Button>
+          </Popconfirm>
         );
       },
     },
@@ -66,36 +78,6 @@ const AccountManagement = () => {
     setEditingRecord(null);
     form.resetFields();
     setModalVisible(true);
-  };
-
-  const handleEdit = (record) => {
-    setEditingRecord(record);
-    form.setFieldsValue({
-      username: record.username,
-      name: record.name,
-      role: record.role,
-      prison_id: record.prison_id,
-    });
-    setModalVisible(true);
-  };
-
-  const handleDelete = (record) => {
-    confirm({
-      title: '确认删除',
-      icon: <ExclamationCircleOutlined />,
-      content: `确定要删除账号"${record.username}"吗？`,
-      okText: '确认',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await http.post('/prison_manage/account/account_delete', { id: record.id });
-          message.success('删除成功');
-          refresh();
-        } catch (error) {
-          message.error('删除失败');
-        }
-      },
-    });
   };
 
   const handleModalOk = async () => {
