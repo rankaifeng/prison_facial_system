@@ -881,6 +881,13 @@
         font-size: 16px;
         flex-shrink: 0;
 
+        &.exit-total-icon {
+          background: rgba(0, 240, 255, 0.2);
+          color: #00f0ff;
+          box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+
         &.in-prison {
           background: rgba(24, 119, 255, 0.2);
           color: #1890ff;
@@ -921,6 +928,22 @@
           background: rgba(255, 138, 0, 0.2);
           color: #ff8a00;
           box-shadow: 0 0 10px rgba(255, 138, 0, 0.3);
+        }
+      }
+
+      .exit-total {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(24, 119, 255, 0.1) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.3);
+
+        .stat-content {
+          .stat-label {
+            color: @primary-glow;
+            font-weight: 600;
+          }
+          .stat-number {
+            color: @primary-glow;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
+          }
         }
       }
 

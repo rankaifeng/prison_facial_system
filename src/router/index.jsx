@@ -7,6 +7,7 @@ import PrisonerDetail from '@/pages/prisoners/detail';
 import Statistics from '@/pages/statistics';
 import ExitRecords from '@/pages/exit-records';
 import Permission from '@/pages/permission';
+import TypeManagement from '@/pages/type-management';
 
 const routes = [
   { path: '/login', element: <Login /> },
@@ -18,8 +19,8 @@ const routes = [
       { path: '/prisoners', element: <PrisonerList /> },
       { path: '/prisoners/:id', element: <PrisonerDetail /> },
       { path: '/statistics', element: <Statistics /> },
-      // { path: '/exit-records', element: <ExitRecords /> },
       { path: '/permission', element: <Permission /> },
+      { path: '/type-management', element: <TypeManagement /> },
     ],
   },
   { path: '*', element: <div>404 Not Found</div> }

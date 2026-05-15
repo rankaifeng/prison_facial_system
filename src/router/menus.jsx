@@ -3,13 +3,14 @@ import {
   TeamOutlined,
   FileTextOutlined,
   SafetyCertificateOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 
 export const allMenus = [
   {
     key: "/dashboard",
     icon: <DashboardOutlined />,
-    label: "首页大屏",
+    label: "首页",
   },
   {
     key: "/prisoners",
@@ -21,15 +22,15 @@ export const allMenus = [
     icon: <FileTextOutlined />,
     label: "进出统计",
   },
-  // {
-  //   key: "/exit-records",
-  //   icon: <FileTextOutlined />,
-  //   label: "出狱信息",
-  // },
   {
     key: "/permission",
     icon: <SafetyCertificateOutlined />,
-    label: "权限管理",
+    label: "账号管理",
+  },
+  {
+    key: "/type-management",
+    icon: <AppstoreOutlined />,
+    label: "类型管理",
   },
 ];
 

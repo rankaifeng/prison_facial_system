@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -8,6 +8,7 @@ import StatisticsChart from './components/StatisticsChart';
 import StatusPieChart from './components/StatusPieChart';
 import PrisonMap from './components/PrisonMap';
 import ExitConfirmModal from './components/ExitConfirmModal';
+import EnterConfirmModal from './components/EnterConfirmModal';
 import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [workData, setWorkData] = useState([]);
   const [messages, setMessages] = useState([]);
   const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
 
@@ -70,7 +72,8 @@ const Dashboard = () => {
       { key: '/dashboard', label: '首页大屏' },
       { key: '/prisoners', label: '档案库' },
       { key: '/statistics', label: '进出统计' },
-      { key: '/permission', label: '权限管理' },
+      { key: '/permission', label: '账号管理' },
+      { key: '/type-management', label: '类型管理' },
     ],
     onClick: ({ key }) => navigate(key),
   };
@@ -103,6 +106,14 @@ const Dashboard = () => {
             className="exit-btn"
           >
             出监确认
+          </Button>
+          <Button
+            type="primary"
+            icon={<LoginOutlined />}
+            onClick={() => setEnterModalOpen(true)}
+            className="exit-btn"
+          >
+            入监确认
           </Button>
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
@@ -181,6 +192,11 @@ const Dashboard = () => {
         open={exitModalOpen}
         onCancel={() => setExitModalOpen(false)}
         onOk={() => setExitModalOpen(false)}
+      />
+      <EnterConfirmModal
+        open={enterModalOpen}
+        onCancel={() => setEnterModalOpen(false)}
+        onOk={() => setEnterModalOpen(false)}
       />
     </div>
   );

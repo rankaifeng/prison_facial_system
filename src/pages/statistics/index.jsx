@@ -120,7 +120,7 @@ const Statistics = () => {
         onReset={search.reset}
       />
       <TableLayout
-        haderLayout={
+        headerLayout={
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10, gap: 12 }}>
             <Button type="primary" icon={<ExportOutlined />} onClick={handleExport}>
               导出

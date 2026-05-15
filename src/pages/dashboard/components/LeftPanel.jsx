@@ -1,9 +1,16 @@
 import React from 'react';
-import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import GenderRatio from './GenderRatio';
 
 const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
   const total = realtimeData?.total || 890;
+
+  // 计算出监总人数 = 各类型数量之和
+  const exitTotalCount = (prisonStats?.inPrison || 0) +
+    (prisonStats?.working || 0) +
+    (prisonStats?.hospital || 0) +
+    (prisonStats?.isolated || 0) +
+    (prisonStats?.quarantine || 0);
 
   return (
     <div className="left-panel">
@@ -48,6 +55,16 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             <span className="decor-dot"></span>
             <span className="decor-dot"></span>
             <span className="decor-dot"></span>
+          </div>
+        </div>
+        {/* 出监总人数 */}
+        <div className="stat-box exit-total">
+          <div className="stat-icon exit-total-icon">
+            <ArrowUpOutlined />
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">当天出监总人数</div>
+            <div className="stat-number">{exitTotalCount}</div>
           </div>
         </div>
         <div className="stats-grid">

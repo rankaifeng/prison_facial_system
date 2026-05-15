@@ -3,7 +3,7 @@ import './index.less';
 import { Table } from 'antd';
 
 const TableLayout = (props) => {
-    const { tableProps, loading, columns, haderLayout } = props;
+    const { tableProps, loading, columns, headerLayout } = props;
 
     const { pagination, dataSource, ...restTableProps } = tableProps;
 
@@ -64,7 +64,7 @@ const TableLayout = (props) => {
 
     return (
         <div className='table-layout'>
-            {haderLayout && <div className="table-header">{haderLayout}</div>}
+            {headerLayout && <div className="table-header">{headerLayout}</div>}
             <Table
                 bordered
                 {...restTableProps}
