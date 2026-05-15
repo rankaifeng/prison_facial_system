@@ -2,6 +2,9 @@ import jwt
 import time
 from datetime import datetime, timedelta
 from django.conf import settings
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth import get_user_model
 
 
 SECRET_KEY = settings.SECRET_KEY
@@ -33,3 +36,27 @@ def verify_token(token):
         return None
     except jwt.InvalidTokenError:
         return None
+
+
+class JWTAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        if not auth_header:
+            return None
+
+        parts = auth_header.split()
+        if len(parts) != 2 or parts[0].lower() != 'bearer':
+            return None
+
+        token = parts[1]
+        payload = verify_token(token)
+        if payload is None:
+            raise AuthenticationFailed('无效的token')
+
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=payload['user_id'])
+        except User.DoesNotExist:
+            raise AuthenticationFailed('用户不存在')
+
+        return (user, token)

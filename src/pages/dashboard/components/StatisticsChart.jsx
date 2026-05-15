@@ -109,32 +109,6 @@ const StatisticsChart = ({ data }) => {
           data: [],
         },
       ],
-      graphic: [
-        {
-          type: 'text',
-          left: '50%',
-          top: '78%',
-          style: {
-            text: '人',
-            fill: 'rgba(255, 255, 255, 0.6)',
-            fontSize: 14,
-            textAlign: 'center',
-          },
-          transform: 'translate(-50%, 0)',
-        },
-        {
-          type: 'text',
-          left: '50%',
-          top: '85%',
-          style: {
-            text: `目标: ${maxValue}`,
-            fill: 'rgba(255, 255, 255, 0.4)',
-            fontSize: 10,
-            textAlign: 'center',
-          },
-          transform: 'translate(-50%, 0)',
-        },
-      ],
     };
 
     chart.setOption(option);

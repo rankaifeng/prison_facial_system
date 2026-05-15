@@ -22,7 +22,7 @@ const AccountManagement = () => {
   }, []);
 
   const { tableProps, form: searchForm, search, refresh } = useQueryTable({
-    url: '/prison_manage/account/account_list',
+    url: '/user_manage/account/account_list',
     rowKey: 'id',
   });
 
@@ -41,7 +41,7 @@ const AccountManagement = () => {
             description={`确定要删除账号"${record.username}"吗？`}
             onConfirm={async () => {
               try {
-                await http.post('/prison_manage/account/account_delete', { id: record.id });
+                await http.post('/user_manage/account/account_delete', { id: record.id });
                 message.success('删除成功');
                 refresh();
               } catch (error) {
@@ -83,11 +83,8 @@ const AccountManagement = () => {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      const isEdit = !!editingRecord;
-      const apiUrl = isEdit ? '/prison_manage/account/account_update' : '/prison_manage/account/account_add';
-      const payload = isEdit ? { ...editingRecord, ...values } : values;
-      await http.post(apiUrl, payload);
-      message.success(isEdit ? '更新成功' : '新增成功');
+      await http.post('/user_manage/account/account_add', values);
+      message.success('新增成功');
       setModalVisible(false);
       refresh();
     } catch (error) {

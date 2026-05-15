@@ -87,7 +87,7 @@ TIME_ZONE = 'Asia/Shanghai'
 USE_I18N = True
 USE_TZ = True
 
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -109,6 +109,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'apps.users.views.custom_exception_handler',
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
