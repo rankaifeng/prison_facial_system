@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import SignatureCanvas from './SignatureCanvas';
 import './ExitConfirmModal.less';
 
 const EnterConfirmModal = ({ open, onCancel, onOk }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
-  const [policeSignature, setPoliceSignature] = useState(null);
+  const [policeImage, setPoliceImage] = useState(null);
 
   const handleNext = async () => {
     if (current === 0) {
@@ -18,8 +17,8 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
         return;
       }
     } else {
-      if (!policeSignature) {
-        message.warning('请先签字确认');
+      if (!policeImage) {
+        message.warning('请先录入人脸');
         return;
       }
       handleSubmit();
@@ -34,7 +33,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
     const values = form.getFieldsValue();
     const data = {
       ...values,
-      policeSignature,
+      policeImage,
     };
     message.success('提交成功');
     onOk?.(data);
@@ -44,7 +43,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
   const handleReset = () => {
     form.resetFields();
     setCurrent(0);
-    setPoliceSignature(null);
+    setPoliceImage(null);
     onCancel?.();
   };
 
@@ -94,16 +93,19 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
 
   const renderStep2 = () => (
     <div className="step-content confirm-step">
-      <div className="signature-wrapper">
-        {policeSignature ? (
-          <img src={policeSignature} alt="签字" className="signature-preview" />
+      <div className="confirm-image">
+        {policeImage ? (
+          <img src={policeImage} alt="民警人脸" />
         ) : (
-          <SignatureCanvas
-            onSave={(data) => setPoliceSignature(data)}
-            onClear={() => setPoliceSignature(null)}
-          />
+          <div className="image-placeholder">
+            <UserOutlined />
+            <span>等待录入</span>
+          </div>
         )}
       </div>
+      <Button type="primary" onClick={() => setPoliceImage('/imgs/face.png')}>
+        确认
+      </Button>
     </div>
   );
 

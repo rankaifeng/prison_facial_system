@@ -56,15 +56,8 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             <span className="decor-dot"></span>
             <span className="decor-dot"></span>
           </div>
-        </div>
-        {/* 出监总人数 */}
-        <div className="stat-box exit-total">
-          <div className="stat-icon exit-total-icon">
-            <ArrowUpOutlined />
-          </div>
-          <div className="stat-content">
-            <div className="stat-label">当天出监总人数</div>
-            <div className="stat-number">{exitTotalCount}</div>
+          <div className="header-stat">
+            <span>当天出监总人数：{exitTotalCount}</span>
           </div>
         </div>
         <div className="stats-grid">
