@@ -1,9 +1,23 @@
 from django.urls import path, re_path
-from .views import LoginView, AccountListView, AccountDeleteView
+from .controllers import (
+    LoginController,
+    AccountListController,
+    AccountDeleteController,
+    ExitRecordController,
+    EntryRecordController,
+    RealtimeStatisticsController,
+    WorkStatisticsController,
+    RecordListController,
+)
 
 urlpatterns = [
-    re_path(r'^user_login/user_login_web/?$', LoginView.as_view(), name='login'),
-    re_path(r'^account/account_list/?$', AccountListView.as_view(), name='account_list'),
-    re_path(r'^account/account_add/?$', AccountListView.as_view(), name='account_add'),
-    re_path(r'^account/account_delete/?$', AccountDeleteView.as_view(), name='account_delete'),
+    re_path(r'^user_login/user_login_web/?$', LoginController.as_view(), name='login'),
+    re_path(r'^account/account_list/?$', AccountListController.as_view(), name='account_list'),
+    re_path(r'^account/account_add/?$', AccountListController.as_view(), name='account_add'),
+    re_path(r'^account/account_delete/?$', AccountDeleteController.as_view(), name='account_delete'),
+    re_path(r'^exit_record/submit/?$', ExitRecordController.as_view(), name='exit_record'),
+    re_path(r'^entry_record/submit/?$', EntryRecordController.as_view(), name='entry_record'),
+    re_path(r'^statistics/realtime/?$', RealtimeStatisticsController.as_view(), name='realtime_statistics'),
+    re_path(r'^statistics/work/?$', WorkStatisticsController.as_view(), name='work_statistics'),
+    re_path(r'^record/list/?$', RecordListController.as_view(), name='record_list'),
 ]

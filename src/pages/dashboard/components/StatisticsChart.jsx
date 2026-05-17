@@ -64,7 +64,7 @@ const StatisticsChart = ({ data }) => {
           data: [
             {
               value: totalValue,
-              name: '出工人数',
+              name: '出监人数',
               title: {
                 offsetCenter: ['0%', '30%'],
                 color: 'rgba(255, 255, 255, 0.7)',
@@ -127,7 +127,7 @@ const StatisticsChart = ({ data }) => {
       <div className="chart-header">
         <div className="header-content">
           <PieChartOutlined />
-          <span>出工统计</span>
+          <span>当日出监人数统计</span>
         </div>
         <div className="header-line"></div>
         <div className="header-decor">
