@@ -567,6 +567,151 @@ GET /user_manage/record/list?type=exit&start_date=2026-05-01&end_date=2026-05-15
 
 ---
 
+### 出监原因管理模块
+
+> 以下接口需要登录认证（JWT Token）
+
+---
+
+#### 5.10 获取出监原因列表
+- **接口路径**: `GET /user_manage/exit_type/list`
+- **认证方式**: Bearer Token (JWT)
+
+**请求参数 (Query):**
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| type_name | string | 否 | 出监原因名称（模糊搜索） |
+
+**请求示例:**
+```
+GET /user_manage/exit_type/list?type_name=刑满
+```
+
+**响应示例:**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    {
+      "id": 1,
+      "type_name": "刑满释放",
+      "parent_id": null,
+      "sort_order": 0,
+      "status": "active"
+    }
+  ],
+  "num": 1
+}
+```
+
+---
+
+#### 5.11 新增出监原因
+- **接口路径**: `POST /user_manage/exit_type/add`
+- **认证方式**: Bearer Token (JWT)
+
+**请求参数 (application/json):**
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| type_name | string | 是 | 出监原因名称 |
+| parent_id | int | 否 | 父级ID（用于二级分类） |
+| sort_order | int | 否 | 排序值（默认 0） |
+| status | string | 否 | 状态：active（启用）/ disabled（停用），默认 active |
+
+**请求示例:**
+```json
+{
+  "type_name": "外出就医",
+  "sort_order": 1,
+  "status": "active"
+}
+```
+
+**响应示例:**
+```json
+{
+  "code": 200,
+  "message": "新增成功",
+  "data": {
+    "id": 2,
+    "type_name": "外出就医",
+    "parent_id": null,
+    "sort_order": 1,
+    "status": "active"
+  }
+}
+```
+
+---
+
+#### 5.12 更新出监原因
+- **接口路径**: `POST /user_manage/exit_type/update`
+- **认证方式**: Bearer Token (JWT)
+
+**请求参数 (application/json):**
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | int | 是 | 出监原因ID |
+| type_name | string | 是 | 出监原因名称 |
+| parent_id | int | 否 | 父级ID |
+| sort_order | int | 否 | 排序值 |
+| status | string | 否 | 状态：active（启用）/ disabled（停用） |
+
+**请求示例:**
+```json
+{
+  "id": 2,
+  "type_name": "外出就医（已更新）",
+  "sort_order": 2,
+  "status": "active"
+}
+```
+
+**响应示例:**
+```json
+{
+  "code": 200,
+  "message": "更新成功",
+  "data": {
+    "id": 2,
+    "type_name": "外出就医（已更新）",
+    "parent_id": null,
+    "sort_order": 2,
+    "status": "active"
+  }
+}
+```
+
+---
+
+#### 5.13 删除出监原因
+- **接口路径**: `POST /user_manage/exit_type/delete`
+- **认证方式**: Bearer Token (JWT)
+
+**请求参数 (application/json):**
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | int | 是 | 出监原因ID |
+
+**请求示例:**
+```json
+{
+  "id": 2
+}
+```
+
+**响应示例:**
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+---
+
 ## 六、角色权限
 
 | 角色 | 说明 | 权限 |

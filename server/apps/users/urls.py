@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import re_path
 from .controllers import (
     LoginController,
     AccountListController,
@@ -8,6 +8,10 @@ from .controllers import (
     RealtimeStatisticsController,
     WorkStatisticsController,
     RecordListController,
+    ExitTypeListController,
+    ExitTypeAddController,
+    ExitTypeUpdateController,
+    ExitTypeDeleteController,
 )
 
 urlpatterns = [
@@ -20,4 +24,8 @@ urlpatterns = [
     re_path(r'^statistics/realtime/?$', RealtimeStatisticsController.as_view(), name='realtime_statistics'),
     re_path(r'^statistics/work/?$', WorkStatisticsController.as_view(), name='work_statistics'),
     re_path(r'^record/list/?$', RecordListController.as_view(), name='record_list'),
+    re_path(r'^exit_type/list/?$', ExitTypeListController.as_view(), name='exit_type_list'),
+    re_path(r'^exit_type/add/?$', ExitTypeAddController.as_view(), name='exit_type_add'),
+    re_path(r'^exit_type/update/?$', ExitTypeUpdateController.as_view(), name='exit_type_update'),
+    re_path(r'^exit_type/delete/?$', ExitTypeDeleteController.as_view(), name='exit_type_delete'),
 ]
