@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
 from apps.users.serializers import AccountCreateSerializer
 from apps.users.services import AccountService
+from apps.users.dict import get_prison_area_name
 
 
 class AccountListController(APIView):
@@ -45,13 +46,14 @@ class AccountListController(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        prison_id = data.get('prison_id', '')
         success, message, result = AccountService.create_account(
             username=data.get('username'),
             password=data.get('password', '123456'),
             name=data.get('name', ''),
             role=data.get('role', 'user'),
-            prison_id=data.get('prison_id', ''),
-            prison_name=data.get('prison_name', ''),
+            prison_id=prison_id,
+            prison_name=get_prison_area_name(prison_id) if prison_id else '',
         )
 
         if not success:

@@ -43,6 +43,9 @@ class RecordService(BaseService):
         operator_id, operator_name
     ):
         with transaction.atomic():
+            # 保存武警签名为图片文件
+            signature_path = RecordService.save_image(armed_police_signature, 'signature')
+
             record = RecordRepository.create(
                 prisoner_no=prisoner_no,
                 prisoner_name=prisoner_name,
@@ -55,7 +58,7 @@ class RecordService(BaseService):
                 police_face=police_face,
                 police_name=operator_name,
                 swat_face=swat_face,
-                armed_police_signature=armed_police_signature,
+                armed_police_signature=signature_path,
                 operator_id=operator_id,
                 operator_name=operator_name,
                 status='completed',
@@ -88,6 +91,19 @@ class RecordService(BaseService):
         entry_date, police_face, operator_id, operator_name
     ):
         with transaction.atomic():
+            # 查找该罪犯的最后一条出监记录，获取出监原因
+            exit_record = RecordRepository.get_last_exit_by_prisoner_no(prisoner_no)
+            exit_reason = exit_record.reason if exit_record else None
+
+            # 出监原因映射
+            reason_map = {
+                '刑满释放': 'exit_reason_1',
+                '外出就医': 'exit_reason_2',
+                '外出教育': 'exit_reason_3',
+                '离监探亲': 'exit_reason_4',
+                '押回重审': 'exit_reason_5',
+            }
+
             record = RecordRepository.create(
                 prisoner_no=prisoner_no,
                 prisoner_name=prisoner_name,
@@ -105,10 +121,29 @@ class RecordService(BaseService):
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
             stat.entry_count += 1
-            stat.in_prison_count += 1
-            StatisticsRepository.update_daily_stats(stat, entry_count=stat.entry_count, in_prison_count=stat.in_prison_count)
+            stat.exit_count = max(0, stat.exit_count - 1)  # 不能为负数
 
-            logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
+            # 减少对应的出监原因计数
+            if exit_reason:
+                reason_field = reason_map.get(exit_reason)
+                if reason_field:
+                    current_value = getattr(stat, reason_field)
+                    setattr(stat, reason_field, max(0, current_value - 1))
+
+            StatisticsRepository.update_daily_stats(
+                stat,
+                entry_count=stat.entry_count,
+                exit_count=stat.exit_count,
+                exit_reason_1=stat.exit_reason_1,
+                exit_reason_2=stat.exit_reason_2,
+                exit_reason_3=stat.exit_reason_3,
+                exit_reason_4=stat.exit_reason_4,
+                exit_reason_5=stat.exit_reason_5,
+            )
+
+            logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
+
+            return True, '提交成功', {'id': record.id, 'status': record.status}
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -122,15 +157,38 @@ class RecordService(BaseService):
 
         data = []
         for record in records:
+            # 构建完整的 HTTP 图片 URL
+            # path 格式: /media/faces/xxx.jpg
+            def build_image_url(path):
+                if not path:
+                    return None
+                if path.startswith('http'):
+                    return path
+                return f"http://localhost:8000{path}"
+
+            # 入监记录需要显示出监原因
+            exit_reason = None
+            if record.type == 'entry':
+                exit_record = RecordRepository.get_last_exit_by_prisoner_no(record.prisoner_no)
+                exit_reason = exit_record.reason if exit_record else None
+
             data.append({
                 'id': record.id,
                 'prisoner_no': record.prisoner_no,
                 'prisoner_name': record.prisoner_name,
+                'prisoner_photo': build_image_url(record.prisoner_photo),
                 'prison_area_name': record.prison_area_name,
                 'type': record.type,
-                'reason': record.reason,
+                'reason': record.reason,  # 入监时填写的理由（可为空）
+                'exit_reason': exit_reason,  # 出监原因（入监记录特有）
                 'exit_date': record.exit_date,
                 'entry_date': record.entry_date,
+                'police_face': build_image_url(record.police_face),
+                'police_name': record.police_name,
+                'swat_face': build_image_url(record.swat_face),
+                'swat_name': record.swat_name,
+                'armed_police_signature': build_image_url(record.armed_police_signature),
+                'armed_police_name': record.armed_police_name,
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             })
@@ -148,15 +206,29 @@ class RecordService(BaseService):
         if not record:
             return False, '记录不存在', None
 
+        def build_image_url(path):
+            if not path:
+                return None
+            if path.startswith('http'):
+                return path
+            return f"http://localhost:8000{path}"
+
         return True, '获取成功', {
             'id': record.id,
             'prisoner_no': record.prisoner_no,
             'prisoner_name': record.prisoner_name,
+            'prisoner_photo': build_image_url(record.prisoner_photo),
             'prison_area': record.prison_area,
             'prison_area_name': record.prison_area_name,
             'type': record.type,
             'reason': record.reason,
             'exit_date': record.exit_date,
             'entry_date': record.entry_date,
+            'police_face': build_image_url(record.police_face),
+            'police_name': record.police_name,
+            'swat_face': build_image_url(record.swat_face),
+            'swat_name': record.swat_name,
+            'armed_police_signature': build_image_url(record.armed_police_signature),
+            'armed_police_name': record.armed_police_name,
             'status': record.status,
         }

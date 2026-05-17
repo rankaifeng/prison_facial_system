@@ -15,6 +15,15 @@ class ExitTypeRepository:
             return None
 
     @staticmethod
+    def get_type_name(exit_type_id):
+        """根据 ID 获取出监原因名称"""
+        try:
+            exit_type = ExitType.objects.get(id=exit_type_id)
+            return exit_type.type_name
+        except ExitType.DoesNotExist:
+            return None
+
+    @staticmethod
     def exists_by_sibling_name(type_name, parent_id=None, exclude_id=None):
         queryset = ExitType.objects.filter(type_name=type_name)
         if parent_id:

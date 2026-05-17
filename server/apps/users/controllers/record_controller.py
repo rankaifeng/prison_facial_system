@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
 from apps.users.services import RecordService
+from apps.users.dict import get_prison_area_name
+from apps.users.repositories import ExitTypeRepository
 
 
 class ExitRecordController(APIView):
@@ -16,10 +18,11 @@ class ExitRecordController(APIView):
         prisoner_no = data.get('prisoner_no')
         prisoner_name = data.get('prisoner_name')
         prisoner_photo = data.get('prisoner_photo')
-        prison_area = data.get('prison_area')
-        prison_area_name = data.get('prison_area_name')
+        prison_area = data.get('prison_area')  # 前端传入的是 ID
+        prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         exit_date = data.get('exit_date')
-        reason = data.get('reason')
+        reason_id = data.get('reason')  # 前端传入的是出监原因 ID
+        reason = ExitTypeRepository.get_type_name(reason_id) if reason_id else None  # 转换为名称
         police_face = data.get('police_face')
         swat_face = data.get('swat_face')
         armed_police_signature = data.get('armed_police_signature')
@@ -74,8 +77,8 @@ class EntryRecordController(APIView):
         prisoner_no = data.get('prisoner_no')
         prisoner_name = data.get('prisoner_name')
         prisoner_photo = data.get('prisoner_photo')
-        prison_area = data.get('prison_area')
-        prison_area_name = data.get('prison_area_name')
+        prison_area = data.get('prison_area')  # 前端传入的是 ID
+        prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')
         police_face = data.get('police_face')
 

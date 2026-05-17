@@ -43,6 +43,17 @@ class RecordRepository:
         return ExitEntryRecord.objects.filter(prisoner_no=prisoner_no).order_by('-created_at')
 
     @staticmethod
+    def get_last_exit_by_prisoner_no(prisoner_no):
+        """获取该罪犯的最后一条出监记录"""
+        try:
+            return ExitEntryRecord.objects.filter(
+                prisoner_no=prisoner_no,
+                type='exit'
+            ).order_by('-created_at').first()
+        except ExitEntryRecord.DoesNotExist:
+            return None
+
+    @staticmethod
     def count_by_type(type):
         """统计某类型记录数量"""
         return ExitEntryRecord.objects.filter(type=type).count()
