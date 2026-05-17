@@ -122,7 +122,7 @@ const TypeManagement = () => {
         }
       />
       <Modal
-        title={editingRecord ? '编辑类型' : '新增类型'}
+        title={editingRecord ? '编辑出监原因' : '新增出监原因'}
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
@@ -131,10 +131,10 @@ const TypeManagement = () => {
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
             name="type_name"
-            label="类型名称"
-            rules={[{ required: true, message: '请输入类型名称' }]}
+            label="出监原因"
+            rules={[{ required: true, message: '请输入出监原因' }]}
           >
-            <Input placeholder="请输入类型名称" />
+            <Input placeholder="请输入出监原因" />
           </Form.Item>
         </Form>
       </Modal>

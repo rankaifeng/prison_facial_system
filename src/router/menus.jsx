@@ -30,7 +30,7 @@ export const allMenus = [
   {
     key: "/type-management",
     icon: <AppstoreOutlined />,
-    label: "类型管理",
+    label: "出监原因管理",
   },
 ];
 
