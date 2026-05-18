@@ -12,6 +12,15 @@ import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import http from '@/server/axios';
 
+const Account = [{ id: 1, name: '分监区一' },
+{ id: 2, name: '分监区二' },
+{ id: 3, name: '分监区三' },
+{ id: 4, name: '分监区四' },
+{ id: 5, name: '分监区五' },
+{ id: 6, name: '分监区六' },
+{ id: 7, name: '分监区七' }];
+
+
 const { confirm } = Modal;
 
 const TypeManagement = () => {

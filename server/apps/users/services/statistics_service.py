@@ -23,6 +23,15 @@ class StatisticsService(BaseService):
         today = date.today()
         queryset = StatisticsRepository.get_daily_stats(prison_area, today)
 
+        # 获取所有出监原因
+        from apps.users.models import ExitType
+        all_exit_types = ExitType.objects.filter(status='active').order_by('sort_order', 'id')
+        all_reasons = [et.type_name for et in all_exit_types]
+
+        # 如果没有配置出监原因，使用默认的
+        if not all_reasons:
+            all_reasons = ['刑满释放', '外出就医', '外出教育', '离监探亲', '押回重审']
+
         # 按分监区分组统计
         area_stats = queryset.values(
             'prison_area',
@@ -37,71 +46,53 @@ class StatisticsService(BaseService):
             exit_reason_5=Sum('exit_reason_5'),
         )
 
+        # 原因映射
+        reason_key_map = {
+            '刑满释放': 'exit_reason_1',
+            '外出就医': 'exit_reason_2',
+            '外出教育': 'exit_reason_3',
+            '离监探亲': 'exit_reason_4',
+            '押回重审': 'exit_reason_5',
+        }
+
         # 按分监区统计的列表（供地图使用）
         area_list = []
         total_exit = 0
         total_entry = 0
-        total_reason_1 = 0
-        total_reason_2 = 0
-        total_reason_3 = 0
-        total_reason_4 = 0
-        total_reason_5 = 0
+        total_by_reason = {reason: 0 for reason in all_reasons}
 
         for stat in area_stats:
             exit_cnt = stat['exit_count'] or 0
             entry_cnt = stat['entry_count'] or 0
 
-            # 只返回有数据的出监原因
-            reasons = []
-            if stat['exit_reason_1']:
-                reasons.append({'name': '刑满释放', 'count': stat['exit_reason_1']})
-            if stat['exit_reason_2']:
-                reasons.append({'name': '外出就医', 'count': stat['exit_reason_2']})
-            if stat['exit_reason_3']:
-                reasons.append({'name': '外出教育', 'count': stat['exit_reason_3']})
-            if stat['exit_reason_4']:
-                reasons.append({'name': '离监探亲', 'count': stat['exit_reason_4']})
-            if stat['exit_reason_5']:
-                reasons.append({'name': '押回重审', 'count': stat['exit_reason_5']})
+            # 按分监区的统计，包含各出监原因
+            area_reasons = []
+            for reason in all_reasons:
+                reason_key = reason_key_map.get(reason, f'exit_reason_{all_reasons.index(reason) + 1}')
+                count = stat.get(reason_key, 0) or 0
+                area_reasons.append({'name': reason, 'count': count})
+                total_by_reason[reason] += count
 
             area_item = {
                 'prison_area': stat['prison_area'],
                 'prison_area_name': stat['prison_area_name'],
                 'exit_count': exit_cnt,
                 'entry_count': entry_cnt,
-                'net_exit': exit_cnt - entry_cnt,
-                'reasons': reasons
+                                'reasons': area_reasons
             }
             area_list.append(area_item)
 
             total_exit += exit_cnt
             total_entry += entry_cnt
-            total_reason_1 += stat['exit_reason_1'] or 0
-            total_reason_2 += stat['exit_reason_2'] or 0
-            total_reason_3 += stat['exit_reason_3'] or 0
-            total_reason_4 += stat['exit_reason_4'] or 0
-            total_reason_5 += stat['exit_reason_5'] or 0
-
-        # 只返回有数据的汇总出监原因
-        total_reasons = []
-        if total_reason_1:
-            total_reasons.append({'name': '刑满释放', 'count': total_reason_1})
-        if total_reason_2:
-            total_reasons.append({'name': '外出就医', 'count': total_reason_2})
-        if total_reason_3:
-            total_reasons.append({'name': '外出教育', 'count': total_reason_3})
-        if total_reason_4:
-            total_reasons.append({'name': '离监探亲', 'count': total_reason_4})
-        if total_reason_5:
-            total_reasons.append({'name': '押回重审', 'count': total_reason_5})
 
         # 汇总统计
+        total_reasons = [{'name': reason, 'count': total_by_reason[reason]} for reason in all_reasons]
+
         result = {
             'total': {
                 'exit_count': total_exit,
                 'entry_count': total_entry,
-                'net_exit': total_exit - total_entry,
-                'reasons': total_reasons
+                                'reasons': total_reasons
             },
             'by_area': area_list,
         }
