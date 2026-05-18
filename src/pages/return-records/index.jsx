@@ -24,33 +24,6 @@ const ReturnStatistics = () => {
     rowKey: 'id',
     defaultParams: { type: 'entry' },
   });
-
-  useEffect(() => {
-    const fetchExitTypes = async () => {
-      try {
-        const res = await exitType.list();
-        console.log('exitType.list res:', res);
-        console.log('Array.isArray(res):', Array.isArray(res));
-        if (res && Array.isArray(res)) {
-          console.log('Setting exitReasons');
-          const options = res.map(item => ({
-            value: item.type_name,
-            label: item.type_name,
-          }));
-          setExitReasons(options);
-          console.log('exitReasons set to:', options);
-        } else {
-          console.log('res is not array or is empty:', res);
-        }
-      } catch (error) {
-        console.error('获取出监原因列表失败', error);
-      }
-    };
-    fetchExitTypes();
-  }, []);
-
-  console.log('exitReasons state:', exitReasons);
-
   const handleExport = () => {
     const data = tableProps.dataSource || [];
     if (data.length === 0) {
@@ -65,7 +38,6 @@ const ReturnStatistics = () => {
     { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name', width: 100 },
     { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no', width: 120 },
     { title: '回监时间', dataIndex: 'entry_date', key: 'entry_date', width: 160 },
-    { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason', width: 120 },
     {
       title: '民警确认',
       dataIndex: 'police_face',
@@ -95,12 +67,6 @@ const ReturnStatistics = () => {
       name: 'prisoner_no',
       type: 'input',
       props: { placeholder: '请输入罪犯编号' }
-    },
-    {
-      label: '出监原因',
-      name: 'reason',
-      type: 'select',
-      props: { placeholder: '请选择出监原因', options: exitReasons }
     },
   ], []);
 
