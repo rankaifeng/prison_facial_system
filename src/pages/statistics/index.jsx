@@ -12,7 +12,7 @@ const Statistics = () => {
   const prisonNameParam = searchParams.get('prisonName');
 
   const { tableProps, loading, form, search } = useQueryTable({
-    url: '/prison_manage/exit_statistics/exit_statistics_list',
+    url: '/user_manage/record/list',
     rowKey: 'id',
     defaultParams: prisonNameParam ? { prisonName: prisonNameParam } : {},
   });

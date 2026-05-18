@@ -16,8 +16,14 @@ PRISON_AREAS = [
 
 def get_prison_area_name(prison_area_id):
     """根据 ID 获取分监区名称"""
+    if not prison_area_id:
+        return ''
+    try:
+        prison_area_id = str(int(prison_area_id))
+    except (ValueError, TypeError):
+        return ''
     for area in PRISON_AREAS:
-        if area['id'] == prison_area_id:
+        if str(area['id']) == prison_area_id:
             return area['name']
     return ''
 

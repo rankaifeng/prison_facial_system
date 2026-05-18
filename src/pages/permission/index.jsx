@@ -6,20 +6,20 @@ import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import http from '@/server/axios';
 
+const prisonAreas = [{ id: 1, name: '分监区一' },
+{ id: 2, name: '分监区二' },
+{ id: 3, name: '分监区三' },
+{ id: 4, name: '分监区四' },
+{ id: 5, name: '分监区五' },
+{ id: 6, name: '分监区六' },
+{ id: 7, name: '分监区七' }];
+
 const AccountManagement = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
-  const [prisonAreas, setPrisonAreas] = useState([]);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    http.get('/prison_manage/prison_info/prison_info_list').then(res => {
-      if (res?.data) {
-        setPrisonAreas(res.data.map(p => ({ label: p.name, value: p.prison_id || p.id })));
-      }
-    });
-  }, []);
 
   const { tableProps, form: searchForm, search, refresh } = useQueryTable({
     url: '/user_manage/account/account_list',
@@ -27,8 +27,8 @@ const AccountManagement = () => {
   });
 
   const columns = [
-    { title: '账号', dataIndex: 'username', key: 'username'},
-    { title: '所属分监区', dataIndex: 'prison_name', key: 'prison_name'},
+    { title: '账号', dataIndex: 'username', key: 'username' },
+    { title: '所属分监区', dataIndex: 'prison_name', key: 'prison_name' },
     {
       title: '操作',
       fixed: 'right',
@@ -133,13 +133,13 @@ const AccountManagement = () => {
           >
             <Input type="password" placeholder={editingRecord ? '不修改请留空' : '请输入密码'} />
           </Form.Item>
-         
+
           <Form.Item
             name="prison_id"
             label="所属分监区"
             rules={[{ required: true, message: '请选择分监区' }]}
           >
-            <Select placeholder="请选择分监区" options={prisonAreas} />
+            <Select placeholder="请选择分监区" options={prisonAreas} fieldNames={{ label: 'name', value: 'id' }} />
           </Form.Item>
         </Form>
       </Modal>
