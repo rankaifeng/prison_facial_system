@@ -151,7 +151,5 @@ class RecordListController(APIView):
             'code': 1,
             'msg': message,
             'data': result.get('data', []),
-            'total': result.get('total', 0),
-            'page': result.get('page', 1),
-            'page_size': result.get('page_size', 10),
+            'num': result.get('num', 0),
         })

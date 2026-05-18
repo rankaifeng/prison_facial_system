@@ -18,7 +18,7 @@ const useQueryTable = (options) => {
         const base = { page: current, limit: pageSize, ...defaultParams, ...(formData || {}) };
         const params = transformParams ? transformParams(base) : base;
         const res = await http.get(url, params);
-        return { list: res?.data, total: res?.total };
+        return { list: res?.data, total: res?.num };
     };
 
     const antdTable = useAntdTable(getTableData, {

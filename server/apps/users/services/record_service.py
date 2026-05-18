@@ -208,9 +208,7 @@ class RecordService(BaseService):
 
         return True, '获取成功', {
             'data': data,
-            'total': total,
-            'page': page,
-            'page_size': page_size,
+            'num': total,
         }
 
     @staticmethod
