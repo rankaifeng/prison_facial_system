@@ -4,7 +4,11 @@
       "Bash(python3 *)",
       "Bash(curl -s -X POST http://127.0.0.1:8000/user_manage/user_login/user_login_web -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
       "Bash(pip3 show *)",
-      "Bash(pip3 install *)"
+      "Bash(pip3 install *)",
+      "Bash(curl -s \"http://localhost:8000/prison_manage/exit_type/exit_type_list\" -H \"Authorization: Bearer $\\(python3 manage.py shell -c \"from apps.users.config import create_token; from django.contrib.auth import get_user_model; User = get_user_model\\(\\); user = User.objects.first\\(\\); print\\(create_token\\(user\\)\\)\"\\)\")",
+      "Bash(curl -s http://localhost:8000/user_manage/exit_type/list)",
+      "Bash(curl -s http://localhost:8000/user_manage/user_login/user_login_web -d 'username=admin&password=admin123')",
+      "Bash(curl -s http://localhost:8000/user_manage/user_login/user_login_web -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=admin&password=admin123')"
     ]
   }
 }

@@ -126,6 +126,9 @@ class RecordListController(APIView):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
         prison_area = request.query_params.get('prison_area')
+        prisoner_name = request.query_params.get('prisoner_name')
+        prisoner_no = request.query_params.get('prisoner_no')
+        reason = request.query_params.get('reason')
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
 
@@ -137,6 +140,9 @@ class RecordListController(APIView):
             start_date=start_date,
             end_date=end_date,
             prison_area=prison_area,
+            prisoner_name=prisoner_name,
+            prisoner_no=prisoner_no,
+            reason=reason,
             page=page,
             page_size=page_size,
         )

@@ -17,7 +17,8 @@ class RecordRepository:
         return ExitEntryRecord.objects.all().order_by('-created_at')
 
     @staticmethod
-    def filter(type=None, start_date=None, end_date=None, prison_area=None):
+    def filter(type=None, start_date=None, end_date=None, prison_area=None,
+              prisoner_name=None, prisoner_no=None, reason=None):
         """条件筛选记录"""
         queryset = ExitEntryRecord.objects.all()
 
@@ -29,6 +30,12 @@ class RecordRepository:
             queryset = queryset.filter(created_at__lte=end_date)
         if prison_area:
             queryset = queryset.filter(prison_area=prison_area)
+        if prisoner_name:
+            queryset = queryset.filter(prisoner_name__icontains=prisoner_name)
+        if prisoner_no:
+            queryset = queryset.filter(prisoner_no=prisoner_no)
+        if reason:
+            queryset = queryset.filter(reason=reason)
 
         return queryset.order_by('-created_at')
 

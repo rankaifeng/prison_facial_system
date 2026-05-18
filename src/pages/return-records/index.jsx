@@ -1,17 +1,55 @@
-import React, { useMemo } from 'react';
-import { Button, message, Tag } from 'antd';
-import { ExportOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Button, Image, message } from 'antd';
+import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
+import { exitType } from '@/api/globApi';
+
+const PRISON_AREAS = [
+  { value: 1, label: '分监区一' },
+  { value: 2, label: '分监区二' },
+  { value: 3, label: '分监区三' },
+  { value: 4, label: '分监区四' },
+  { value: 5, label: '分监区五' },
+  { value: 6, label: '分监区六' },
+  { value: 7, label: '分监区七' },
+];
 
 const ReturnStatistics = () => {
+  const [exitReasons, setExitReasons] = useState([]);
   const { tableProps, loading, form, search } = useQueryTable({
     url: '/user_manage/record/list',
     rowKey: 'id',
     defaultParams: { type: 'entry' },
   });
+
+  useEffect(() => {
+    const fetchExitTypes = async () => {
+      try {
+        const res = await exitType.list();
+        console.log('exitType.list res:', res);
+        console.log('Array.isArray(res):', Array.isArray(res));
+        if (res && Array.isArray(res)) {
+          console.log('Setting exitReasons');
+          const options = res.map(item => ({
+            value: item.type_name,
+            label: item.type_name,
+          }));
+          setExitReasons(options);
+          console.log('exitReasons set to:', options);
+        } else {
+          console.log('res is not array or is empty:', res);
+        }
+      } catch (error) {
+        console.error('获取出监原因列表失败', error);
+      }
+    };
+    fetchExitTypes();
+  }, []);
+
+  console.log('exitReasons state:', exitReasons);
 
   const handleExport = () => {
     const data = tableProps.dataSource || [];
@@ -33,11 +71,9 @@ const ReturnStatistics = () => {
       dataIndex: 'police_face',
       key: 'police_face',
       width: 100,
-      render: (val) => val ? (
-        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
-      ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
-      ),
+      render: (val) => {
+        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
     },
   ];
 
@@ -45,8 +81,8 @@ const ReturnStatistics = () => {
     {
       label: '分监区',
       name: 'prison_area',
-      type: 'input',
-      props: { placeholder: '请输入分监区名称' }
+      type: 'select',
+      props: { placeholder: '请选择分监区', options: PRISON_AREAS }
     },
     {
       label: '罪犯姓名',
@@ -59,6 +95,12 @@ const ReturnStatistics = () => {
       name: 'prisoner_no',
       type: 'input',
       props: { placeholder: '请输入罪犯编号' }
+    },
+    {
+      label: '出监原因',
+      name: 'reason',
+      type: 'select',
+      props: { placeholder: '请选择出监原因', options: exitReasons }
     },
   ], []);
 
