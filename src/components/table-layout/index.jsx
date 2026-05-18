@@ -3,7 +3,7 @@ import './index.less';
 import { Table } from 'antd';
 
 const TableLayout = (props) => {
-    const { tableProps, loading, columns, headerLayout } = props;
+    const { tableProps, loading, columns, headerLayout, hideIndex = false } = props;
 
     const { pagination, dataSource, ...restTableProps } = tableProps;
 
@@ -24,7 +24,8 @@ const TableLayout = (props) => {
     }, [dataSource]);
 
     const columnsWithIndex = useMemo(() => {
-        if (isTreeData) {
+        // 树形数据或设置了 hideIndex 不显示序号列
+        if (isTreeData || hideIndex) {
             return columns || [];
         }
 
@@ -32,8 +33,7 @@ const TableLayout = (props) => {
             title: '序号',
             dataIndex: '_index',
             key: '_index',
-            width: 60,
-            fixed: 'left',
+            width: 70,
             align: 'center',
             render: (_, record, index) => {
                 if (record.parent_id != null) {
@@ -60,11 +60,8 @@ const TableLayout = (props) => {
         });
 
         return [indexColumn, ...processedColumns];
-    }, [columns, pagination, isTreeData]);
+    }, [columns, pagination, isTreeData, hideIndex]);
 
-    console.log(customizedPagination?.total);
-    //scroll={{ x: 'max-content', y: 'calc(100vh - 320px)' }}
-    //scroll={customizedPagination?.total > 0 ? { x: 'max-content', y: width >= 1920 ? 'calc(100vh - 200px)' : 'calc(100vh - 350px)' } : false}
     return (
         <div className='table-layout'>
             {headerLayout && <div className="table-header">{headerLayout}</div>}

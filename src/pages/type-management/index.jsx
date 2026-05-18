@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Button, Form, Input, InputNumber, Modal, Space, Tag, message } from 'antd';
+import { Button, Form, Input, Modal, Popconfirm, Space, message } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  ExclamationCircleOutlined,
   NodeIndexOutlined,
 } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
@@ -21,8 +20,6 @@ const Account = [{ id: 1, name: '分监区一' },
 { id: 7, name: '分监区七' }];
 
 
-const { confirm } = Modal;
-
 const TypeManagement = () => {
   const [modalForm] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
@@ -32,7 +29,7 @@ const TypeManagement = () => {
   const { tableProps, loading, form: searchForm, search, refresh } = useQueryTable({
     url: '/prison_manage/exit_type/exit_type_list',
     rowKey: 'id',
-    defaultPageSize: 100,
+    defaultPageSize: 10,
   });
 
   const handleAddRoot = () => {
@@ -63,23 +60,14 @@ const TypeManagement = () => {
     setModalVisible(true);
   };
 
-  const handleDelete = (record) => {
-    confirm({
-      title: '确认删除',
-      icon: <ExclamationCircleOutlined />,
-      content: `确定要删除出监原因"${record.type_name}"吗？删除后它的下级原因也会一起删除。`,
-      okText: '确认',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          const res = await http.post('/prison_manage/exit_type/exit_type_delete', { id: record.id });
-          message.success(res?.message || '删除成功');
-          refresh();
-        } catch (error) {
-          message.error(error?.response?.data?.message || '删除失败');
-        }
-      },
-    });
+  const handleDelete = async (record) => {
+    try {
+      const res = await http.post('/prison_manage/exit_type/exit_type_delete', { id: record.id });
+      message.success(res?.msg || '删除成功');
+      refresh();
+    } catch (error) {
+      message.error(error?.response?.data?.msg || '删除失败');
+    }
   };
 
   const handleModalOk = async () => {
@@ -95,12 +83,12 @@ const TypeManagement = () => {
       };
 
       const res = await http.post(apiUrl, payload);
-      message.success(res?.message || (isEdit ? '更新成功' : '新增成功'));
+      message.success(res?.msg || (isEdit ? '更新成功' : '新增成功'));
       setModalVisible(false);
       refresh();
     } catch (error) {
       if (error?.errorFields) return;
-      message.error(error?.response?.data?.message || '保存失败');
+      message.error(error?.response?.data?.msg || '保存失败');
     }
   };
 
@@ -138,15 +126,16 @@ const TypeManagement = () => {
           >
             编辑
           </Button>
-          <Button
-            size='small'
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
+          <Popconfirm
+            description={`确定要删除吗？`}
+            onConfirm={() => handleDelete(record)}
+            okText="确认"
+            cancelText="取消"
           >
-            删除
-          </Button>
+            <Button size='small' type="link" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
         </>
       ),
     },
@@ -173,6 +162,7 @@ const TypeManagement = () => {
         tableProps={tableProps}
         loading={loading}
         columns={columns}
+        hideIndex
         headerLayout={
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
             新增一级原因
@@ -198,9 +188,6 @@ const TypeManagement = () => {
             rules={[{ required: true, message: '请输入出监原因' }]}
           >
             <Input placeholder="请输入出监原因" />
-          </Form.Item>
-          <Form.Item name="sort_order" label="排序">
-            <InputNumber style={{ width: '100%' }} min={0} precision={0} placeholder="数字越小越靠前" />
           </Form.Item>
         </Form>
       </Modal>
