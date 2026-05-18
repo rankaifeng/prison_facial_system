@@ -15,9 +15,7 @@ const RightPanel = () => {
   const fetchMessages = async () => {
     try {
       const res = await prisonMessages.list({ page: 1, limit: 50 });
-      if (res && res.data) {
-        setMessages(res.data);
-      }
+      setMessages(res);
     } catch (error) {
       console.error('获取监狱消息失败:', error);
     }
@@ -52,6 +50,7 @@ const RightPanel = () => {
 
   const duplicatedMessages = [...messages, ...messages];
   const shouldScroll = messages.length > 3;
+  console.log("duplicatedMessages", duplicatedMessages);
 
   const renderEmptyState = () => (
     <div className="message-empty">
@@ -83,13 +82,13 @@ const RightPanel = () => {
         </Button>
       </div>
       <div className="message-list" style={{ overflow: shouldScroll ? 'hidden' : 'auto' }}>
-          <div
-            className="message-scroll"
-            style={{ animationPlayState: shouldScroll ? 'running' : 'paused' }}
-          >
-            {duplicatedMessages.length === 0 ? (
-              renderEmptyState()
-            ) : (
+        <div
+          className="message-scroll"
+          style={{ animationPlayState: shouldScroll ? 'running' : 'paused' }}
+        >
+          {duplicatedMessages.length === 0 ? (
+            renderEmptyState()
+          ) : (
             duplicatedMessages.map((msg, index) => (
               <div key={`${msg.id || index}-${index >= messages.length ? 'dup' : 'orig'}`} className="message-item">
                 <div className="message-content">
