@@ -12,6 +12,7 @@ from .controllers import (
     ExitTypeAddController,
     ExitTypeUpdateController,
     ExitTypeDeleteController,
+    PrisonMessagesController,
 )
 
 urlpatterns = [
@@ -24,6 +25,7 @@ urlpatterns = [
     re_path(r'^statistics/realtime/?$', RealtimeStatisticsController.as_view(), name='realtime_statistics'),
     re_path(r'^statistics/work/?$', WorkStatisticsController.as_view(), name='work_statistics'),
     re_path(r'^record/list/?$', RecordListController.as_view(), name='record_list'),
+    re_path(r'^record/prison_messages/?$', PrisonMessagesController.as_view(), name='prison_messages'),
     re_path(r'^exit_type/list/?$', ExitTypeListController.as_view(), name='exit_type_list'),
     re_path(r'^exit_type/add/?$', ExitTypeAddController.as_view(), name='exit_type_add'),
     re_path(r'^exit_type/update/?$', ExitTypeUpdateController.as_view(), name='exit_type_update'),

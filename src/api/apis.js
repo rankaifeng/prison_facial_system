@@ -14,6 +14,7 @@ export const ACCOUNT_UPDATE = '/user_manage/account/account_update';
 export const ACCOUNT_DELETE = '/user_manage/account/account_delete';
 export const RESET_PASSWORD = '/user_manage/account/reset_password';
 export const PRISONER_ARCHIVE = '/prison_manage/prisoner_archive/prisoner_archive_list';
+export const PRISON_MESSAGES = '/user_manage/record/prison_messages';
 export const EXIT_TYPE_LIST = '/user_manage/exit_type/list';
 export const EXIT_TYPE_ADD = '/user_manage/exit_type/add';
 export const EXIT_TYPE_UPDATE = '/user_manage/exit_type/update';

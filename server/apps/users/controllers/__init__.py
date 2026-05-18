@@ -8,6 +8,7 @@ from .exit_type_controller import (
     ExitTypeUpdateController,
     ExitTypeDeleteController,
 )
+from .message_controller import PrisonMessagesController
 
 __all__ = [
     'LoginController',
@@ -22,4 +23,5 @@ __all__ = [
     'ExitTypeAddController',
     'ExitTypeUpdateController',
     'ExitTypeDeleteController',
+    'PrisonMessagesController',
 ]

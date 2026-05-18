@@ -168,7 +168,7 @@ const Dashboard = () => {
 
         <div className="right-area">
           <StatusPieChart data={realtimeData} />
-          <RightPanel messages={[]} />
+          <RightPanel />
         </div>
       </div>
 

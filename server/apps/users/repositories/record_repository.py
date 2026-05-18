@@ -69,3 +69,20 @@ class RecordRepository:
     def get_recent_records(limit=10):
         """获取最近记录"""
         return ExitEntryRecord.objects.all().order_by('-created_at')[:limit]
+
+    @staticmethod
+    def get_active_exit_messages():
+        """获取活跃的出监消息（未入监的）"""
+        return ExitEntryRecord.objects.filter(
+            type='exit',
+            status='completed'
+        ).order_by('-created_at')
+
+    @staticmethod
+    def has_entry_record(prisoner_no):
+        """检查是否存在入监记录"""
+        return ExitEntryRecord.objects.filter(
+            prisoner_no=prisoner_no,
+            type='entry',
+            status='completed'
+        ).exists()

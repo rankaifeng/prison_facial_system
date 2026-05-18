@@ -212,6 +212,30 @@ class RecordService(BaseService):
         }
 
     @staticmethod
+    def get_prison_messages(page=1, page_size=20):
+        """获取监狱消息列表"""
+        exit_records = RecordRepository.get_active_exit_messages()
+
+        messages = []
+        for record in exit_records:
+            has_entry = RecordRepository.has_entry_record(record.prisoner_no)
+            if not has_entry:
+                messages.append({
+                    'id': record.id,
+                    'prisoner_name': record.prisoner_name,
+                    'prison_area_name': record.prison_area_name,
+                    'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
+                    'reason': record.reason,
+                    'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                })
+
+        total = len(messages)
+        offset = (page - 1) * page_size
+        paginated = messages[offset:offset + page_size]
+
+        return True, '获取成功', {'data': paginated, 'num': total}
+
+    @staticmethod
     def get_record(record_id):
         record = RecordRepository.get_by_id(record_id)
         if not record:
