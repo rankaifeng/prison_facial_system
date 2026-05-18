@@ -31,14 +31,16 @@ const StatusPieChart = ({ data }) => {
 
     const option = {
       backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(20, 25, 45, 0.95)',
-        borderColor: 'rgba(0, 240, 255, 0.5)',
-        borderWidth: 1,
-        textStyle: { color: '#fff' },
-        formatter: '{b}: {c} ({d}%)'
-      },
+      // tooltip: {
+      //   trigger: 'item',
+      //   backgroundColor: 'rgba(20, 25, 45, 0.95)',
+      //   borderColor: 'rgba(0, 240, 255, 0.5)',
+      //   borderWidth: 1,
+      //   textStyle: { color: '#fff' },
+      //   formatter: '{b}: {c} ({d}%)',
+      //   z: 9999,
+      //   extraCssText: 'z-index: 9999; position: absolute;',
+      // },
       legend: {
         orient: 'horizontal',
         bottom: 0,
@@ -92,7 +94,7 @@ const StatusPieChart = ({ data }) => {
   }, [reasons]);
 
   return (
-    <div className="status-pie-chart">
+    <div className="status-pie-chart" style={{ position: 'relative', zIndex: 1 }}>
       <div className="chart-title">
         <div className="title-content">
           <PieChartOutlined />
@@ -105,8 +107,8 @@ const StatusPieChart = ({ data }) => {
           <span className="decor-dot"></span>
         </div>
       </div>
-      <div className="chart-wrapper">
-        <div ref={chartRef} className="echarts-container" />
+      <div className="chart-wrapper" style={{ position: 'relative', zIndex: 1 }}>
+        <div ref={chartRef} className="echarts-container" style={{ position: 'relative', zIndex: 1 }} />
       </div>
     </div>
   );
