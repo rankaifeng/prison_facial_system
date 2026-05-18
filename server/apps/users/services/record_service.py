@@ -15,6 +15,15 @@ class RecordService(BaseService):
         if not base64_data:
             return None
 
+        # 如果是已存在的文件路径（包含 / 或 media/），直接返回
+        if base64_data.startswith('/') or base64_data.startswith('media/'):
+            return base64_data
+
+        # 如果是URL，直接返回
+        if base64_data.startswith('http'):
+            return base64_data
+
+        # 处理 base64 数据
         if ',' in base64_data:
             base64_data = base64_data.split(',')[1]
 

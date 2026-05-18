@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
+import { exitRecord } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const { RangePicker } = DatePicker;
@@ -71,17 +72,32 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     setCurrent(current - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const values = form.getFieldsValue();
     const data = {
-      ...values,
-      policeImage,
-      swatImage,
-      armedPoliceSignature,
+      prisoner_no: values.prisonerName,
+      prisoner_name: values.prisonerName,
+      prisoner_photo: null,
+      prison_area: values.prisonArea,
+      exit_date: values.exitDate ? values.exitDate.format('YYYY-MM-DD') : null,
+      reason: values.exitReason,
+      police_face: policeImage,
+      swat_face: swatImage,
+      armed_police_signature: armedPoliceSignature,
     };
-    message.success('提交成功');
-    onOk?.(data);
-    handleReset();
+
+    try {
+      const res = await exitRecord.submit(data);
+      if (res.code === 1) {
+        message.success('提交成功');
+        onOk?.(data);
+        handleReset();
+      } else {
+        message.error(res.msg || '提交失败');
+      }
+    } catch (error) {
+      message.error('提交失败');
+    }
   };
 
   const handleReset = () => {

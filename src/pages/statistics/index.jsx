@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Button, message } from 'antd';
+import { Button, Image, message } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
@@ -8,7 +8,7 @@ import exportToCSV from '@/utils/export';
 
 const Statistics = () => {
   const { tableProps, loading, form, search } = useQueryTable({
-    url: '/prison_manage/record/list',
+    url: '/user_manage/record/list',
     rowKey: 'id',
     defaultParams: { type: 'exit' },
   });
@@ -33,22 +33,27 @@ const Statistics = () => {
       dataIndex: 'police_face',
       key: 'police_face',
       width: 100,
-      render: (val) => val ? (
-        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
-      ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
-      ),
+      render: (val) => {
+        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
     },
     {
       title: '特警确认',
       dataIndex: 'swat_face',
       key: 'swat_face',
       width: 100,
-      render: (val) => val ? (
-        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
-      ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
-      ),
+      render: (val) => {
+        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
+    },
+    {
+      title: '武警确认',
+      dataIndex: 'armed_police_signature',
+      key: 'armed_police_signature',
+      width: 100,
+      render: (val) => {
+        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
     },
   ];
 

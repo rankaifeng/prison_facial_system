@@ -30,10 +30,10 @@ const getNameFromPath = (path) => {
   const nameMap = {
     dashboard: '首页大屏',
     prisoners: '档案库',
-    statistics: '进出统计',
-    'exit-records': '出狱信息',
+    statistics: '出监统计',
+    'return-records': '回监统计',
     permission: '账号管理',
-    'type-management': '类型管理',
+    'type-management': '出监原因管理',
     list: '列表',
     detail: '详情',
   };

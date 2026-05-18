@@ -8,7 +8,7 @@ import exportToCSV from '@/utils/export';
 
 const ReturnStatistics = () => {
   const { tableProps, loading, form, search } = useQueryTable({
-    url: '/prison_manage/record/list',
+    url: '/user_manage/record/list',
     rowKey: 'id',
     defaultParams: { type: 'entry' },
   });
