@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
-import { exitRecord } from '@/api/globApi';
+import { exitRecord, exitType, prison } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const { RangePicker } = DatePicker;
 
-const PRISONS = ['分监区一', '分监区二', '分监区三', '分监区四', '分监区五', '分监区六', '分监区七'];
-
-const EXIT_REASONS = [
-  { value: '刑满释放', label: '刑满释放' },
-  { value: '外出就医', label: '外出就医' },
-  { value: '外出教育', label: '外出教育' },
-  { value: '离监探亲', label: '离监探亲' },
-  { value: '押回重审', label: '押回重审' },
+const PRISON_AREAS = [
+  { value: 1, label: '分监区一' },
+  { value: 2, label: '分监区二' },
+  { value: 3, label: '分监区三' },
+  { value: 4, label: '分监区四' },
+  { value: 5, label: '分监区五' },
+  { value: 6, label: '分监区六' },
+  { value: 7, label: '分监区七' },
 ];
 
 const HOSPITALS_CENTER = [
@@ -40,17 +40,50 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   const [policeImage, setPoliceImage] = useState(null);
   const [swatImage, setSwatImage] = useState(null);
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
+  const [exitReasons, setExitReasons] = useState([]);
+  const [formValues, setFormValues] = useState({});
 
   const exitReason = Form.useWatch('exitReason', form);
   const hospitalType = Form.useWatch('hospital', form);
   const centerPrison = Form.useWatch('transferPrison', form);
 
+  useEffect(() => {
+    // 每次弹窗打开时重置表单和状态
+    if (open) {
+      setFormValues({});
+      form.resetFields();
+      setCurrent(0);
+      setPoliceImage(null);
+      setSwatImage(null);
+      setArmedPoliceSignature(null);
+      // 获取出监原因列表
+      const fetchExitTypes = async () => {
+        try {
+          const res = await exitType.list();
+          if (res && Array.isArray(res)) {
+            const options = res.map(item => ({
+              value: item.id,
+              label: item.type_name,
+            }));
+            setExitReasons(options);
+          }
+        } catch (error) {
+          console.error('获取出监原因列表失败', error);
+        }
+      };
+      fetchExitTypes();
+    }
+  }, [open, form]);
+
   const handleNext = async () => {
     if (current === 0) {
       try {
-        await form.validateFields();
+        const values = await form.validateFields();
+        console.log("步骤0表单值:", JSON.stringify(values));
+        setFormValues(values);  // 保存表单值
         setCurrent(1);
-      } catch {
+      } catch (error) {
+        console.log("验证失败:", error);
         return;
       }
     } else if (current === 1) {
@@ -73,19 +106,22 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const handleSubmit = async () => {
-    const values = form.getFieldsValue();
+    // 使用步骤0保存的表单值
+    console.log("提交表单值:", JSON.stringify(formValues));
+    console.log("prisonArea:", formValues.prisonArea);
+    console.log("exitReason:", formValues.exitReason);
+
     const data = {
-      prisoner_no: values.prisonerName,
-      prisoner_name: values.prisonerName,
-      prisoner_photo: null,
-      prison_area: values.prisonArea,
-      exit_date: values.exitDate ? values.exitDate.format('YYYY-MM-DD') : null,
-      reason: values.exitReason,
+      prisoner_no: formValues.prisonerNo,
+      prisoner_name: formValues.prisonerName,
+      prison_area: formValues.prisonArea,
+      exit_date: formValues.exitDate ? formValues.exitDate.format('YYYY-MM-DD') : null,
+      reason: formValues.exitReason,
       police_face: policeImage,
       swat_face: swatImage,
       armed_police_signature: armedPoliceSignature,
     };
-
+    console.log('提交数据:', data);
     try {
       const res = await exitRecord.submit(data);
       if (res.code === 1) {
@@ -101,6 +137,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const handleReset = () => {
+    setFormValues({});
     form.resetFields();
     setCurrent(0);
     setPoliceImage(null);
@@ -110,12 +147,20 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const renderStep1 = () => (
-    <div className="step-content step-form">
+    <div className="step-content step-form" style={{ display: current === 0 ? 'block' : 'none' }}>
       <Form
         form={form}
         layout="vertical"
         initialValues={{ exitDate: null }}
       >
+        <Form.Item
+          name="prisonerNo"
+          label="罪犯编号"
+          rules={[{ required: true, message: '请输入罪犯编号' }]}
+        >
+          <Input placeholder="请输入罪犯编号" />
+        </Form.Item>
+
         <Form.Item
           name="prisonerName"
           label="罪犯姓名"
@@ -137,22 +182,20 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           label="出监原因"
           rules={[{ required: true, message: '请选择出监原因' }]}
         >
-          <Select placeholder="请选择出监原因" options={EXIT_REASONS} />
+          <Select placeholder="请选择出监原因" options={exitReasons} />
         </Form.Item>
 
-       
-
-        {exitReason === '外出就医' && (
+        {exitReason === 2 && (
           <Form.Item
             name="hospital"
-            label="医院"
-            rules={[{ required: true, message: '请选择医院' }]}
+            label="医院类型"
+            rules={[{ required: true, message: '请选择医院类型' }]}
           >
-            <Select placeholder="请选择医院" options={HOSPITALS_CENTER} />
+            <Select placeholder="请选择医院类型" options={HOSPITALS_CENTER} />
           </Form.Item>
         )}
 
-        {exitReason === '外出就医' && hospitalType === '中心医院' && (
+        {exitReason === 2 && hospitalType === '中心医院' && (
           <Form.Item
             name="transferPrison"
             label="转诊监狱"
@@ -162,7 +205,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === '外出就医' && hospitalType === '中心医院' && centerPrison === '其他' && (
+        {exitReason === 2 && hospitalType === '中心医院' && centerPrison === '其他' && (
           <Form.Item
             name="transferPrisonOther"
             label="转诊监狱（其他）"
@@ -172,7 +215,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === '外出就医' && hospitalType === '社会医院' && (
+        {exitReason === 2 && hospitalType === '社会医院' && (
           <Form.Item
             name="socialHospital"
             label="医院"
@@ -182,7 +225,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === '外出就医' && hospitalType === '社会医院' && form.getFieldValue('socialHospital') === '其他' && (
+        {exitReason === 2 && hospitalType === '社会医院' && form.getFieldValue('socialHospital') === '其他' && (
           <Form.Item
             name="socialHospitalOther"
             label="医院（其他）"
@@ -191,19 +234,20 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
             <Input placeholder="请输入医院名称" />
           </Form.Item>
         )}
-         <Form.Item
+
+        <Form.Item
           name="prisonArea"
           label="分监区"
           rules={[{ required: true, message: '请选择分监区' }]}
         >
-          <Select placeholder="请选择分监区" options={PRISONS.map(p => ({ value: p, label: p }))} />
+          <Select placeholder="请选择分监区" options={PRISON_AREAS} />
         </Form.Item>
       </Form>
     </div>
   );
 
   const renderStep2 = () => (
-    <div className="step-content confirm-step">
+    <div className="step-content confirm-step" style={{ display: current === 1 ? 'block' : 'none' }}>
       <div className="confirm-image">
         {policeImage ? (
           <img src={policeImage} alt="民警照片" />
@@ -221,7 +265,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep3 = () => (
-    <div className="step-content confirm-step">
+    <div className="step-content confirm-step" style={{ display: current === 2 ? 'block' : 'none' }}>
       <div className="confirm-image">
         {swatImage ? (
           <img src={swatImage} alt="特警照片" />
@@ -239,7 +283,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
 const renderStep4 = () => (
-    <div className="step-content confirm-step">
+    <div className="step-content confirm-step" style={{ display: current === 3 ? 'block' : 'none' }}>
       <div className="signature-wrapper">
         {armedPoliceSignature ? (
           <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
