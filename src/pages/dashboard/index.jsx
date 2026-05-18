@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
 import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +54,13 @@ const Dashboard = () => {
       console.error('获取数据失败:', error);
     }
   };
+
+  const handleDataUpdate = useCallback((refreshMessages) => {
+    fetchData();
+    if (refreshMessages) {
+      refreshMessages();
+    }
+  }, []);
 
   const navMenu = {
     items: [
@@ -168,19 +175,19 @@ const Dashboard = () => {
 
         <div className="right-area">
           <StatusPieChart data={realtimeData} />
-          <RightPanel />
+          <RightPanel onDataUpdate={handleDataUpdate} />
         </div>
       </div>
 
       <ExitConfirmModal
         open={exitModalOpen}
         onCancel={() => setExitModalOpen(false)}
-        onOk={() => setExitModalOpen(false)}
+        onOk={() => { setExitModalOpen(false); handleDataUpdate(); }}
       />
       <EnterConfirmModal
         open={enterModalOpen}
         onCancel={() => setEnterModalOpen(false)}
-        onOk={() => setEnterModalOpen(false)}
+        onOk={() => { setEnterModalOpen(false); handleDataUpdate(); }}
       />
     </div>
   );

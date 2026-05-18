@@ -28,14 +28,10 @@ class StatisticsRepository:
             defaults={
                 'prison_area_name': prison_area_name,
                 'exit_count': 0,
-                'exit_reason_1': 0,
-                'exit_reason_2': 0,
-                'exit_reason_3': 0,
-                'exit_reason_4': 0,
-                'exit_reason_5': 0,
                 'entry_count': 0,
                 'in_prison_count': 0,
                 'work_count': 0,
+                'reason_stats': {},
             }
         )
         return stat

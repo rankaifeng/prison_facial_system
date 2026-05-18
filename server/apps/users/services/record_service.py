@@ -77,20 +77,13 @@ class RecordService(BaseService):
             stat.exit_count += 1
             stat.in_prison_count -= 1
 
-            reason_map = {
-                '刑满释放': 'exit_reason_1',
-                '外出就医': 'exit_reason_2',
-                '外出教育': 'exit_reason_3',
-                '离监探亲': 'exit_reason_4',
-                '押回重审': 'exit_reason_5',
-            }
-            reason_field = reason_map.get(reason)
-            if reason_field:
-                current_value = getattr(stat, reason_field)
-                StatisticsRepository.update_daily_stats(stat, **{reason_field: current_value + 1})
+            # 使用 JSONField 存储原因统计
+            reason_stats = stat.reason_stats or {}
+            reason_stats[reason] = reason_stats.get(reason, 0) + 1
+            stat.reason_stats = reason_stats
+            stat.save()
 
-            StatisticsRepository.update_daily_stats(stat, exit_count=stat.exit_count, in_prison_count=stat.in_prison_count)
-            logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}")
+            logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}, total={stat.exit_count}")
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -103,15 +96,6 @@ class RecordService(BaseService):
             # 查找该罪犯的最后一条出监记录，获取出监原因
             exit_record = RecordRepository.get_last_exit_by_prisoner_no(prisoner_no)
             exit_reason = exit_record.reason if exit_record else None
-
-            # 出监原因映射
-            reason_map = {
-                '刑满释放': 'exit_reason_1',
-                '外出就医': 'exit_reason_2',
-                '外出教育': 'exit_reason_3',
-                '离监探亲': 'exit_reason_4',
-                '押回重审': 'exit_reason_5',
-            }
 
             record = RecordRepository.create(
                 prisoner_no=prisoner_no,
@@ -130,29 +114,17 @@ class RecordService(BaseService):
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
             stat.entry_count += 1
-            stat.exit_count = max(0, stat.exit_count - 1)  # 不能为负数
+            stat.exit_count = max(0, stat.exit_count - 1)
 
-            # 减少对应的出监原因计数
+            # 使用 JSONField 减少对应的出监原因计数
             if exit_reason:
-                reason_field = reason_map.get(exit_reason)
-                if reason_field:
-                    current_value = getattr(stat, reason_field)
-                    setattr(stat, reason_field, max(0, current_value - 1))
+                reason_stats = stat.reason_stats or {}
+                current_count = reason_stats.get(exit_reason, 0)
+                reason_stats[exit_reason] = max(0, current_count - 1)
+                stat.reason_stats = reason_stats
 
-            StatisticsRepository.update_daily_stats(
-                stat,
-                entry_count=stat.entry_count,
-                exit_count=stat.exit_count,
-                exit_reason_1=stat.exit_reason_1,
-                exit_reason_2=stat.exit_reason_2,
-                exit_reason_3=stat.exit_reason_3,
-                exit_reason_4=stat.exit_reason_4,
-                exit_reason_5=stat.exit_reason_5,
-            )
-
+            stat.save()
             logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
-
-            return True, '提交成功', {'id': record.id, 'status': record.status}
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 

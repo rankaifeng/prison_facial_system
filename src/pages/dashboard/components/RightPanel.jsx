@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { prisonMessages } from '@/api/globApi';
 
-const RightPanel = () => {
+const RightPanel = ({ onDataUpdate }) => {
   const [messages, setMessages] = useState([]);
   const navigate = useNavigate();
 
@@ -12,10 +12,17 @@ const RightPanel = () => {
     fetchMessages();
   }, []);
 
+  useEffect(() => {
+    if (onDataUpdate) {
+      onDataUpdate(fetchMessages);
+    }
+  }, [onDataUpdate]);
+
   const fetchMessages = async () => {
     try {
       const res = await prisonMessages.list({ page: 1, limit: 50 });
-      setMessages(res);
+      const data = Array.isArray(res) ? res : (res?.data || []);
+      setMessages(data);
     } catch (error) {
       console.error('获取监狱消息失败:', error);
     }
@@ -44,13 +51,13 @@ const RightPanel = () => {
       '外出教育': '外出教育出监',
       '离监探亲': '离监探亲出监',
       '押回重审': '押回重审出监',
+      '假释': '假释出监',
     };
     return actionMap[reason] || '出监';
   };
 
   const duplicatedMessages = [...messages, ...messages];
   const shouldScroll = messages.length > 3;
-  console.log("duplicatedMessages", duplicatedMessages);
 
   const renderEmptyState = () => (
     <div className="message-empty">

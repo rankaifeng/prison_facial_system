@@ -122,18 +122,16 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
       armed_police_signature: armedPoliceSignature,
     };
     console.log('提交数据:', data);
-    try {
-      const res = await exitRecord.submit(data);
-      if (res.code === 1) {
-        message.success('提交成功');
-        onOk?.(data);
-        handleReset();
-      } else {
-        message.error(res.msg || '提交失败');
-      }
-    } catch (error) {
-      message.error('提交失败');
+
+    const res = await exitRecord.submit(data);
+    if (res.code === 1) {
+      message.success('提交成功');
+      onOk?.(data);
+      handleReset();
+    } else {
+      message.error(res.msg || '提交失败');
     }
+
   };
 
   const handleReset = () => {
@@ -147,7 +145,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const renderStep1 = () => (
-    <div className="step-content step-form" style={{ display: current === 0 ? 'block' : 'none' }}>
+    <div className="step-content step-form" style={{ display: current === 0 ? 'block' : 'flex' }}>
       <Form
         form={form}
         layout="vertical"
@@ -247,7 +245,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep2 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 1 ? 'block' : 'none' }}>
+    <div className="step-content confirm-step" style={{ display: current === 1 ? 'block' : 'flex' }}>
       <div className="confirm-image">
         {policeImage ? (
           <img src={policeImage} alt="民警照片" />
@@ -265,7 +263,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep3 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 2 ? 'block' : 'none' }}>
+    <div className="step-content confirm-step" style={{ display: current === 2 ? 'block' : 'flex' }}>
       <div className="confirm-image">
         {swatImage ? (
           <img src={swatImage} alt="特警照片" />
@@ -282,8 +280,8 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     </div>
   );
 
-const renderStep4 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 3 ? 'block' : 'none' }}>
+  const renderStep4 = () => (
+    <div className="step-content confirm-step" style={{ display: current === 3 ? 'block' : 'flex' }}>
       <div className="signature-wrapper">
         {armedPoliceSignature ? (
           <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
