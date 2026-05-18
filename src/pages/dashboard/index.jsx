@@ -78,7 +78,6 @@ const Dashboard = () => {
       },
     });
   };
-
   return (
     <div className="dashboard">
       <div className="dashboard-header">
@@ -141,9 +140,7 @@ const Dashboard = () => {
 
       <div className="dashboard-content">
         <div className="left-area">
-          <LeftPanel
-            realtimeData={realtimeData}
-          />
+          <LeftPanel data={realtimeData} />
         </div>
 
         <div className="center-area">
@@ -164,7 +161,7 @@ const Dashboard = () => {
           </div>
 
           <div className="chart-section">
-            <StatisticsChart data={realtimeData} />
+            sdfs
           </div>
         </div>
 

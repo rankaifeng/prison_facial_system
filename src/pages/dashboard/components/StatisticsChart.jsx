@@ -24,8 +24,8 @@ const StatisticsChart = ({ data }) => {
           type: 'gauge',
           startAngle: 90,
           endAngle: -270,
-          radius: '90%',
-          center: ['50%', '55%'],
+          radius: '70%',
+          center: ['50%', '50%'],
           pointer: {
             show: false,
           },
@@ -76,7 +76,7 @@ const StatisticsChart = ({ data }) => {
               detail: {
                 offsetCenter: ['0%', '0%'],
                 color: '#00f0ff',
-                fontSize: 36,
+                fontSize: 28,
                 fontWeight: 'bold',
                 formatter: function(value) {
                   return Math.round(value);
@@ -88,11 +88,11 @@ const StatisticsChart = ({ data }) => {
             },
           ],
           title: {
-            fontSize: 12,
+            fontSize: 10,
             color: 'rgba(255, 255, 255, 0.7)',
           },
           detail: {
-            fontSize: 36,
+            fontSize: 28,
             fontWeight: 'bold',
             color: '#00f0ff',
             formatter: '{value}',
@@ -100,8 +100,8 @@ const StatisticsChart = ({ data }) => {
         },
         {
           type: 'pie',
-          radius: ['58%', '62%'],
-          center: ['50%', '55%'],
+          radius: ['45%', '48%'],
+          center: ['50%', '50%'],
           avoidLabelOverlap: false,
           label: {
             show: false,
