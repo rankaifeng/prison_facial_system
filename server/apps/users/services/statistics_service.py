@@ -39,6 +39,7 @@ class StatisticsService(BaseService):
         ).annotate(
             exit_count=Sum('exit_count'),
             entry_count=Sum('entry_count'),
+            in_prison_count=Sum('in_prison_count'),
             exit_reason_1=Sum('exit_reason_1'),
             exit_reason_2=Sum('exit_reason_2'),
             exit_reason_3=Sum('exit_reason_3'),
@@ -59,11 +60,13 @@ class StatisticsService(BaseService):
         area_list = []
         total_exit = 0
         total_entry = 0
+        total_in_prison = 0
         total_by_reason = {reason: 0 for reason in all_reasons}
 
         for stat in area_stats:
             exit_cnt = stat['exit_count'] or 0
             entry_cnt = stat['entry_count'] or 0
+            in_prison_cnt = stat['in_prison_count'] or 0
 
             # 按分监区的统计，包含各出监原因
             area_reasons = []
@@ -78,12 +81,14 @@ class StatisticsService(BaseService):
                 'prison_area_name': stat['prison_area_name'],
                 'exit_count': exit_cnt,
                 'entry_count': entry_cnt,
-                                'reasons': area_reasons
+                'in_prison_count': in_prison_cnt,
+                'reasons': area_reasons
             }
             area_list.append(area_item)
 
             total_exit += exit_cnt
             total_entry += entry_cnt
+            total_in_prison += in_prison_cnt
 
         # 汇总统计
         total_reasons = [{'name': reason, 'count': total_by_reason[reason]} for reason in all_reasons]
@@ -92,7 +97,8 @@ class StatisticsService(BaseService):
             'total': {
                 'exit_count': total_exit,
                 'entry_count': total_entry,
-                                'reasons': total_reasons
+                'in_prison_count': total_in_prison,
+                'reasons': total_reasons
             },
             'by_area': area_list,
         }

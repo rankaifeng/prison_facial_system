@@ -9,18 +9,14 @@ import StatusPieChart from './components/StatusPieChart';
 import PrisonMap from './components/PrisonMap';
 import ExitConfirmModal from './components/ExitConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
-import { prison, realtimeStatistics, workStatistics, message as messageApi } from '@/api/globApi';
+import { realtimeStatistics } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
 
 const { Title } = Typography;
 
 const Dashboard = () => {
-  const [prisons, setPrisons] = useState([]);
   const [realtimeData, setRealtimeData] = useState({});
-  const [prisonStats, setPrisonStats] = useState({});
-  const [workData, setWorkData] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [exitModalOpen, setExitModalOpen] = useState(false);
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -50,18 +46,9 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [prisonList, realtime, workStat, msgList] = await Promise.all([
-        prison.list(),
-        realtimeStatistics.get(),
-        workStatistics.list(),
-        messageApi.list({ limit: 10 }),
-      ]);
-
-      setPrisons(prisonList || []);
+      const realtime = await realtimeStatistics.get();
+      console.log('实时统计数据:', realtime);
       setRealtimeData(realtime || {});
-      setPrisonStats(realtime?.stats || {});
-      setWorkData(workStat || []);
-      setMessages(msgList || []);
     } catch (error) {
       console.error('获取数据失败:', error);
     }
@@ -71,7 +58,8 @@ const Dashboard = () => {
     items: [
       { key: '/dashboard', label: '首页大屏' },
       { key: '/prisoners', label: '档案库' },
-      { key: '/statistics', label: '进出统计' },
+      { key: '/statistics', label: '出监统计' },
+      { key: '/return-records', label: '回监统计' },
       { key: '/permission', label: '账号管理' },
       { key: '/type-management', label: '类型管理' },
     ],
@@ -155,8 +143,6 @@ const Dashboard = () => {
         <div className="left-area">
           <LeftPanel
             realtimeData={realtimeData}
-            prisonStats={prisonStats}
-            genderData={{ male: 680, female: 210 }}
           />
         </div>
 
@@ -174,17 +160,17 @@ const Dashboard = () => {
                 <span className="decor-dot"></span>
               </div>
             </div>
-            <PrisonMap />
+            <PrisonMap realtimeData={realtimeData} />
           </div>
 
           <div className="chart-section">
-            <StatisticsChart data={workData} />
+            <StatisticsChart data={realtimeData} />
           </div>
         </div>
 
         <div className="right-area">
-          <StatusPieChart data={prisonStats} />
-          <RightPanel messages={messages} />
+          <StatusPieChart data={realtimeData} />
+          <RightPanel messages={[]} />
         </div>
       </div>
 

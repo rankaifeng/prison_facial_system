@@ -5,13 +5,16 @@ import * as echarts from 'echarts';
 const StatisticsChart = ({ data }) => {
   const chartRef = useRef(null);
 
+  // workStatistics API 返回的数据结构: data.total.exit_count, data.total.entry_count
+  const exitCount = data?.total?.exit_count || 0;
+
   useEffect(() => {
     if (!chartRef.current) return;
 
     const chart = echarts.init(chartRef.current);
 
-    const defaultValue = 256;
-    const totalValue = data?.total || defaultValue;
+    const defaultValue = 0;
+    const totalValue = exitCount || defaultValue;
     const maxValue = 500;
 
     const option = {
@@ -120,7 +123,7 @@ const StatisticsChart = ({ data }) => {
       window.removeEventListener('resize', handleResize);
       chart.dispose();
     };
-  }, [data]);
+  }, [exitCount]);
 
   return (
     <div className="statistics-chart">

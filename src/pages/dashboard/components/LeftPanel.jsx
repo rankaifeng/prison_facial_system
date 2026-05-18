@@ -2,15 +2,18 @@ import React from 'react';
 import { UserOutlined, HeartOutlined, MedicineBoxOutlined, LockOutlined, DisconnectOutlined, HomeOutlined, ThunderboltOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import GenderRatio from './GenderRatio';
 
-const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
-  const total = realtimeData?.total || 890;
+const LeftPanel = ({ realtimeData }) => {
+  // 实时在监总人数 - 来自API的 total.in_prison_count
+  const total = realtimeData?.total?.in_prison_count || 0;
 
-  // 计算出监总人数 = 各类型数量之和
-  const exitTotalCount = (prisonStats?.inPrison || 0) +
-    (prisonStats?.working || 0) +
-    (prisonStats?.hospital || 0) +
-    (prisonStats?.isolated || 0) +
-    (prisonStats?.quarantine || 0);
+  // 各出监原因数量 - 来自API的 total.reasons
+  const reasons = realtimeData?.total?.reasons || [];
+
+  // 计算各原因的数量
+  const getReasonCount = (reasonName) => {
+    const reason = reasons.find(r => r.name === reasonName);
+    return reason ? reason.count : 0;
+  };
 
   return (
     <div className="left-panel">
@@ -57,7 +60,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             <span className="decor-dot"></span>
           </div>
           <div className="header-stat">
-            <span>当天出监总人数：{exitTotalCount}</span>
+            <span>当天出监总人数：{realtimeData?.total?.exit_count || 0}</span>
           </div>
         </div>
         <div className="stats-grid">
@@ -67,7 +70,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             </div>
             <div className="stat-content">
               <div className="stat-label">刑满释放</div>
-              <div className="stat-number">{prisonStats?.inPrison || 0}</div>
+              <div className="stat-number">{getReasonCount('刑满释放')}</div>
             </div>
           </div>
           <div className="stat-box">
@@ -76,7 +79,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             </div>
             <div className="stat-content">
               <div className="stat-label">外出就医</div>
-              <div className="stat-number">{prisonStats?.working || 0}</div>
+              <div className="stat-number">{getReasonCount('外出就医')}</div>
             </div>
           </div>
           <div className="stat-box">
@@ -85,7 +88,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             </div>
             <div className="stat-content">
               <div className="stat-label">外出教育</div>
-              <div className="stat-number">{prisonStats?.hospital || 0}</div>
+              <div className="stat-number">{getReasonCount('外出教育')}</div>
             </div>
           </div>
           <div className="stat-box">
@@ -94,7 +97,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             </div>
             <div className="stat-content">
               <div className="stat-label">离监探亲</div>
-              <div className="stat-number">{prisonStats?.isolated || 0}</div>
+              <div className="stat-number">{getReasonCount('离监探亲')}</div>
             </div>
           </div>
           <div className="stat-box">
@@ -103,7 +106,7 @@ const LeftPanel = ({ realtimeData, prisonStats, genderData }) => {
             </div>
             <div className="stat-content">
               <div className="stat-label">押回重审</div>
-              <div className="stat-number">{prisonStats?.quarantine || 0}</div>
+              <div className="stat-number">{getReasonCount('押回重审')}</div>
             </div>
           </div>
         </div>

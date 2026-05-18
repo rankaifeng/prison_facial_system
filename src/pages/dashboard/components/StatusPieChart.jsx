@@ -5,26 +5,27 @@ import * as echarts from 'echarts';
 const StatusPieChart = ({ data }) => {
   const chartRef = useRef(null);
 
+  // 从API获取的数据结构: data.total.reasons = [{name: '刑满释放', count: 100}, ...]
+  const reasons = data?.total?.reasons || [];
+
   useEffect(() => {
     if (!chartRef.current) return;
 
     const chart = echarts.init(chartRef.current);
 
     const defaultData = [
-      { name: '刑满释放', value: 680 },
-      { name: '外出就医', value: 120 },
-      { name: '外出教育', value: 25 },
-      { name: '离监探亲', value: 15 },
-      { name: '押回重审', value: 20 }
+      { name: '刑满释放', value: 0 },
+      { name: '外出就医', value: 0 },
+      { name: '外出教育', value: 0 },
+      { name: '离监探亲', value: 0 },
+      { name: '押回重审', value: 0 }
     ];
 
-    const chartData = data && Object.keys(data).length > 0 ? [
-      { name: '刑满释放', value: data.inPrison || 0 },
-      { name: '外出就医', value: data.working || 0 },
-      { name: '外出教育', value: data.hospital || 0 },
-      { name: '离监探亲', value: data.isolated || 0 },
-      { name: '押回重审', value: data.quarantine || 0 },
-    ] : defaultData;
+    // 使用API返回的reasons数据，如果没有则用defaultData
+    const chartData = reasons.length > 0 ? reasons.map(item => ({
+      name: item.name,
+      value: item.count || 0
+    })) : defaultData;
 
     const colors = ['#1890ff', '#52c41a', '#ff4d4f', '#faad14', '#722ed1'];
 
@@ -88,7 +89,7 @@ const StatusPieChart = ({ data }) => {
       window.removeEventListener('resize', handleResize);
       chart.dispose();
     };
-  }, [data]);
+  }, [reasons]);
 
   return (
     <div className="status-pie-chart">
