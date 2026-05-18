@@ -85,6 +85,8 @@
   .ant-modal-body {
     padding: 24px 28px;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -200,9 +202,13 @@
 }
 
 .step-content {
-  min-height: 400px;
+  min-height: 320px;
   padding: 24px 8px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .confirm-step {
@@ -211,7 +217,8 @@
   align-items: center;
   justify-content: center;
   gap: 24px;
-  height: 100%;
+  flex: 1;
+  width: 100%;
 }
 
 .confirm-icon {

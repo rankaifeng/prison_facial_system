@@ -145,7 +145,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const renderStep1 = () => (
-    <div className="step-content step-form" style={{ display: current === 0 ? 'block' : 'flex' }}>
+    <div className="step-content step-form" style={{ display: current === 0 ? 'flex' : 'none' }}>
       <Form
         form={form}
         layout="vertical"
@@ -245,10 +245,10 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep2 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 1 ? 'block' : 'flex' }}>
+    <div className="step-content confirm-step" style={{ display: current === 1 ? 'flex' : 'none' }}>
       <div className="confirm-image">
         {policeImage ? (
-          <img src={policeImage} alt="民警照片" />
+          <img src={policeImage} alt="民警照片1" />
         ) : (
           <div className="image-placeholder">
             <UserOutlined />
@@ -263,7 +263,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep3 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 2 ? 'block' : 'flex' }}>
+    <div className="step-content confirm-step" style={{ display: current === 2 ? 'flex' : 'none' }}>
       <div className="confirm-image">
         {swatImage ? (
           <img src={swatImage} alt="特警照片" />
@@ -281,7 +281,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   );
 
   const renderStep4 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 3 ? 'block' : 'flex' }}>
+    <div className="step-content confirm-step" style={{ display: current === 3 ? 'flex' : 'none' }}>
       <div className="signature-wrapper">
         {armedPoliceSignature ? (
           <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
