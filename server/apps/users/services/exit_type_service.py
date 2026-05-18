@@ -47,9 +47,24 @@ class ExitTypeService(BaseService):
 
     @staticmethod
     def list_exit_types(type_name=''):
-        items = list(ExitTypeRepository.get_all().select_related('parent'))
-        tree = ExitTypeService._build_tree(items, type_name)
-        return True, '获取成功', tree
+        items = ExitTypeRepository.get_all().select_related('parent')
+
+        # 过滤
+        if type_name:
+            items = items.filter(type_name__icontains=type_name)
+
+        data = []
+        for item in items:
+            data.append({
+                'id': item.id,
+                'type_name': item.type_name,
+                'parent_id': item.parent_id,
+                'parent_name': item.parent.type_name if item.parent else '',
+                'sort_order': item.sort_order,
+                'status': item.status,
+                'created_at': item.created_at.strftime('%Y-%m-%d %H:%M:%S') if item.created_at else '',
+            })
+        return True, '获取成功', data
 
     @staticmethod
     def create_exit_type(type_name, parent_id=None, sort_order=0, status='active'):

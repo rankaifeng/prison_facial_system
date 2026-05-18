@@ -5,7 +5,7 @@ import Dashboard from '@/pages/dashboard';
 import PrisonerList from '@/pages/prisoners/list';
 import PrisonerDetail from '@/pages/prisoners/detail';
 import Statistics from '@/pages/statistics';
-import ExitRecords from '@/pages/exit-records';
+import ReturnRecords from '@/pages/return-records';
 import Permission from '@/pages/permission';
 import TypeManagement from '@/pages/type-management';
 
@@ -19,6 +19,7 @@ const routes = [
       { path: '/prisoners', element: <PrisonerList /> },
       { path: '/prisoners/:id', element: <PrisonerDetail /> },
       { path: '/statistics', element: <Statistics /> },
+      { path: '/return-records', element: <ReturnRecords /> },
       { path: '/permission', element: <Permission /> },
       { path: '/type-management', element: <TypeManagement /> },
     ],
