@@ -1500,7 +1500,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
     margin-bottom: 8px;
     padding: 6px 10px;
     position: relative;
@@ -1517,32 +1516,67 @@
       animation: header-shine 3s ease-in-out infinite;
     }
 
-    .header-content {
+    .header-left {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: @primary-glow;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
       position: relative;
       z-index: 1;
 
-      .anticon {
-        font-size: 14px;
-        filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: @primary-glow;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
+
+        .anticon {
+          font-size: 14px;
+          filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
+        }
+      }
+
+      .header-line {
+        width: 60px;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.1));
       }
     }
 
-    .header-line {
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.1), transparent);
+    .header-total {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(24, 119, 255, 0.1) 100%);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.1);
+
+      .total-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .total-value {
+        color: @primary-glow;
+        font-size: 16px;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+      }
+
+      .total-unit {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+      }
     }
 
-    .header-decor {
+    .header-right {
       display: flex;
       align-items: center;
       gap: 4px;
