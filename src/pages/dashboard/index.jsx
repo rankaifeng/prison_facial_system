@@ -9,6 +9,7 @@ import StatusPieChart from './components/StatusPieChart';
 import PrisonMap from './components/PrisonMap';
 import ExitConfirmModal from './components/ExitConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
+import ExitReasonBarChart from './components/ExitReasonBarChart';
 import { realtimeStatistics } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
@@ -161,7 +162,7 @@ const Dashboard = () => {
           </div>
 
           <div className="chart-section">
-            sdfs
+            <ExitReasonBarChart data={realtimeData} />
           </div>
         </div>
 
