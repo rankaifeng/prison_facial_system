@@ -109,33 +109,29 @@ const TypeManagement = () => {
       title: '出监原因',
       dataIndex: 'type_name',
       key: 'type_name',
-      width: 260,
       render: (text, record) => (
         <Space>
           <span>{text}</span>
-          <Tag color={record.level === 1 ? 'blue' : record.level === 2 ? 'green' : 'default'}>
-            {record.level}级
-          </Tag>
         </Space>
       ),
     },
-    { title: '排序', dataIndex: 'sort_order', key: 'sort_order', width: 100 },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at' },
     {
       title: '操作',
       key: 'action',
-      width: 260,
-      fixed: 'right',
+      width: 300,
       render: (_, record) => (
-        <Space>
+        <>
           <Button
             type="link"
+            size='small'
             icon={<NodeIndexOutlined />}
             onClick={() => handleAddChild(record)}
           >
             新增下级
           </Button>
           <Button
+            size='small'
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
@@ -143,6 +139,7 @@ const TypeManagement = () => {
             编辑
           </Button>
           <Button
+            size='small'
             type="link"
             danger
             icon={<DeleteOutlined />}
@@ -150,7 +147,7 @@ const TypeManagement = () => {
           >
             删除
           </Button>
-        </Space>
+        </>
       ),
     },
   ], []);

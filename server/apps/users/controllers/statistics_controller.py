@@ -17,8 +17,8 @@ class RealtimeStatisticsController(APIView):
         success, message, data = StatisticsService.get_realtime_statistics(prison_area)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data
         })
 
@@ -35,7 +35,7 @@ class WorkStatisticsController(APIView):
         success, message, data = StatisticsService.get_work_statistics(prison_area)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data
         })

@@ -4,8 +4,9 @@ import {
   PRISON_LIST,
   PRISONER_LIST,
   PRISONER_DETAIL,
-  PRISONER_EXIT_RECORD,
-  EXIT_STATISTICS,
+  EXIT_RECORD,
+  ENTRY_RECORD,
+  RECORD_LIST,
   REALTIME_STATISTICS,
   WORK_STATISTICS,
   MESSAGE_LIST,
@@ -33,11 +34,15 @@ export const prisoner = {
 };
 
 export const exitRecord = {
-  list: (data) => http.get(PRISONER_EXIT_RECORD, data).then((res) => res?.data),
+  submit: (data) => http.post(EXIT_RECORD, data),
 };
 
-export const exitStatistics = {
-  list: (data) => http.get(EXIT_STATISTICS, data).then((res) => res?.data),
+export const entryRecord = {
+  submit: (data) => http.post(ENTRY_RECORD, data),
+};
+
+export const record = {
+  list: (data) => http.get(RECORD_LIST, data).then((res) => res?.data),
 };
 
 export const realtimeStatistics = {

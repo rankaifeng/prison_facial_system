@@ -118,14 +118,14 @@ const mockHandler = (url, params = {}) => {
     });
 };
 
-// Check if should use mock
-const USE_MOCK = import.meta.env.MODE === 'development';
+// Check if should use mock (disabled - using real backend)
+const USE_MOCK = false;
 
 const service = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,
     headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json; charset=utf-8',
     },
 });
@@ -134,7 +134,7 @@ service.interceptors.request.use(
     (config) => {
         const token = cache.getVal("token");
         if (token) {
-            config.headers['Authorization'] = token;
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
@@ -147,7 +147,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data;
-        if (res.msg && res.msg.includes("超时")) {
+        if (res.msg && res.msg.includes("无效")) {
             cache.clearVal();
             window.location.href = '/login';
             return;
@@ -156,6 +156,8 @@ service.interceptors.response.use(
     },
     (error) => {
         let msg = '网络连接异常';
+        console.log("error", error);
+
         if (error.response) {
             const { status } = error.response;
             switch (status) {

@@ -15,16 +15,16 @@ class AccountListController(APIView):
     def get(self, request):
         if request.user.role != 'admin':
             return Response({
-                'code': 403,
-                'message': '无权限访问',
+                'code': 0,
+                'msg': '无权限访问',
                 'data': None
-            }, status=status.HTTP_403_FORBIDDEN)
+            }, status=status.HTTP_200_OK)
 
         success, message, data = AccountService.list_accounts()
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data,
             'num': len(data) if data else 0
         })
@@ -32,18 +32,18 @@ class AccountListController(APIView):
     def post(self, request):
         if request.user.role != 'admin':
             return Response({
-                'code': 403,
-                'message': '无权限访问',
+                'code': 0,
+                'msg': '无权限访问',
                 'data': None
-            }, status=status.HTTP_403_FORBIDDEN)
+            }, status=status.HTTP_200_OK)
 
         serializer = AccountCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response({
-                'code': 400,
-                'message': '参数错误',
+                'code': 0,
+                'msg': '参数错误',
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
         data = serializer.validated_data
         prison_id = data.get('prison_id', '')
@@ -59,13 +59,13 @@ class AccountListController(APIView):
         if not success:
             return Response({
                 'code': 400,
-                'message': message,
+                'msg': message,
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result
         })
 
@@ -77,16 +77,16 @@ class AccountDeleteController(APIView):
     def post(self, request):
         if request.user.role != 'admin':
             return Response({
-                'code': 403,
-                'message': '无权限访问',
+                'code': 0,
+                'msg': '无权限访问',
                 'data': None
-            }, status=status.HTTP_403_FORBIDDEN)
+            }, status=status.HTTP_200_OK)
 
         account_id = request.data.get('id')
         if not account_id:
             return Response({
                 'code': 400,
-                'message': '缺少账号ID',
+                'msg': '缺少账号ID',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -96,12 +96,12 @@ class AccountDeleteController(APIView):
             code = 404 if '不存在' in message else 400
             return Response({
                 'code': code,
-                'message': message,
+                'msg': message,
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST if code == 400 else status.HTTP_404_NOT_FOUND)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': None
         })

@@ -14,10 +14,10 @@ class LoginController(APIView):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response({
-                'code': 400,
-                'message': '用户名和密码不能为空',
+                'code': 0,
+                'msg': '用户名和密码不能为空',
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
@@ -26,13 +26,13 @@ class LoginController(APIView):
 
         if not success:
             return Response({
-                'code': 401,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            }, status=status.HTTP_200_OK)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data
         })

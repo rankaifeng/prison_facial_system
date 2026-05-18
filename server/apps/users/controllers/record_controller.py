@@ -29,8 +29,8 @@ class ExitRecordController(APIView):
 
         if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason, police_face, swat_face, armed_police_signature]):
             return Response({
-                'code': 400,
-                'message': '缺少必要参数',
+                'code': 0,
+                'msg': '缺少必要参数',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -55,14 +55,14 @@ class ExitRecordController(APIView):
 
         if not success:
             return Response({
-                'code': 400,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result
         })
 
@@ -84,8 +84,8 @@ class EntryRecordController(APIView):
 
         if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
             return Response({
-                'code': 400,
-                'message': '缺少必要参数',
+                'code': 0,
+                'msg': '缺少必要参数',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -105,14 +105,14 @@ class EntryRecordController(APIView):
 
         if not success:
             return Response({
-                'code': 400,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result
         })
 
@@ -142,8 +142,8 @@ class RecordListController(APIView):
         )
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result.get('data', []),
             'total': result.get('total', 0),
             'page': result.get('page', 1),

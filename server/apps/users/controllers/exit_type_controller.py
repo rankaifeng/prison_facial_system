@@ -16,8 +16,8 @@ class ExitTypeListController(APIView):
         success, message, data = ExitTypeService.list_exit_types(type_name)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data,
             'num': len(data) if data else 0,
         })
@@ -31,8 +31,8 @@ class ExitTypeAddController(APIView):
         serializer = ExitTypeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response({
-                'code': 400,
-                'message': '参数错误',
+                'code': 0,
+                'msg': '参数错误',
                 'data': serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,14 +45,14 @@ class ExitTypeAddController(APIView):
         )
         if not success:
             return Response({
-                'code': 400,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result,
         })
 
@@ -65,16 +65,16 @@ class ExitTypeUpdateController(APIView):
         exit_type_id = request.data.get('id')
         if not exit_type_id:
             return Response({
-                'code': 400,
-                'message': '缺少出监原因ID',
+                'code': 0,
+                'msg': '缺少出监原因ID',
                 'data': None,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = ExitTypeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response({
-                'code': 400,
-                'message': '参数错误',
+                'code': 0,
+                'msg': '参数错误',
                 'data': serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -88,14 +88,14 @@ class ExitTypeUpdateController(APIView):
         )
         if not success:
             return Response({
-                'code': 400,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': result,
         })
 
@@ -108,21 +108,21 @@ class ExitTypeDeleteController(APIView):
         exit_type_id = request.data.get('id')
         if not exit_type_id:
             return Response({
-                'code': 400,
-                'message': '缺少出监原因ID',
+                'code': 0,
+                'msg': '缺少出监原因ID',
                 'data': None,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         success, message, data = ExitTypeService.delete_exit_type(exit_type_id)
         if not success:
             return Response({
-                'code': 400,
-                'message': message,
+                'code': 0,
+                'msg': message,
                 'data': None,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'code': 200,
-            'message': message,
+            'code': 1,
+            'msg': message,
             'data': data,
         })

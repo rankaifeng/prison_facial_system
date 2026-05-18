@@ -1,5 +1,5 @@
 const MODE = import.meta.env.MODE;
-const apiBaseUrl = 'http://192.168.100.144:8793/'
+const apiBaseUrl = 'http://127.0.0.1:8000/'
 
 const returnBaseUrl = () => {
     if (MODE === 'development') {

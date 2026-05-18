@@ -3,6 +3,7 @@ import { Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { getFirstMenuPath } from '@/router/menus';
+import { userLogin } from '@/api/globApi';
 import cache from '@/utils/cache';
 import './index.less';
 
@@ -13,20 +14,23 @@ const Login = () => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      cache.setVal("token", "fake_token_12345");
-      cache.setVal("userName", values.username || '管理员');
-      message.success('登录成功');
+    const res = await userLogin(values);
+    setLoading(false);
+    const { code, msg, data } = res;
+
+    if (code === 1) {
+      message.success(msg);
+      const { prison_id, role_name, token } = data || {};
+      cache.setVal('token', token);
+      cache.setVal('prisonId', prison_id);
+      cache.setVal('roleName', role_name);
       setTimeout(() => {
         navigate(getFirstMenuPath());
-      }, 800);
-    } catch (error) {
-      message.error('登录失败');
-    } finally {
-      setLoading(false);
+      }, 500);
+    } else {
+      message.error(msg || '登录失败');
     }
-  };
+  }
 
   return (
     <div className="login-page">
