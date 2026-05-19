@@ -93,8 +93,11 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
           };
         });
 
-        const center = isAdmin ? [108, 27] : (provinceCenters[currentPrisonName + '省'] || provinceCenters[currentPrisonName + '市'] || provinceCenters[currentPrisonName + '自治区'] || [108, 27]);
-        const zoom = isAdmin ? 1.2 : 5;
+        // 非管理员使用监区预设坐标并放大
+        const displayCenter = isAdmin
+          ? [108, 27]
+          : (updatedCont[0]?.coordinates || [108, 27]);
+        const displayZoom = isAdmin ? 1.2 : 1.1;
 
         const option = {
           backgroundColor: 'transparent',
@@ -105,8 +108,8 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
             map: 'prison-map',
             roam: true,
             scaleLimit: { min: 0.5, max: 3 },
-            zoom: zoom,
-            center: center,
+            zoom: displayZoom,
+            center: displayCenter,
             aspectScale: 1,
             label: { show: false },
             itemStyle: {
