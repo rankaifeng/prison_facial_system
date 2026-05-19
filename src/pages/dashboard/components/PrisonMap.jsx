@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as echarts from 'echarts';
 //center: [114, 23], { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 510, workCount: 395 },
@@ -11,21 +11,7 @@ const PrisonMap = ({ realtimeData }) => {
   // 从API获取的 by_area 数据
   const byArea = realtimeData?.by_area || [];
 
-  // 映射到监狱数据，使用API数据
-  const prisons = byArea.length > 0 ? byArea.map((area, index) => {
-    const defaultCoords = [
-      [104.06, 30.67], [101.34, 25.04], [106.71, 26.60],
-      [108.33, 22.84], [112.94, 28.24], [113.26, 23.13], [115.89, 28.68]
-    ];
-    return {
-      name: area.prison_area_name || `分监区${index + 1}`,
-      province: '',
-      code: '',
-      coordinates: defaultCoords[index] || [104, 30],
-      totalCount: area.in_prison_count || 0,
-      workCount: area.exit_count || 0,
-    };
-  }) : [
+  const mCont = [
     { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, workCount: 0 },
     { name: '分监区二', province: '云南', code: '530000', coordinates: [101.34, 25.04], totalCount: 0, workCount: 0 },
     { name: '分监区三', province: '贵州', code: '520000', coordinates: [106.71, 26.60], totalCount: 0, workCount: 0 },
@@ -34,15 +20,25 @@ const PrisonMap = ({ realtimeData }) => {
     { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, workCount: 0 },
     { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, workCount: 0 },
     { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, workCount: 0 },
-  ];
-
+  ]
   useEffect(() => {
     const chart = echarts.init(chartRef.current);
 
-    fetch('/china.json')
+    mCont.forEach((item, index) => {
+      byArea.forEach(area => {
+        if (area.prison_area_name === item.name) {
+          mCont[index] = {
+            ...item,
+            totalCount: 33,
+            workCount: area.exit_count || 0,
+          };
+        }
+      });
+    });
+      fetch('/china.json')
       .then(res => res.json())
       .then(chinaData => {
-        const provinces = prisons.map(p => p.code);
+        const provinces = mCont.map(p => p.code);
 
         const filteredFeatures = chinaData.features.filter(feature => {
           const adcode = feature.properties.adcode || feature.properties.id;
@@ -73,7 +69,7 @@ const PrisonMap = ({ realtimeData }) => {
           }
         });
 
-        prisons.forEach(p => {
+        mCont.forEach(p => {
           const center = provinceCenters[p.province + '省'] || provinceCenters[p.province + '市'] || provinceCenters[p.province + '自治区'] || provinceCenters[p.province];
           if (center) {
             p.coordinates = center;
@@ -112,12 +108,16 @@ const PrisonMap = ({ realtimeData }) => {
               name: '监狱',
               type: 'effectScatter',
               coordinateSystem: 'geo',
-              data: prisons.map(p => ({
-                name: p.name,
-                value: [...p.coordinates, p.totalCount],
-                totalCount: p.totalCount,
-                workCount: p.workCount,
-              })),
+              data: mCont.map(p => {
+                console.log("pppp", p);
+
+                return {
+                  name: p.name,
+                  value: [...p.coordinates, p.totalCount],
+                  totalCount: p.totalCount,
+                  workCount: p.workCount,
+                }
+              }),
               symbolSize: (val) => {
                 const count = val[2];
                 return Math.max(15, Math.min(30, count / 20));
@@ -176,7 +176,7 @@ const PrisonMap = ({ realtimeData }) => {
       window.removeEventListener('resize', handleResize);
       chart.dispose();
     };
-  }, []);
+  }, [realtimeData]);
 
   return <div ref={chartRef} style={{ width: '100%', height: '100%' }} />;
 };
