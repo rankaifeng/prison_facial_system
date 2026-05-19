@@ -73,6 +73,11 @@ class RecordService(BaseService):
                 status='completed',
             )
 
+            # 刑满释放不计入统计（因为不会回来）
+            if reason == '刑满释放':
+                logger.info(f"Exit record created (刑满释放，不统计): id={record.id}, prisoner={prisoner_no}")
+                return True, '提交成功', {'id': record.id, 'status': record.status}
+
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
             stat.exit_count += 1
             stat.in_prison_count -= 1
