@@ -110,23 +110,23 @@ const RightPanel = ({ onDataUpdate }) => {
             <>
               {messages.map((msg, index) => (
                 <div key={`orig-${msg.id || index}`} className="message-item">
-                  <div className="message-content">
-                    <div className="message-text">
-                      <div className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></div>
-                      <div className="action-text">{msg.reason}</div>
-                      {msg.hospital_name && <div style={{ color: '#00f0ff', marginLeft: 5 }}>-{msg.hospital_name}</div>}
-                    </div>
+                  <div className="message-dot" />
+                  <div className="message-text">
+                    <span className="person-name">{msg.prisoner_name}</span>
+                    <span className="date">{msg.exit_date}</span>
+                    <span className="reason">{msg.reason}</span>
+                    {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
                   </div>
                 </div>
               ))}
               {messages.map((msg, index) => (
                 <div key={`dup-${msg.id || index}`} className="message-item">
-                  <div className="message-content">
-                    <div className="message-text">
-                      <div className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></div>
-                      <div className="action-text">{msg.reason}</div>
-                      {msg.hospital_name && <div style={{ color: '#00f0ff', marginLeft: 5 }}>-{msg.hospital_name}</div>}
-                    </div>
+                  <div className="message-dot" />
+                  <div className="message-text">
+                    <span className="person-name">{msg.prisoner_name}</span>
+                    <span className="date">{msg.exit_date}</span>
+                    <span className="reason">{msg.reason}</span>
+                    {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
                   </div>
                 </div>
               ))}
