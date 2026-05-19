@@ -1097,14 +1097,12 @@
 
   .message-list {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     position: relative;
     min-height: 0;
 
     .message-scroll {
-      position: absolute;
       width: 100%;
-      animation: scrollUp 20s linear infinite;
     }
 
     .message-item {
