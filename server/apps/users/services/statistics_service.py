@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime
 from django.db.models import Sum
 from apps.users.repositories import StatisticsRepository
 from .base_service import BaseService
@@ -42,6 +42,20 @@ class StatisticsService(BaseService):
         total_entry = 0
         total_in_prison = 0
 
+        # 年度出监统计（从1月1日到今天）
+        year_start = date(today.year, 1, 1)
+        from apps.users.models import ExitEntryRecord
+        from django.db.models import Count
+        yearly_stats = {}
+        yearly_records = ExitEntryRecord.objects.filter(
+            type='exit',
+            exit_date__gte=year_start,
+            exit_date__lte=today
+        ).values('prison_area').annotate(yearly_exit=Count('id'))
+
+        for item in yearly_records:
+            yearly_stats[item['prison_area']] = item['yearly_exit']
+
         for stat in area_stats:
             exit_cnt = stat['exit_count'] or 0
             entry_cnt = stat['entry_count'] or 0
@@ -69,6 +83,7 @@ class StatisticsService(BaseService):
                 'exit_count': exit_cnt,
                 'entry_count': entry_cnt,
                 'in_prison_count': in_prison_cnt,
+                'yearly_exit_count': yearly_stats.get(stat['prison_area'], 0),
                 'reasons': area_reasons
             }
             area_list.append(area_item)

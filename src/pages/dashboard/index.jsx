@@ -48,7 +48,6 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       const realtime = await realtimeStatistics.get();
-      console.log('实时统计数据:', realtime);
       setRealtimeData(realtime || {});
     } catch (error) {
       console.error('获取数据失败:', error);

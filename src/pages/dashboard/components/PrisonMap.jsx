@@ -12,33 +12,31 @@ const PrisonMap = ({ realtimeData }) => {
   const byArea = realtimeData?.by_area || [];
 
   const mCont = [
-    { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, workCount: 0 },
-    { name: '分监区二', province: '云南', code: '530000', coordinates: [101.34, 25.04], totalCount: 0, workCount: 0 },
-    { name: '分监区三', province: '贵州', code: '520000', coordinates: [106.71, 26.60], totalCount: 0, workCount: 0 },
-    { name: '分监区四', province: '广西', code: '450000', coordinates: [108.33, 22.84], totalCount: 0, workCount: 0 },
-    { name: '分监区五', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 0, workCount: 0 },
-    { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, workCount: 0 },
-    { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, workCount: 0 },
-    { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, workCount: 0 },
+    { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区二', province: '云南', code: '530000', coordinates: [101.34, 25.04], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区三', province: '贵州', code: '520000', coordinates: [106.71, 26.60], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区四', province: '广西', code: '450000', coordinates: [108.33, 22.84], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区五', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, yearlyExitCount: 0 },
+    { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, yearlyExitCount: 0 },
+    { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, yearlyExitCount: 0 },
   ]
   useEffect(() => {
     const chart = echarts.init(chartRef.current);
 
-    mCont.forEach((item, index) => {
-      byArea.forEach(area => {
-        if (area.prison_area_name === item.name) {
-          mCont[index] = {
-            ...item,
-            totalCount: 33,
-            workCount: area.exit_count || 0,
-          };
-        }
-      });
+    const updatedCont = mCont.map((item, index) => {
+      const area = byArea.find(a => a.prison_area_name === item.name);
+      return {
+        ...item,
+        totalCount: 22 || 0,
+        yearlyExitCount: area?.yearly_exit_count || 0,
+      };
     });
+
       fetch('/china.json')
       .then(res => res.json())
       .then(chinaData => {
-        const provinces = mCont.map(p => p.code);
+        const provinces = updatedCont.map(p => p.code);
 
         const filteredFeatures = chinaData.features.filter(feature => {
           const adcode = feature.properties.adcode || feature.properties.id;
@@ -69,11 +67,12 @@ const PrisonMap = ({ realtimeData }) => {
           }
         });
 
-        mCont.forEach(p => {
+        const finalCont = updatedCont.map(p => {
           const center = provinceCenters[p.province + '省'] || provinceCenters[p.province + '市'] || provinceCenters[p.province + '自治区'] || provinceCenters[p.province];
-          if (center) {
-            p.coordinates = center;
-          }
+          return {
+            ...p,
+            coordinates: center || p.coordinates,
+          };
         });
 
         const option = {
@@ -108,14 +107,12 @@ const PrisonMap = ({ realtimeData }) => {
               name: '监狱',
               type: 'effectScatter',
               coordinateSystem: 'geo',
-              data: mCont.map(p => {
-                console.log("pppp", p);
-
+              data: finalCont.map(p => {
                 return {
                   name: p.name,
                   value: [...p.coordinates, p.totalCount],
                   totalCount: p.totalCount,
-                  workCount: p.workCount,
+                  yearlyExitCount: p.yearlyExitCount,
                 }
               }),
               symbolSize: (val) => {
@@ -145,7 +142,7 @@ const PrisonMap = ({ realtimeData }) => {
               label: {
                 show: true,
                 position: 'top',
-                formatter: (params) => `📍 ${params.data.name}\n👥 实时在监人数: ${params.data.totalCount}\n🚶 当年累计出监人数: ${params.data.workCount}`,
+                formatter: (params) => `📍 ${params.data.name}\n👥 实时在监人数: ${params.data.totalCount}\n🚶 当年累计出监人数: ${params.data.yearlyExitCount}`,
                 fontSize: 11,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',
