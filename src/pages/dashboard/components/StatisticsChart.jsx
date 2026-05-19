@@ -24,8 +24,8 @@ const StatisticsChart = ({ data }) => {
           type: 'gauge',
           startAngle: 90,
           endAngle: -270,
-          radius: '70%',
-          center: ['50%', '50%'],
+          radius: '80%',
+          center: ['50%', '55%'],
           pointer: {
             show: false,
           },
@@ -43,16 +43,19 @@ const StatisticsChart = ({ data }) => {
                 y2: 0,
                 colorStops: [
                   { offset: 0, color: '#00f0ff' },
-                  { offset: 0.5, color: '#1877ff' },
+                  { offset: 0.3, color: '#00d0ff' },
+                  { offset: 0.7, color: '#0080ff' },
                   { offset: 1, color: '#00f0ff' },
                 ],
               },
+              shadowBlur: 20,
+              shadowColor: '#00f0ff',
             },
           },
           axisLine: {
             lineStyle: {
-              width: 18,
-              color: [[1, 'rgba(0, 240, 255, 0.15)']],
+              width: 22,
+              color: [[1, 'rgba(0, 240, 255, 0.1)']],
             },
           },
           splitLine: {
@@ -69,14 +72,15 @@ const StatisticsChart = ({ data }) => {
               value: totalValue,
               name: '出监人数',
               title: {
-                offsetCenter: ['0%', '30%'],
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontSize: 12,
+                offsetCenter: ['0%', '35%'],
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: 14,
+                fontWeight: 500,
               },
               detail: {
-                offsetCenter: ['0%', '0%'],
+                offsetCenter: ['0%', '5%'],
                 color: '#00f0ff',
-                fontSize: 28,
+                fontSize: 36,
                 fontWeight: 'bold',
                 formatter: function(value) {
                   return Math.round(value);
@@ -84,24 +88,28 @@ const StatisticsChart = ({ data }) => {
               },
               itemStyle: {
                 color: '#00f0ff',
+                shadowBlur: 30,
+                shadowColor: '#00f0ff',
               },
             },
           ],
           title: {
-            fontSize: 10,
+            fontSize: 12,
             color: 'rgba(255, 255, 255, 0.7)',
           },
           detail: {
-            fontSize: 28,
+            fontSize: 36,
             fontWeight: 'bold',
             color: '#00f0ff',
             formatter: '{value}',
+            shadowBlur: 20,
+            shadowColor: '#00f0ff',
           },
         },
         {
           type: 'pie',
-          radius: ['45%', '48%'],
-          center: ['50%', '50%'],
+          radius: ['50%', '54%'],
+          center: ['50%', '55%'],
           avoidLabelOverlap: false,
           label: {
             show: false,
@@ -110,6 +118,24 @@ const StatisticsChart = ({ data }) => {
             show: false,
           },
           data: [],
+        },
+        {
+          type: 'pie',
+          radius: ['42%', '43%'],
+          center: ['50%', '55%'],
+          avoidLabelOverlap: false,
+          label: {
+            show: false,
+          },
+          labelLine: {
+            show: false,
+          },
+          data: [{
+            value: 0,
+            itemStyle: {
+              color: 'transparent',
+            }
+          }],
         },
       ],
     };

@@ -145,7 +145,7 @@ const PrisonMap = ({ realtimeData }) => {
               label: {
                 show: true,
                 position: 'top',
-                formatter: (params) => `📍 ${params.data.name}\n👥 总人数: ${params.data.totalCount}\n🚶 出监人数: ${params.data.workCount}`,
+                formatter: (params) => `📍 ${params.data.name}\n👥 实时在监人数: ${params.data.totalCount}\n🚶 当年累计出监人数: ${params.data.workCount}`,
                 fontSize: 11,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',

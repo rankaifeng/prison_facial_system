@@ -628,21 +628,21 @@
     border-radius: 10px;
     border: none;
     padding: 10px;
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+    box-shadow:
+      0 0 30px rgba(0, 240, 255, 0.15),
+      inset 0 0 50px rgba(0, 240, 255, 0.03);
     display: flex;
     position: relative;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
+    border: 1px solid rgba(0, 240, 255, 0.2);
 
     .chart-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 10px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      margin-bottom: 8px;
       padding: 8px 12px;
       overflow: hidden;
 
@@ -714,36 +714,51 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 15px 0;
+      padding: 10px 0;
 
       .total-circle {
-        width: 180px;
-        height: 180px;
+        width: 200px;
+        height: 200px;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, rgba(0, 240, 255, 0.9) 0%, rgba(24, 119, 255, 0.6) 30%, rgba(0, 50, 150, 0.4) 60%, rgba(0, 20, 80, 0.8) 100%);
-        border: 3px solid rgba(0, 240, 255, 0.6);
+        background: radial-gradient(circle at 35% 35%, rgba(0, 240, 255, 0.95) 0%, rgba(24, 119, 255, 0.7) 25%, rgba(0, 80, 200, 0.5) 50%, rgba(0, 20, 80, 0.9) 100%);
+        border: 4px solid rgba(0, 240, 255, 0.8);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         position: relative;
-        box-shadow: 0 0 40px rgba(0, 240, 255, 0.6), 0 0 80px rgba(0, 240, 255, 0.4), inset 0 0 40px rgba(0, 240, 255, 0.4), inset -5px -5px 35px rgba(0, 30, 100, 0.5);
-        transform: perspective(200px) rotateX(5deg);
+        box-shadow:
+          0 0 50px rgba(0, 240, 255, 0.8),
+          0 0 100px rgba(0, 240, 255, 0.5),
+          inset 0 0 50px rgba(0, 240, 255, 0.5),
+          inset -8px -8px 40px rgba(0, 30, 120, 0.6);
+        transform: perspective(200px) rotateX(8deg);
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          right: -8px;
+          bottom: -8px;
+          border-radius: 50%;
+          border: 1px solid rgba(0, 240, 255, 0.3);
+          box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
 
         .total-value {
-          font-size: 48px;
+          font-size: 52px;
           font-weight: 700;
           color: #fff;
           line-height: 1;
-          text-shadow: 0 0 20px rgba(0, 240, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.5);
-          margin-top: -4px;
+          text-shadow: 0 0 30px rgba(0, 240, 255, 1), 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .total-unit {
-          font-size: 14px;
+          font-size: 16px;
           color: rgba(255, 255, 255, 0.9);
-          margin-top: 4px;
-          text-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+          margin-top: 6px;
+          text-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
         }
       }
 
@@ -751,13 +766,13 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 15px;
+        margin-top: 20px;
 
         .decoration-line {
-          width: 50px;
+          width: 60px;
           height: 2px;
           background: linear-gradient(90deg, transparent, @primary-glow, transparent);
-          box-shadow: 0 0 10px @primary-glow;
+          box-shadow: 0 0 15px @primary-glow;
         }
 
         .decoration-dot {
@@ -773,7 +788,7 @@
   }
 
   .stats-section {
-    flex: 0.7;
+    flex: 0.8;
     background: @card-bg;
     border-radius: 10px;
     border: none;
@@ -781,8 +796,23 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+    box-shadow:
+      0 0 30px rgba(0, 240, 255, 0.15),
+      inset 0 0 50px rgba(0, 240, 255, 0.03);
     overflow: hidden;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      pointer-events: none;
+    }
 
     .section-header {
       display: flex;

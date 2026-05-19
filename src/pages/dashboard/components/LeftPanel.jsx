@@ -19,7 +19,7 @@ const LeftPanel = ({ data }) => {
           </div>
         </div>
         <div className="total-display">
-          <div className="total-circle" style={{ marginTop: 20 }}>
+          <div className="total-circle">
             <div className="total-value">{222}</div>
             <div className="total-unit">人</div>
           </div>
