@@ -17,15 +17,15 @@ import './index.less';
 const { Title } = Typography;
 
 const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return '凌晨好';
-    if (hour < 9) return '早上好';
-    if (hour < 12) return '上午好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    if (hour < 22) return '晚上好';
-    return '夜里好';
-  };
+  const hour = new Date().getHours();
+  if (hour < 6) return '凌晨好';
+  if (hour < 9) return '早上好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  if (hour < 22) return '晚上好';
+  return '夜里好';
+};
 
 const Dashboard = () => {
   const [realtimeData, setRealtimeData] = useState({});
@@ -33,11 +33,13 @@ const Dashboard = () => {
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userName, setUserName] = useState('');
+  const [isAdmin, setIsAdmin] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedPrisonName = cache.getVal('prisonName');
     setUserName(storedPrisonName || '管理员');
+    setIsAdmin(!storedPrisonName);
   }, []);
 
   const toggleFullscreen = () => {
@@ -79,13 +81,18 @@ const Dashboard = () => {
   }, []);
 
   const navMenu = {
-    items: [
+    items: isAdmin ? [
       { key: '/dashboard', label: '首页大屏' },
       { key: '/prisoners', label: '档案库' },
       { key: '/statistics', label: '出监记录' },
       { key: '/return-records', label: '回监记录' },
       { key: '/permission', label: '账号管理' },
       { key: '/type-management', label: '出监原因管理' },
+    ] : [
+      { key: '/dashboard', label: '首页大屏' },
+      { key: '/prisoners', label: '档案库' },
+      { key: '/statistics', label: '出监记录' },
+      { key: '/return-records', label: '回监记录' },
     ],
     onClick: ({ key }) => navigate(key),
   };
@@ -114,22 +121,26 @@ const Dashboard = () => {
           <span className="welcome-name">{userName}</span>
         </div>
         <div className="header-right">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setExitModalOpen(true)}
-            className="exit-btn"
-          >
-            出监确认
-          </Button>
-          <Button
-            type="primary"
-            icon={<LoginOutlined />}
-            onClick={() => setEnterModalOpen(true)}
-            className="exit-btn"
-          >
-            入监确认
-          </Button>
+          {isAdmin && (
+            <>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setExitModalOpen(true)}
+                className="exit-btn"
+              >
+                出监确认
+              </Button>
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                onClick={() => setEnterModalOpen(true)}
+                className="exit-btn"
+              >
+                入监确认
+              </Button>
+            </>
+          )}
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
             className="fullscreen-btn"
@@ -176,7 +187,7 @@ const Dashboard = () => {
             <div className="section-title">
               <div className="title-content">
                 <SafetyOutlined />
-                <span>监狱概览</span>
+                <span>{isAdmin ? '监狱概览' : userName}</span>
               </div>
               <div className="title-line"></div>
               <div className="title-decor">
@@ -185,7 +196,7 @@ const Dashboard = () => {
                 <span className="decor-dot"></span>
               </div>
             </div>
-            <PrisonMap realtimeData={realtimeData} />
+            <PrisonMap realtimeData={realtimeData} isAdmin={isAdmin} />
           </div>
 
           <div className="chart-section">

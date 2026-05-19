@@ -4,12 +4,24 @@ import * as echarts from 'echarts';
 //center: [114, 23], { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 510, workCount: 395 },
 
 //用户表 档案表 出入记录表
-const PrisonMap = ({ realtimeData }) => {
+const PrisonMap = ({ realtimeData, isAdmin }) => {
   const chartRef = useRef(null);
   const navigate = useNavigate();
 
   // 从API获取的 by_area 数据
   const byArea = realtimeData?.by_area || [];
+
+  // 获取当前登录的监区名称
+  const getStoredPrisonName = () => {
+    try {
+      const stored = localStorage.getItem('prisonName');
+      return stored || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const currentPrisonName = getStoredPrisonName();
 
   const mCont = [
     { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, yearlyExitCount: 0 },
@@ -20,11 +32,17 @@ const PrisonMap = ({ realtimeData }) => {
     { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, yearlyExitCount: 0 },
     { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, yearlyExitCount: 0 },
     { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, yearlyExitCount: 0 },
-  ]
+  ];
+
+  // 非管理员只显示登录的监区
+  const displayCont = isAdmin
+    ? mCont
+    : (mCont.filter(item => item.name === currentPrisonName)[0] ? mCont.filter(item => item.name === currentPrisonName) : [mCont[0]]);
+
   useEffect(() => {
     const chart = echarts.init(chartRef.current);
 
-    const updatedCont = mCont.map((item, index) => {
+    const updatedCont = displayCont.map((item) => {
       const area = byArea.find(a => a.prison_area_name === item.name);
       return {
         ...item,
@@ -75,6 +93,9 @@ const PrisonMap = ({ realtimeData }) => {
           };
         });
 
+        const center = isAdmin ? [108, 27] : (provinceCenters[currentPrisonName + '省'] || provinceCenters[currentPrisonName + '市'] || provinceCenters[currentPrisonName + '自治区'] || [108, 27]);
+        const zoom = isAdmin ? 1.2 : 5;
+
         const option = {
           backgroundColor: 'transparent',
           tooltip: {
@@ -84,8 +105,8 @@ const PrisonMap = ({ realtimeData }) => {
             map: 'prison-map',
             roam: true,
             scaleLimit: { min: 0.5, max: 3 },
-            zoom: 1.2,
-            center: [108, 27],
+            zoom: zoom,
+            center: center,
             aspectScale: 1,
             label: { show: false },
             itemStyle: {
@@ -173,7 +194,7 @@ const PrisonMap = ({ realtimeData }) => {
       window.removeEventListener('resize', handleResize);
       chart.dispose();
     };
-  }, [realtimeData]);
+  }, [realtimeData, isAdmin, currentPrisonName]);
 
   return <div ref={chartRef} style={{ width: '100%', height: '100%' }} />;
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout, Menu, Space, theme, Modal } from 'antd';
 import { SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -13,6 +13,7 @@ const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showMenus, setShowMenus] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { layout } = useTheme();
@@ -42,6 +43,19 @@ const MainLayout = () => {
     onClick: ({ key }) => navigate(key),
   };
 
+
+  useEffect(() => {
+
+    const mRole = cache.getVal('prisonName');
+    if (mRole) {
+      //删掉allMenus里的最后两项
+      const filteredMenus = allMenus.filter(menu => menu.key !== '/permission' && menu.key !== '/type-management');
+      setShowMenus(filteredMenus);
+    } else {
+      setShowMenus(allMenus);
+    }
+  }, [])
+
   return (
     <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       {!isDashboard && (
@@ -65,7 +79,7 @@ const MainLayout = () => {
             theme="dark"
             mode="inline"
             selectedKeys={[selectedKey]}
-            items={allMenus}
+            items={showMenus}
             onClick={({ key }) => navigate(key)}
           />
         </Sider>
