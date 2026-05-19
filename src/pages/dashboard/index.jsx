@@ -65,10 +65,10 @@ const Dashboard = () => {
     items: [
       { key: '/dashboard', label: '首页大屏' },
       { key: '/prisoners', label: '档案库' },
-      { key: '/statistics', label: '出监统计' },
-      { key: '/return-records', label: '回监统计' },
+      { key: '/statistics', label: '出监记录' },
+      { key: '/return-records', label: '回监记录' },
       { key: '/permission', label: '账号管理' },
-      { key: '/type-management', label: '类型管理' },
+      { key: '/type-management', label: '出监原因管理' },
     ],
     onClick: ({ key }) => navigate(key),
   };

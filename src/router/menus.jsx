@@ -20,12 +20,12 @@ export const allMenus = [
   {
     key: "/statistics",
     icon: <FileTextOutlined />,
-    label: "出监统计",
+    label: "出监记录",
   },
   {
     key: "/return-records",
     icon: <FileTextOutlined />,
-    label: "回监统计",
+    label: "回监记录",
   },
   {
     key: "/permission",
