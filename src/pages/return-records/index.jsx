@@ -3,6 +3,7 @@ import { Button, Image, message } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
+import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToExcel from '@/utils/export';
 import { recordExport } from '@/api/globApi';
@@ -55,6 +56,7 @@ const ReturnStatistics = () => {
     { title: '回监时间', dataIndex: 'entry_date', key: 'entry_date' },
     { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason' },
     { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
+    { title: '录像', dataIndex: 'video', key: 'video' },
   ];
 
   const columns = [
@@ -69,6 +71,15 @@ const ReturnStatistics = () => {
       width: 100,
       render: (val) => {
         return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
+    },
+    {
+      title: '录像',
+      dataIndex: 'video',
+      key: 'video',
+      width: 100,
+      render: (val) => {
+        return <VideoPlayer src={val} />
       }
     },
   ];
