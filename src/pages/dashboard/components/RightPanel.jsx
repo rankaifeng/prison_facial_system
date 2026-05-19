@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BellOutlined, RightOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,9 @@ import { prisonMessages } from '@/api/globApi';
 
 const RightPanel = ({ onDataUpdate }) => {
   const [messages, setMessages] = useState([]);
+  const [shouldScroll, setShouldScroll] = useState(false);
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     fetchMessages();
@@ -20,7 +22,7 @@ const RightPanel = ({ onDataUpdate }) => {
 
   const fetchMessages = async () => {
     try {
-      const res = await prisonMessages.list({ page: 1, limit: 50 });
+      const res = await prisonMessages.list({ page: 1, limit: 60 });
       const data = Array.isArray(res) ? res : (res?.data || []);
       setMessages(data);
     } catch (error) {
@@ -28,36 +30,7 @@ const RightPanel = ({ onDataUpdate }) => {
     }
   };
 
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '';
-    const date = new Date(timeStr);
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return '刚刚';
-    if (minutes < 60) return `${minutes}分钟前`;
-    if (hours < 24) return `${hours}小时前`;
-    if (days < 7) return `${days}天前`;
-    return timeStr.split(' ')[0];
-  };
-
-  const getActionText = (reason) => {
-    const actionMap = {
-      '刑满释放': '刑满释放出监',
-      '外出就医': '外出就医出监',
-      '外出教育': '外出教育出监',
-      '离监探亲': '离监探亲出监',
-      '押回重审': '押回重审出监',
-      '假释': '假释出监',
-    };
-    return actionMap[reason] || '出监';
-  };
-
-  const duplicatedMessages = [...messages, ...messages];
-  const shouldScroll = messages.length > 3;
 
   const renderEmptyState = () => (
     <div className="message-empty">
@@ -88,22 +61,25 @@ const RightPanel = ({ onDataUpdate }) => {
           详情 <RightOutlined />
         </Button>
       </div>
-      <div className="message-list" style={{ overflow: shouldScroll ? 'hidden' : 'auto' }}>
+      <div
+        className="message-list"
+        style={{ overflow: shouldScroll ? 'hidden' : 'visible' }}
+        ref={scrollRef}
+      >
         <div
           className="message-scroll"
           style={{ animationPlayState: shouldScroll ? 'running' : 'paused' }}
         >
-          {duplicatedMessages.length === 0 ? (
+          {messages.length === 0 ? (
             renderEmptyState()
           ) : (
-            duplicatedMessages.map((msg, index) => (
+            messages.map((msg, index) => (
               <div key={`${msg.id || index}-${index >= messages.length ? 'dup' : 'orig'}`} className="message-item">
                 <div className="message-content">
                   <div className="message-text">
                     <span className="prison-tag">【{msg.prison_area_name || '未知监区'}】</span>
-                    <span className="person-name">{msg.prisoner_name}</span>
-                    <span className="action-text">{getActionText(msg.reason)}</span>
-                    <span className="time-text">{formatTime(msg.created_at)}</span>
+                    <span className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></span>
+                    <span className="action-text">{msg.reason}</span>
                   </div>
                 </div>
               </div>
