@@ -14,7 +14,12 @@ class PrisonMessagesController(APIView):
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('limit', 20))
 
-        success, message, result = RecordService.get_prison_messages(page, page_size)
+        # 非管理员只能看本监区的消息
+        prison_area = None
+        if request.user.role != 'admin':
+            prison_area = request.user.prison_id
+
+        success, message, result = RecordService.get_prison_messages(page, page_size, prison_area)
 
         return Response({
             'code': 1 if success else 0,

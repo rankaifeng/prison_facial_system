@@ -71,12 +71,15 @@ class RecordRepository:
         return ExitEntryRecord.objects.all().order_by('-created_at')[:limit]
 
     @staticmethod
-    def get_active_exit_messages():
+    def get_active_exit_messages(prison_area=None):
         """获取活跃的出监消息（未入监的）"""
-        return ExitEntryRecord.objects.filter(
+        queryset = ExitEntryRecord.objects.filter(
             type='exit',
             status='completed'
-        ).order_by('-created_at')
+        )
+        if prison_area:
+            queryset = queryset.filter(prison_area=prison_area)
+        return queryset.order_by('-created_at')
 
     @staticmethod
     def has_entry_record(prisoner_no):

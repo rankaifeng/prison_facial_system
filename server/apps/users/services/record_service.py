@@ -191,9 +191,9 @@ class RecordService(BaseService):
         }
 
     @staticmethod
-    def get_prison_messages(page=1, page_size=20):
+    def get_prison_messages(page=1, page_size=20, prison_area=None):
         """获取监狱消息列表"""
-        exit_records = RecordRepository.get_active_exit_messages()
+        exit_records = RecordRepository.get_active_exit_messages(prison_area)
 
         messages = []
         for record in exit_records:
