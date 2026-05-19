@@ -77,10 +77,9 @@ const RightPanel = ({ onDataUpdate }) => {
               <div key={`${msg.id || index}-${index >= messages.length ? 'dup' : 'orig'}`} className="message-item">
                 <div className="message-content">
                   <div className="message-text">
-                    <span className="prison-tag">【{msg.prison_area_name || '未知监区'}】</span>
-                    <span className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></span>
-                    <span className="action-text">{msg.reason}</span>
-                    {msg.hospital_name && <span style={{ color: '#00f0ff', marginLeft: 5 }}>-{msg.hospital_name}</span>}
+                    <div className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></div>
+                    <div className="action-text">{msg.reason}</div>
+                    {msg.hospital_name && <div style={{ color: '#00f0ff', marginLeft: 5 }}>-{msg.hospital_name}</div>}
                   </div>
                 </div>
               </div>

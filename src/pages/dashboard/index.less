@@ -205,45 +205,45 @@
         box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 8px rgba(0, 240, 255, 0.1);
       }
 
-.exit-btn {
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%) !important;
-    border: 1px solid rgba(0, 240, 255, 0.5) !important;
-    color: #00f0ff !important;
-    font-weight: 500;
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+      .exit-btn {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%) !important;
+        border: 1px solid rgba(0, 240, 255, 0.5) !important;
+        color: #00f0ff !important;
+        font-weight: 500;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
 
-    &:hover {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.35) 0%, rgba(24, 119, 255, 0.35) 100%) !important;
-      border-color: #00f0ff !important;
-      box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
-      transform: translateY(-1px);
-    }
-  }
+        &:hover {
+          background: linear-gradient(135deg, rgba(0, 240, 255, 0.35) 0%, rgba(24, 119, 255, 0.35) 100%) !important;
+          border-color: #00f0ff !important;
+          box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+          transform: translateY(-1px);
+        }
+      }
 
-  .fullscreen-btn {
-    font-size: 20px;
-    padding: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 100, 150, 0.1) 100%);
-    border: 1px solid rgba(0, 240, 255, 0.4);
-    border-radius: 8px;
-    color: @primary-glow;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+      .fullscreen-btn {
+        font-size: 20px;
+        padding: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 100, 150, 0.1) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        border-radius: 8px;
+        color: @primary-glow;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
 
-    &:hover {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(0, 150, 200, 0.2) 100%);
-      border-color: @primary-glow;
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
-      transform: translateY(-1px);
-    }
-  }
+        &:hover {
+          background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(0, 150, 200, 0.2) 100%);
+          border-color: @primary-glow;
+          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+          transform: translateY(-1px);
+        }
+      }
 
-  .nav-icon,
-  .user-icon {
+      .nav-icon,
+      .user-icon {
         font-size: 20px;
         color: @primary-glow;
         cursor: pointer;
@@ -405,8 +405,13 @@
             box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
             animation: pulse-dot 2s ease-in-out infinite;
 
-            &:nth-child(2) { animation-delay: 0.3s; }
-            &:nth-child(3) { animation-delay: 0.6s; }
+            &:nth-child(2) {
+              animation-delay: 0.3s;
+            }
+
+            &:nth-child(3) {
+              animation-delay: 0.6s;
+            }
           }
         }
       }
@@ -961,6 +966,7 @@
             color: @primary-glow;
             font-weight: 600;
           }
+
           .stat-number {
             color: @primary-glow;
             text-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
@@ -1102,20 +1108,21 @@
     }
 
     .message-item {
-      padding: 8px 12px;
-      background: rgba(0, 0, 0, 0.3);
+      padding: 5px 12px;
+      background: rgba(36, 36, 36, 0.3);
       margin-bottom: 4px;
-      box-sizing: border-box;
       display: flex;
+      white-space: nowrap;
       align-items: center;
+      overflow: hidden;
+
 
       .message-text {
-        font-size: 14px;
+        font-size: 12px;
         color: rgba(255, 255, 255, 0.85);
         line-height: 1.5;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        display: flex;
+
 
         .prison-tag {
           color: @primary-glow;
@@ -1613,8 +1620,13 @@
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
         animation: pulse-dot 2s ease-in-out infinite;
 
-        &:nth-child(2) { animation-delay: 0.3s; }
-        &:nth-child(3) { animation-delay: 0.6s; }
+        &:nth-child(2) {
+          animation-delay: 0.3s;
+        }
+
+        &:nth-child(3) {
+          animation-delay: 0.6s;
+        }
       }
     }
   }
