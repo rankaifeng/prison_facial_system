@@ -14,8 +14,6 @@ const TableLayout = (props) => {
     const customizedPagination = pagination ? {
         ...pagination,
         showTotal: showTotal,
-        showSizeChanger: true,
-        showQuickJumper: true
     } : false;
 
     const isTreeData = useMemo(() => {
