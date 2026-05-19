@@ -16,12 +16,29 @@ import './index.less';
 
 const { Title } = Typography;
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 6) return '凌晨好';
+    if (hour < 9) return '早上好';
+    if (hour < 12) return '上午好';
+    if (hour < 14) return '中午好';
+    if (hour < 18) return '下午好';
+    if (hour < 22) return '晚上好';
+    return '夜里好';
+  };
+
 const Dashboard = () => {
   const [realtimeData, setRealtimeData] = useState({});
   const [exitModalOpen, setExitModalOpen] = useState(false);
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [userName, setUserName] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedPrisonName = cache.getVal('prisonName');
+    setUserName(storedPrisonName || '管理员');
+  }, []);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -91,6 +108,10 @@ const Dashboard = () => {
         <div className="header-left">
           <SafetyOutlined className="header-icon" />
           <Title level={3} className="header-title">监狱关押罪犯出入管控平台</Title>
+        </div>
+        <div className="header-center">
+          <span className="welcome-greeting">{getGreeting()}，</span>
+          <span className="welcome-name">{userName}</span>
         </div>
         <div className="header-right">
           <Button

@@ -20,10 +20,11 @@ const Login = () => {
 
     if (code === 1) {
       message.success(msg);
-      const { prison_id, role_name, token } = data || {};
+      const { prison_id, role_name, token, prison_name } = data || {};
       cache.setVal('token', token);
       cache.setVal('prisonId', prison_id);
       cache.setVal('roleName', role_name);
+      cache.setVal('prisonName', prison_name);
       setTimeout(() => {
         navigate(getFirstMenuPath());
       }, 500);

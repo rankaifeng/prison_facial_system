@@ -187,6 +187,30 @@
       }
     }
 
+    .header-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .welcome-greeting {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 400;
+        letter-spacing: 2px;
+      }
+
+      .welcome-name {
+        font-size: 20px;
+        color: @primary-glow;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+      }
+    }
+
     .header-right {
       display: flex;
       align-items: center;
