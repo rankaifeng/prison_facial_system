@@ -4,7 +4,7 @@ import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
-import exportToCSV from '@/utils/export';
+import exportToExcel from '@/utils/export';
 import { recordExport } from '@/api/globApi';
 
 const PRISON_AREAS = [
@@ -38,7 +38,11 @@ const ReturnStatistics = () => {
     });
     try {
       const res = await recordExport.get(params);
-      exportToCSV(res, exportColumns, '回监统计');
+      if (res && res.length > 0) {
+        exportToExcel(res, exportColumns, '回监统计');
+      } else {
+        message.warning('没有可导出的数据');
+      }
     } catch (error) {
       message.error('导出失败');
     }

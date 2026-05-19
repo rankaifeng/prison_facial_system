@@ -4,7 +4,7 @@ import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
-import exportToCSV from '@/utils/export';
+import exportToExcel from '@/utils/export';
 import { exitType, recordExport } from '@/api/globApi';
 
 const PRISON_AREAS = [
@@ -95,7 +95,11 @@ const Statistics = () => {
     });
     try {
       const res = await recordExport.get(params);
-      exportToCSV(res, exportColumns, '出监统计');
+      if (res && res.length > 0) {
+        exportToExcel(res, exportColumns, '出监统计');
+      } else {
+        message.warning('没有可导出的数据');
+      }
     } catch (error) {
       message.error('导出失败');
     }
@@ -107,12 +111,11 @@ const Statistics = () => {
     { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no' },
     { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date' },
     { title: '出监原因', dataIndex: 'reason', key: 'reason' },
+    { title: '医院名称', dataIndex: 'hospital_name', key: 'hospital_name' },
     { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
     { title: '特警确认', dataIndex: 'swat_face', key: 'swat_face' },
-    { title: '特警姓名', dataIndex: 'swat_name', key: 'swat_name' },
     { title: '武警确认', dataIndex: 'armed_police_signature', key: 'armed_police_signature' },
-    { title: '武警姓名', dataIndex: 'armed_police_name', key: 'armed_police_name' },
-    { title: '医院名称', dataIndex: 'hospital_name', key: 'hospital_name' },
+
   ];
 
   const columns = [

@@ -11,7 +11,8 @@
       "Bash(curl -s http://localhost:8000/user_manage/user_login/user_login_web -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=admin&password=admin123')",
       "Bash(kill 68064 26337)",
       "Bash(curl -s http://localhost:8000/)",
-      "Bash(pkill -f \"manage.py runserver\")"
+      "Bash(pkill -f \"manage.py runserver\")",
+      "Bash(npm install *)"
     ]
   }
 }

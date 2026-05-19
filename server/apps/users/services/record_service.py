@@ -292,7 +292,7 @@ class RecordService(BaseService):
                 'swat_name': record.swat_name or '',
                 'armed_police_signature': build_image_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name or '',
-                'hospital_name': record.hospital_name or '',
+                'hospital_name': record.hospital_name if record.reason == '外出就医' else '',
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             })
