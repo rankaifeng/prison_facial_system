@@ -143,6 +143,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     setArmedPoliceSignature(null);
     onCancel?.();
   };
+  console.log("exitReason", exitReason);
 
   const renderStep1 = () => (
     <div className="step-content step-form" style={{ display: current === 0 ? 'flex' : 'none' }}>
@@ -183,7 +184,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           <Select placeholder="请选择出监原因" options={exitReasons} />
         </Form.Item>
 
-        {exitReason === 2 && (
+        {exitReason === 1 && (
           <Form.Item
             name="hospital"
             label="医院类型"
@@ -193,7 +194,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === 2 && hospitalType === '中心医院' && (
+        {exitReason === 1 && hospitalType === '中心医院' && (
           <Form.Item
             name="transferPrison"
             label="转诊监狱"
@@ -203,7 +204,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === 2 && hospitalType === '中心医院' && centerPrison === '其他' && (
+        {exitReason === 1 && hospitalType === '中心医院' && centerPrison === '其他' && (
           <Form.Item
             name="transferPrisonOther"
             label="转诊监狱（其他）"
@@ -213,7 +214,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === 2 && hospitalType === '社会医院' && (
+        {exitReason === 1 && hospitalType === '社会医院' && (
           <Form.Item
             name="socialHospital"
             label="医院"
@@ -223,7 +224,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </Form.Item>
         )}
 
-        {exitReason === 2 && hospitalType === '社会医院' && form.getFieldValue('socialHospital') === '其他' && (
+        {exitReason === 1 && hospitalType === '社会医院' && form.getFieldValue('socialHospital') === '其他' && (
           <Form.Item
             name="socialHospitalOther"
             label="医院（其他）"
