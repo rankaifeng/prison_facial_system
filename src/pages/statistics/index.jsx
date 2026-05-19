@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button, Image, message, Tag } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router-dom';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import VideoPlayer from '@/components/video-player';
@@ -18,7 +19,18 @@ const PRISON_AREAS = [
   { value: 7, label: '分监区七' },
 ];
 
+const PRISON_AREA_MAP = {
+  '分监区一': 1,
+  '分监区二': 2,
+  '分监区三': 3,
+  '分监区四': 4,
+  '分监区五': 5,
+  '分监区六': 6,
+  '分监区七': 7,
+};
+
 const Statistics = () => {
+  const [searchParams] = useSearchParams();
   const [exitReasons, setExitReasons] = useState([]);
   const [searchItems, setSearchItems] = useState([
     {
@@ -53,6 +65,14 @@ const Statistics = () => {
   });
 
   useEffect(() => {
+    const prisonName = searchParams.get('prisonName');
+    if (prisonName && PRISON_AREA_MAP[prisonName] && form) {
+      const prisonAreaId = PRISON_AREA_MAP[prisonName];
+      form.setFieldsValue({ prison_area: prisonAreaId });
+      setTimeout(() => {
+        search.submit({ prison_area: prisonAreaId });
+      }, 0);
+    }
     const fetchExitTypes = async () => {
       try {
         const res = await exitType.list();

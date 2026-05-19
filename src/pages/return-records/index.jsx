@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button, Image, message } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router-dom';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import VideoPlayer from '@/components/video-player';
@@ -18,13 +19,36 @@ const PRISON_AREAS = [
   { value: 7, label: '分监区七' },
 ];
 
+const PRISON_AREA_MAP = {
+  '分监区一': 1,
+  '分监区二': 2,
+  '分监区三': 3,
+  '分监区四': 4,
+  '分监区五': 5,
+  '分监区六': 6,
+  '分监区七': 7,
+};
+
 const ReturnStatistics = () => {
+  const [searchParams] = useSearchParams();
   const [exitReasons, setExitReasons] = useState([]);
   const { tableProps, loading, form, search } = useQueryTable({
     url: '/user_manage/record/list',
     rowKey: 'id',
     defaultParams: { type: 'entry' },
   });
+
+  useEffect(() => {
+    const prisonName = searchParams.get('prisonName');
+    if (prisonName && PRISON_AREA_MAP[prisonName] && form) {
+      const prisonAreaId = PRISON_AREA_MAP[prisonName];
+      form.setFieldsValue({ prison_area: prisonAreaId });
+      setTimeout(() => {
+        search.submit({ prison_area: prisonAreaId });
+      }, 0);
+    }
+  }, [searchParams, form, search]);
+
   const handleExport = async () => {
     const formValues = form.getFieldsValue();
     const params = {
