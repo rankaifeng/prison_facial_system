@@ -49,7 +49,7 @@ class RecordService(BaseService):
     def create_exit_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         exit_date, reason, police_face, swat_face, armed_police_signature,
-        operator_id, operator_name
+        operator_id, operator_name, hospital_name=None
     ):
         with transaction.atomic():
             # 保存武警签名为图片文件
@@ -70,6 +70,7 @@ class RecordService(BaseService):
                 armed_police_signature=signature_path,
                 operator_id=operator_id,
                 operator_name=operator_name,
+                hospital_name=hospital_name,
                 status='completed',
             )
 
@@ -179,6 +180,7 @@ class RecordService(BaseService):
                 'swat_name': record.swat_name,
                 'armed_police_signature': build_image_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name,
+                'hospital_name': record.hospital_name,
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             })
@@ -203,6 +205,8 @@ class RecordService(BaseService):
                     'prison_area_name': record.prison_area_name,
                     'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
                     'reason': record.reason,
+                    'hospital_type': record.hospital_type,
+                    'hospital_name': record.hospital_name,
                     'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 })
 
@@ -242,5 +246,7 @@ class RecordService(BaseService):
             'swat_name': record.swat_name,
             'armed_police_signature': build_image_url(record.armed_police_signature),
             'armed_police_name': record.armed_police_name,
+            'hospital_type': record.hospital_type,
+            'hospital_name': record.hospital_name,
             'status': record.status,
         }

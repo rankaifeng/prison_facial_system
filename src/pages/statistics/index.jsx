@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Button, Image, message } from 'antd';
+import { Button, Image, message, Tag } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
@@ -95,7 +95,17 @@ const Statistics = () => {
     { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name', width: 100 },
     { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no', width: 120 },
     { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date', width: 160 },
-    { title: '出监原因', dataIndex: 'reason', key: 'reason', width: 120 },
+    {
+      title: '出监原因',
+      width: 120,
+      render: (v) => {
+        return (
+          <Tag color='blue'>
+            {v?.reason} {v?.hospital_name && '-' + v?.hospital_name}
+          </Tag>
+        )
+      }
+    },
     {
       title: '民警确认',
       dataIndex: 'police_face',

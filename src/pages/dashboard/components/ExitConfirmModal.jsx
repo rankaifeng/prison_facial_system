@@ -111,6 +111,21 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     console.log("prisonArea:", formValues.prisonArea);
     console.log("exitReason:", formValues.exitReason);
 
+    let hospitalType = null;
+    let hospitalName = null;
+
+    // 如果是外出就医，收集医院信息
+    if (formValues.exitReason === 1) {
+      hospitalType = formValues.hospital;
+      if (hospitalType === '中心医院') {
+        console.log("hospitalName", formValues);
+        hospitalName = formValues.transferPrison === '其他' ? formValues.transferPrisonOther : formValues.transferPrison;
+      } else if (hospitalType === '社会医院') {
+        hospitalName = formValues.socialHospital === '其他' ? formValues.socialHospitalOther : formValues.socialHospital;
+      }
+    }
+    console.log("hospitalName", hospitalName);
+
     const data = {
       prisoner_no: formValues.prisonerNo,
       prisoner_name: formValues.prisonerName,
@@ -120,9 +135,8 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
       police_face: policeImage,
       swat_face: swatImage,
       armed_police_signature: armedPoliceSignature,
+      hospital_name: hospitalName || null,
     };
-    console.log('提交数据:', data);
-
     const res = await exitRecord.submit(data);
     if (res.code === 1) {
       message.success('提交成功');

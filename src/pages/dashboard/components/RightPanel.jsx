@@ -80,6 +80,7 @@ const RightPanel = ({ onDataUpdate }) => {
                     <span className="prison-tag">【{msg.prison_area_name || '未知监区'}】</span>
                     <span className="person-name">{msg.prisoner_name}在<span style={{ color: 'red', margin: '0 5px' }}>{msg.exit_date}</span></span>
                     <span className="action-text">{msg.reason}</span>
+                    {msg.hospital_name && <span style={{ color: '#00f0ff', marginLeft: 5 }}>-{msg.hospital_name}</span>}
                   </div>
                 </div>
               </div>

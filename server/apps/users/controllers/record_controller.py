@@ -26,11 +26,20 @@ class ExitRecordController(APIView):
         police_face = data.get('police_face')
         swat_face = data.get('swat_face')
         armed_police_signature = data.get('armed_police_signature')
+        hospital_name = data.get('hospital_name')
 
         if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason, police_face, swat_face, armed_police_signature]):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 外出就医必须有医院信息
+        if reason == '外出就医' and not hospital_name:
+            return Response({
+                'code': 0,
+                'msg': '外出就医必须填写医院名称',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,6 +60,7 @@ class ExitRecordController(APIView):
             armed_police_signature=signature_path,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
+            hospital_name=hospital_name,
         )
 
         if not success:

@@ -10,32 +10,43 @@ const ExitRecords = () => {
   });
 
   const columns = [
-    { title: '罪犯姓名', dataIndex: 'prisonerName', key: 'prisonerName', width: 100 },
-    { title: '出监日期', dataIndex: 'exitDate', key: 'exitDate', width: 120 },
-    { title: '出监原因', dataIndex: 'exitReason', key: 'exitReason', width: 120 },
-    { title: '就医医院', dataIndex: 'hospital', key: 'hospital', width: 150 },
+    { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name', width: 100 },
+    { title: '出监日期', dataIndex: 'exit_date', key: 'exit_date', width: 120 },
+    { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason', width: 120 },
+    {
+      title: '就医医院',
+      dataIndex: 'hospital_name',
+      key: 'hospital_name',
+      width: 150,
+      render: (val, record) => {
+        if (record.exit_reason === '外出就医' && val) {
+          return val;
+        }
+        return '';
+      }
+    },
     {
       title: '民警确认',
-      dataIndex: 'policeConfirm',
-      key: 'policeConfirm',
+      dataIndex: 'police_face',
+      key: 'police_face',
       width: 100,
       render: (val) => val ? '✓' : '✗',
     },
     {
       title: '特警确认',
-      dataIndex: 'swatConfirm',
-      key: 'swatConfirm',
+      dataIndex: 'swat_face',
+      key: 'swat_face',
       width: 100,
       render: (val) => val ? '✓' : '✗',
     },
     {
       title: '武警确认',
-      dataIndex: 'armedPoliceConfirm',
-      key: 'armedPoliceConfirm',
+      dataIndex: 'armed_police_signature',
+      key: 'armed_police_signature',
       width: 100,
       render: (val) => val ? '✓' : '✗',
     },
-    { title: '回监时间', dataIndex: 'returnTime', key: 'returnTime', width: 160 },
+    { title: '入监时间', dataIndex: 'entry_date', key: 'entry_date', width: 160 },
   ];
 
   const searchItems = useMemo(() => [
