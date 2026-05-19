@@ -250,3 +250,51 @@ class RecordService(BaseService):
             'hospital_name': record.hospital_name,
             'status': record.status,
         }
+
+    @staticmethod
+    def export_records(type=None, start_date=None, end_date=None, prison_area=None,
+                       prisoner_name=None, prisoner_no=None, reason=None):
+        """导出记录为CSV数据"""
+        queryset = RecordRepository.filter(
+            type=type, start_date=start_date, end_date=end_date, prison_area=prison_area,
+            prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
+        )
+
+        records = queryset[:5000]  # 限制最多导出5000条
+
+        def build_image_url(path):
+            if not path:
+                return ''
+            if path.startswith('http'):
+                return path
+            return f"http://localhost:8000{path}"
+
+        data = []
+        for record in records:
+            # 入监记录需要显示出监原因
+            exit_reason = None
+            if record.type == 'entry':
+                exit_record = RecordRepository.get_last_exit_by_prisoner_no(record.prisoner_no)
+                exit_reason = exit_record.reason if exit_record else None
+
+            data.append({
+                'prison_area_name': record.prison_area_name,
+                'prisoner_name': record.prisoner_name,
+                'prisoner_no': record.prisoner_no,
+                'type': '出监' if record.type == 'exit' else '入监',
+                'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else '',
+                'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
+                'reason': record.reason or '',
+                'exit_reason': exit_reason or '',
+                'police_face': build_image_url(record.police_face),
+                'police_name': record.police_name or '',
+                'swat_face': build_image_url(record.swat_face),
+                'swat_name': record.swat_name or '',
+                'armed_police_signature': build_image_url(record.armed_police_signature),
+                'armed_police_name': record.armed_police_name or '',
+                'hospital_name': record.hospital_name or '',
+                'status': record.status,
+                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            })
+
+        return True, '导出成功', data

@@ -5,7 +5,7 @@ import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
-import { exitType } from '@/api/globApi';
+import { recordExport } from '@/api/globApi';
 
 const PRISON_AREAS = [
   { value: 1, label: '分监区一' },
@@ -24,14 +24,34 @@ const ReturnStatistics = () => {
     rowKey: 'id',
     defaultParams: { type: 'entry' },
   });
-  const handleExport = () => {
-    const data = tableProps.dataSource || [];
-    if (data.length === 0) {
-      message.warning('没有可导出的数据');
-      return;
+  const handleExport = async () => {
+    const formValues = form.getFieldsValue();
+    const params = {
+      type: 'entry',
+      ...formValues,
+    };
+    // 移除空值
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === '' || params[key] === null) {
+        delete params[key];
+      }
+    });
+    try {
+      const res = await recordExport.get(params);
+      exportToCSV(res, exportColumns, '回监统计');
+    } catch (error) {
+      message.error('导出失败');
     }
-    exportToCSV(data, columns, '回监统计');
   };
+
+  const exportColumns = [
+    { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name' },
+    { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name' },
+    { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no' },
+    { title: '回监时间', dataIndex: 'entry_date', key: 'entry_date' },
+    { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason' },
+    { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
+  ];
 
   const columns = [
     { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name', width: 150 },

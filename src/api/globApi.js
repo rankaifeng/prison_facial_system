@@ -7,6 +7,7 @@ import {
   EXIT_RECORD,
   ENTRY_RECORD,
   RECORD_LIST,
+  RECORD_EXPORT,
   REALTIME_STATISTICS,
   WORK_STATISTICS,
   MESSAGE_LIST,
@@ -44,6 +45,10 @@ export const entryRecord = {
 
 export const record = {
   list: (data) => http.get(RECORD_LIST, data).then((res) => res?.data),
+};
+
+export const recordExport = {
+  get: (data) => http.get(RECORD_EXPORT, data).then((res) => res?.data),
 };
 
 export const realtimeStatistics = {

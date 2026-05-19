@@ -5,7 +5,7 @@ import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
-import { exitType } from '@/api/globApi';
+import { exitType, recordExport } from '@/api/globApi';
 
 const PRISON_AREAS = [
   { value: 1, label: '分监区一' },
@@ -81,14 +81,39 @@ const Statistics = () => {
 
   console.log('exitReasons state:', exitReasons);
 
-  const handleExport = () => {
-    const data = tableProps.dataSource || [];
-    if (data.length === 0) {
-      message.warning('没有可导出的数据');
-      return;
+  const handleExport = async () => {
+    const formValues = form.getFieldsValue();
+    const params = {
+      type: 'exit',
+      ...formValues,
+    };
+    // 移除空值
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === '' || params[key] === null) {
+        delete params[key];
+      }
+    });
+    try {
+      const res = await recordExport.get(params);
+      exportToCSV(res, exportColumns, '出监统计');
+    } catch (error) {
+      message.error('导出失败');
     }
-    exportToCSV(data, columns, '出监统计');
   };
+
+  const exportColumns = [
+    { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name' },
+    { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name' },
+    { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no' },
+    { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date' },
+    { title: '出监原因', dataIndex: 'reason', key: 'reason' },
+    { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
+    { title: '特警确认', dataIndex: 'swat_face', key: 'swat_face' },
+    { title: '特警姓名', dataIndex: 'swat_name', key: 'swat_name' },
+    { title: '武警确认', dataIndex: 'armed_police_signature', key: 'armed_police_signature' },
+    { title: '武警姓名', dataIndex: 'armed_police_name', key: 'armed_police_name' },
+    { title: '医院名称', dataIndex: 'hospital_name', key: 'hospital_name' },
+  ];
 
   const columns = [
     { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name', width: 150 },

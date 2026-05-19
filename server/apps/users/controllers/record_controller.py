@@ -163,3 +163,36 @@ class RecordListController(APIView):
             'data': result.get('data', []),
             'num': result.get('num', 0),
         })
+
+
+class RecordExportController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        record_type = request.query_params.get('type')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        prison_area = request.query_params.get('prison_area')
+        prisoner_name = request.query_params.get('prisoner_name')
+        prisoner_no = request.query_params.get('prisoner_no')
+        reason = request.query_params.get('reason')
+
+        if request.user.role != 'admin':
+            prison_area = request.user.prison_id
+
+        success, message, result = RecordService.export_records(
+            type=record_type,
+            start_date=start_date,
+            end_date=end_date,
+            prison_area=prison_area,
+            prisoner_name=prisoner_name,
+            prisoner_no=prisoner_no,
+            reason=reason,
+        )
+
+        return Response({
+            'code': 1,
+            'msg': message,
+            'data': result,
+        })
