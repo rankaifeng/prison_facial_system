@@ -23,7 +23,7 @@ class StatisticsService(BaseService):
         if not all_reasons:
             all_reasons = ['刑满释放', '外出就医', '外出教育', '离监探亲', '押回重审']
 
-        # 按分监区分组统计
+        # 按分监区分组统计（从每日统计表）
         area_stats = queryset.values(
             'prison_area',
             'prison_area_name'
@@ -42,7 +42,7 @@ class StatisticsService(BaseService):
         total_entry = 0
         total_in_prison = 0
 
-        # 年度出监统计（从1月1日到今天）
+        # 年度出监统计（从1月1日到今天）- 从 exit_entry_record 表直接查询
         year_start = date(today.year, 1, 1)
         from apps.users.models import ExitEntryRecord
         from django.db.models import Count
@@ -51,42 +51,60 @@ class StatisticsService(BaseService):
             type='exit',
             exit_date__gte=year_start,
             exit_date__lte=today
-        ).values('prison_area').annotate(yearly_exit=Count('id'))
+        ).values('prison_area', 'prison_area_name').annotate(yearly_exit=Count('id'))
 
+        # 构建年度统计字典
         for item in yearly_records:
-            yearly_stats[item['prison_area']] = item['yearly_exit']
-
-        for stat in area_stats:
-            exit_cnt = stat['exit_count'] or 0
-            entry_cnt = stat['entry_count'] or 0
-            in_prison_cnt = stat['in_prison_count'] or 0
-
-            total_exit += exit_cnt
-            total_entry += entry_cnt
-            total_in_prison += in_prison_cnt
-
-            # 获取该分监区的 reason_stats JSONField
-            db_stat = queryset.filter(prison_area=stat['prison_area']).first()
-            reason_stats = db_stat.reason_stats if db_stat and db_stat.reason_stats else {}
-
-            # 按分监区的统计，包含各出监原因
-            area_reasons = []
-            for reason in all_reasons:
-                count = reason_stats.get(reason, 0)
-                area_reasons.append({'name': reason, 'count': count})
-                if reason in total_reason_stats:
-                    total_reason_stats[reason] += count
-
-            area_item = {
-                'prison_area': stat['prison_area'],
-                'prison_area_name': stat['prison_area_name'],
-                'exit_count': exit_cnt,
-                'entry_count': entry_cnt,
-                'in_prison_count': in_prison_cnt,
-                'yearly_exit_count': yearly_stats.get(stat['prison_area'], 0),
-                'reasons': area_reasons
+            yearly_stats[item['prison_area']] = {
+                'yearly_exit': item['yearly_exit'],
+                'prison_area_name': item['prison_area_name']
             }
-            area_list.append(area_item)
+
+        # 如果每日统计表有数据就用每日统计的
+        if area_stats:
+            for stat in area_stats:
+                exit_cnt = stat['exit_count'] or 0
+                entry_cnt = stat['entry_count'] or 0
+                in_prison_cnt = stat['in_prison_count'] or 0
+
+                total_exit += exit_cnt
+                total_entry += entry_cnt
+                total_in_prison += in_prison_cnt
+
+                # 获取该分监区的 reason_stats JSONField
+                db_stat = queryset.filter(prison_area=stat['prison_area']).first()
+                reason_stats = db_stat.reason_stats if db_stat and db_stat.reason_stats else {}
+
+                # 按分监区的统计，包含各出监原因
+                area_reasons = []
+                for reason in all_reasons:
+                    count = reason_stats.get(reason, 0)
+                    area_reasons.append({'name': reason, 'count': count})
+                    if reason in total_reason_stats:
+                        total_reason_stats[reason] += count
+
+                area_item = {
+                    'prison_area': stat['prison_area'],
+                    'prison_area_name': stat['prison_area_name'],
+                    'exit_count': exit_cnt,
+                    'entry_count': entry_cnt,
+                    'in_prison_count': in_prison_cnt,
+                    'yearly_exit_count': yearly_stats.get(stat['prison_area'], {}).get('yearly_exit', 0),
+                    'reasons': area_reasons
+                }
+                area_list.append(area_item)
+        else:
+            # 每日统计表为空时，直接从 exit_entry_record 构建 by_area（地图用）
+            for item in yearly_records:
+                area_list.append({
+                    'prison_area': item['prison_area'],
+                    'prison_area_name': item['prison_area_name'],
+                    'exit_count': 0,
+                    'entry_count': 0,
+                    'in_prison_count': 0,
+                    'yearly_exit_count': item['yearly_exit'],
+                    'reasons': []
+                })
 
         # 汇总统计
         total_reasons = [{'name': reason, 'count': total_reason_stats[reason]} for reason in all_reasons]
