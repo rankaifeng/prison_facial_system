@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- saved from url=(0043)https://xyaf.pymc.edu.cn/authorization.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页授权</title>
+</head>
+
+<body>
+
+<script src="./网页授权_files/jweixin-1.3.2.js"></script>
+<script>
+    const currUrl = window.location.href
+    let url = new URL(currUrl)
+    let code = url.searchParams.get('code')
+    let phone = url.searchParams.get('state')
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", `https://xyaf.pymc.edu.cn:443/api/user_manage/user_info/get_user_openid?code=${code}&phone=${phone}`, true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var response = JSON.parse(xhr.responseText);
+            parent.wx.miniProgram.switchTab({ url: '/pages/home/index' })
+        }
+    };
+    xhr.send()
+</script>
+
+
+</body></html>

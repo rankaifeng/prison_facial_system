@@ -33,7 +33,7 @@ const VideoPlayer = ({ src }) => {
         centered
       >
         <video
-          src='https://www.w3schools.com/html/mov_bbb.mp4'
+          src={src}
           controls
           autoPlay
           style={{ width: '100%', maxHeight: '70vh' }}

@@ -27,6 +27,7 @@ class ExitRecordController(APIView):
         swat_face = data.get('swat_face')
         armed_police_signature = data.get('armed_police_signature')
         hospital_name = data.get('hospital_name')
+        attachments = request.FILES.getlist('attachments') if request.FILES else []
 
         if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason, police_face, swat_face, armed_police_signature]):
             return Response({
@@ -47,6 +48,13 @@ class ExitRecordController(APIView):
         swat_face_path = RecordService.save_image(swat_face, 'swat')
         signature_path = RecordService.save_image(armed_police_signature, 'signature')
 
+        # 处理附件
+        attachment_paths = []
+        for file in attachments:
+            file_path = RecordService.save_file(file)
+            if file_path:
+                attachment_paths.append(file_path)
+
         success, message, result = RecordService.create_exit_record(
             prisoner_no=prisoner_no,
             prisoner_name=prisoner_name,
@@ -61,6 +69,7 @@ class ExitRecordController(APIView):
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
             hospital_name=hospital_name,
+            attachments=attachment_paths,
         )
 
         if not success:

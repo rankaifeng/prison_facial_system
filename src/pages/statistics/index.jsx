@@ -8,6 +8,7 @@ import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToExcel from '@/utils/export';
 import { exitType, recordExport } from '@/api/globApi';
+import AttachmentPreviewModal from './components/AttachmentPreviewModal';
 
 const { RangePicker } = DatePicker;
 
@@ -34,6 +35,8 @@ const PRISON_AREA_MAP = {
 const Statistics = () => {
   const [searchParams] = useSearchParams();
   const [exitReasons, setExitReasons] = useState([]);
+  const [previewAttachments, setPreviewAttachments] = useState([]);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [searchItems, setSearchItems] = useState([
     {
       label: '分监区',
@@ -208,9 +211,28 @@ const Statistics = () => {
         return <VideoPlayer src={val} />
       }
     },
+    {
+      title: '附件',
+      dataIndex: 'attachments',
+      key: 'attachments',
+      width: 120,
+      render: (val) => {
+        if (!val || val.length === 0) return '-';
+        return (
+          <span
+            style={{ color: '#00f0ff', cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewAttachments(val);
+              setPreviewVisible(true);
+            }}
+          >
+            {val.length} 个附件
+          </span>
+        );
+      }
+    },
   ];
-
-
 
   return (
     <div>
@@ -231,6 +253,11 @@ const Statistics = () => {
         tableProps={tableProps}
         loading={loading}
         columns={columns}
+      />
+      <AttachmentPreviewModal
+        visible={previewVisible}
+        attachments={previewAttachments}
+        onClose={() => setPreviewVisible(false)}
       />
     </div>
   );

@@ -27,6 +27,7 @@ class ExitEntryRecord(models.Model):
     operator_id = models.IntegerField('操作人ID', null=True)
     operator_name = models.CharField('操作人', max_length=64, blank=True)
     status = models.CharField('状态', max_length=16, default='processing')
+    attachments = models.JSONField('附件', default=list, blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 

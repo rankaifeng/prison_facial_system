@@ -46,10 +46,32 @@ class RecordService(BaseService):
             return None
 
     @staticmethod
+    def save_file(file):
+        """保存上传的文件"""
+        if not file:
+            return None
+        try:
+            import os
+            import uuid
+            from django.conf import settings
+            ext = os.path.splitext(file.name)[1]
+            filename = f"attachment_{uuid.uuid4().hex}{ext}"
+            filepath = f"media/attachments/{filename}"
+            full_path = os.path.join(settings.MEDIA_ROOT, 'attachments', filename)
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            with open(full_path, 'wb') as f:
+                for chunk in file.chunks():
+                    f.write(chunk)
+            return f"/media/attachments/{filename}"
+        except Exception as e:
+            logger.error(f"Failed to save file: {e}")
+            return None
+
+    @staticmethod
     def create_exit_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         exit_date, reason, police_face, swat_face, armed_police_signature,
-        operator_id, operator_name, hospital_name=None
+        operator_id, operator_name, hospital_name=None, attachments=None
     ):
         with transaction.atomic():
             # 保存武警签名为图片文件
@@ -72,6 +94,7 @@ class RecordService(BaseService):
                 operator_name=operator_name,
                 hospital_name=hospital_name,
                 status='completed',
+                attachments=attachments or [],
             )
 
             # 刑满释放不计入统计（因为不会回来）
@@ -181,6 +204,7 @@ class RecordService(BaseService):
                 'armed_police_signature': build_image_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name,
                 'hospital_name': record.hospital_name,
+                'attachments': [build_image_url(a) for a in (record.attachments or [])],
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             })
