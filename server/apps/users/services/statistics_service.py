@@ -60,7 +60,8 @@ class StatisticsService(BaseService):
                 'prison_area_name': item['prison_area_name']
             }
 
-        # 如果每日统计表有数据就用每日统计的
+        # 按分监区处理数据，以 area_stats 为主（如有），否则用 yearly_stats 补充
+        processed_areas = set()
         if area_stats:
             for stat in area_stats:
                 exit_cnt = stat['exit_count'] or 0
@@ -93,16 +94,18 @@ class StatisticsService(BaseService):
                     'reasons': area_reasons
                 }
                 area_list.append(area_item)
-        else:
-            # 每日统计表为空时，直接从 exit_entry_record 构建 by_area（地图用）
-            for item in yearly_records:
+                processed_areas.add(stat['prison_area'])
+
+        # 补充没有在 area_stats 中但有年度出监记录的监区
+        for prison_area, yearly_data in yearly_stats.items():
+            if prison_area not in processed_areas:
                 area_list.append({
-                    'prison_area': item['prison_area'],
-                    'prison_area_name': item['prison_area_name'],
+                    'prison_area': prison_area,
+                    'prison_area_name': yearly_data['prison_area_name'],
                     'exit_count': 0,
                     'entry_count': 0,
                     'in_prison_count': 0,
-                    'yearly_exit_count': item['yearly_exit'],
+                    'yearly_exit_count': yearly_data['yearly_exit'],
                     'reasons': []
                 })
 

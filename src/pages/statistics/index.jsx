@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Button, Image, message, Tag } from 'antd';
+import { Button, Image, message, Tag, DatePicker } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import SearchHeader from '@/components/search-header';
@@ -8,6 +8,8 @@ import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToExcel from '@/utils/export';
 import { exitType, recordExport } from '@/api/globApi';
+
+const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
   { value: 1, label: '分监区一' },
@@ -56,6 +58,12 @@ const Statistics = () => {
       name: 'reason',
       type: 'select',
       props: { placeholder: '请选择出监原因', options: [] }
+    },
+    {
+      label: '出监日期',
+      name: 'date_range',
+      type: 'dateRange',
+      props: { placeholder: ['开始日期', '结束日期'] }
     },
   ])
   const { tableProps, loading, form, search } = useQueryTable({
@@ -106,8 +114,17 @@ const Statistics = () => {
     const formValues = form.getFieldsValue();
     const params = {
       type: 'exit',
-      ...formValues,
     };
+    // 处理日期范围（时间戳）
+    if (formValues.date_range && formValues.date_range.length === 2) {
+      params.start_timestamp = formValues.date_range[0].valueOf();
+      params.end_timestamp = formValues.date_range[1].valueOf();
+    }
+    // 其他筛选条件
+    if (formValues.prison_area) params.prison_area = formValues.prison_area;
+    if (formValues.prisoner_name) params.prisoner_name = formValues.prisoner_name;
+    if (formValues.prisoner_no) params.prisoner_no = formValues.prisoner_no;
+    if (formValues.reason) params.reason = formValues.reason;
     // 移除空值
     Object.keys(params).forEach(key => {
       if (params[key] === undefined || params[key] === '' || params[key] === null) {

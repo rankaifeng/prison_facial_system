@@ -1,4 +1,5 @@
 from apps.users.models import ExitEntryRecord
+from datetime import datetime
 
 
 class RecordRepository:
@@ -17,17 +18,40 @@ class RecordRepository:
         return ExitEntryRecord.objects.all().order_by('-created_at')
 
     @staticmethod
-    def filter(type=None, start_date=None, end_date=None, prison_area=None,
+    def filter(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
               prisoner_name=None, prisoner_no=None, reason=None):
         """条件筛选记录"""
         queryset = ExitEntryRecord.objects.all()
 
         if type:
             queryset = queryset.filter(type=type)
-        if start_date:
-            queryset = queryset.filter(created_at__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(created_at__lte=end_date)
+        if start_timestamp:
+            # 支持字符串或整数类型的时间戳
+            if isinstance(start_timestamp, str):
+                start_timestamp = int(start_timestamp)
+            start_date = datetime.fromtimestamp(start_timestamp / 1000).date() if start_timestamp else None
+            if type == 'exit':
+                queryset = queryset.filter(exit_date__gte=start_date)
+            elif type == 'entry':
+                queryset = queryset.filter(entry_date__gte=start_date)
+            else:
+                from django.db.models import Q
+                queryset = queryset.filter(
+                    Q(exit_date__gte=start_date) | Q(entry_date__gte=start_date)
+                )
+        if end_timestamp:
+            if isinstance(end_timestamp, str):
+                end_timestamp = int(end_timestamp)
+            end_date = datetime.fromtimestamp(end_timestamp / 1000).date() if end_timestamp else None
+            if type == 'exit':
+                queryset = queryset.filter(exit_date__lte=end_date)
+            elif type == 'entry':
+                queryset = queryset.filter(entry_date__lte=end_date)
+            else:
+                from django.db.models import Q
+                queryset = queryset.filter(
+                    Q(exit_date__lte=end_date) | Q(entry_date__lte=end_date)
+                )
         if prison_area:
             queryset = queryset.filter(prison_area=prison_area)
         if prisoner_name:

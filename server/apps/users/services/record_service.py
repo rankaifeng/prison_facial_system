@@ -135,10 +135,10 @@ class RecordService(BaseService):
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
     @staticmethod
-    def list_records(type=None, start_date=None, end_date=None, prison_area=None,
+    def list_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
                      prisoner_name=None, prisoner_no=None, reason=None, page=1, page_size=10):
         queryset = RecordRepository.filter(
-            type=type, start_date=start_date, end_date=end_date, prison_area=prison_area,
+            type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
             prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
         )
 
@@ -252,11 +252,11 @@ class RecordService(BaseService):
         }
 
     @staticmethod
-    def export_records(type=None, start_date=None, end_date=None, prison_area=None,
+    def export_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
                        prisoner_name=None, prisoner_no=None, reason=None):
         """导出记录为CSV数据"""
         queryset = RecordRepository.filter(
-            type=type, start_date=start_date, end_date=end_date, prison_area=prison_area,
+            type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
             prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
         )
 

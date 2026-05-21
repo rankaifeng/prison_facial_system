@@ -133,8 +133,8 @@ class RecordListController(APIView):
 
     def get(self, request):
         record_type = request.query_params.get('type')
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
+        start_timestamp = request.query_params.get('start_timestamp')
+        end_timestamp = request.query_params.get('end_timestamp')
         prison_area = request.query_params.get('prison_area')
         prisoner_name = request.query_params.get('prisoner_name')
         prisoner_no = request.query_params.get('prisoner_no')
@@ -147,8 +147,8 @@ class RecordListController(APIView):
 
         success, message, result = RecordService.list_records(
             type=record_type,
-            start_date=start_date,
-            end_date=end_date,
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
             prison_area=prison_area,
             prisoner_name=prisoner_name,
             prisoner_no=prisoner_no,
@@ -171,8 +171,8 @@ class RecordExportController(APIView):
 
     def get(self, request):
         record_type = request.query_params.get('type')
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
+        start_timestamp = request.query_params.get('start_timestamp')
+        end_timestamp = request.query_params.get('end_timestamp')
         prison_area = request.query_params.get('prison_area')
         prisoner_name = request.query_params.get('prisoner_name')
         prisoner_no = request.query_params.get('prisoner_no')
@@ -183,8 +183,8 @@ class RecordExportController(APIView):
 
         success, message, result = RecordService.export_records(
             type=record_type,
-            start_date=start_date,
-            end_date=end_date,
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
             prison_area=prison_area,
             prisoner_name=prisoner_name,
             prisoner_no=prisoner_no,

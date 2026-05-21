@@ -187,7 +187,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           label="出监日期"
           rules={[{ required: true, message: '请选择出监日期' }]}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="请选择出监日期" />
+          <DatePicker style={{ width: '100%' }} placeholder="请选择出监日期" showTime format="YYYY-MM-DD HH:mm" />
         </Form.Item>
 
         <Form.Item

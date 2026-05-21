@@ -30,6 +30,8 @@ const SearchHeader = (props) => {
         return <TreeSelect style={{ width: 200 }} allowClear fieldNames={fieldNames} treeData={treeData} {...itemProps} />;
       case 'date':
         return <DatePicker style={{ width: 160 }} {...itemProps} />;
+      case 'dateRange':
+        return <RangePicker style={{ width: 260 }} {...itemProps} showTime format="YYYY-MM-DD HH:mm" />;
       case 'range':
         return <RangePicker style={{ width: 260 }} {...itemProps} />;
       case 'number':
@@ -42,7 +44,41 @@ const SearchHeader = (props) => {
   };
 
   const handleFinish = (values) => {
-    onSearch?.(values, form);
+    // 处理 dateRange 类型字段，拆分为 start_timestamp 和 end_timestamp（时间戳）
+    const processedValues = { ...values };
+    Object.keys(processedValues).forEach(key => {
+      const item = items.find(i => i.name === key);
+      if (item?.type === 'dateRange') {
+        const val = processedValues[key];
+        // 支持数组格式 [start, end]
+        if (Array.isArray(val) && val.length === 2) {
+          const [start, end] = val;
+          // dayjs 或 moment 对象，使用 valueOf() 获取时间戳
+          const startTs = start?.valueOf ? start.valueOf() : new Date(start).getTime();
+          const endTs = end?.valueOf ? end.valueOf() : new Date(end).getTime();
+          processedValues.start_timestamp = String(startTs);
+          processedValues.end_timestamp = String(endTs);
+        } else if (typeof val === 'string') {
+          // 字符串格式：start,end
+          const parts = val.split(',');
+          if (parts.length === 2) {
+            processedValues.start_timestamp = parts[0].trim();
+            processedValues.end_timestamp = parts[1].trim();
+          }
+        }
+        // 完全删除 date_range 相关的键，避免残留
+        delete processedValues[key];
+      }
+    });
+    // 移除空值
+    Object.keys(processedValues).forEach(key => {
+      if (processedValues[key] === undefined || processedValues[key] === '' || processedValues[key] === null) {
+        delete processedValues[key];
+      }
+    });
+    console.log('最终传递给 search 的值:', processedValues);
+    // 直接调用搜索，不通过 Form 的 onFinish（避免表单值被重新使用）
+    onSearch?.(processedValues, form);
   };
 
   const handleReset = () => {

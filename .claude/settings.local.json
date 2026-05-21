@@ -12,7 +12,8 @@
       "Bash(kill 68064 26337)",
       "Bash(curl -s http://localhost:8000/)",
       "Bash(pkill -f \"manage.py runserver\")",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(sqlite3 db.sqlite3 \"SELECT prison_area, prison_area_name, COUNT\\(*\\) as cnt FROM users_exitentryrecord WHERE type='exit' AND exit_date >= '2026-01-01' GROUP BY prison_area, prison_area_name;\")"
     ]
   }
 }
