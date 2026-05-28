@@ -12,23 +12,23 @@ import { recordExport } from '@/api/globApi';
 const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
-  { value: 1, label: '分监区一' },
-  { value: 2, label: '分监区二' },
-  { value: 3, label: '分监区三' },
-  { value: 4, label: '分监区四' },
-  { value: 5, label: '分监区五' },
-  { value: 6, label: '分监区六' },
-  { value: 7, label: '分监区七' },
+  { value: 1, label: '监区一' },
+  { value: 2, label: '监区二' },
+  { value: 3, label: '监区三' },
+  { value: 4, label: '监区四' },
+  { value: 5, label: '监区五' },
+  { value: 6, label: '监区六' },
+  { value: 7, label: '监区七' },
 ];
 
 const PRISON_AREA_MAP = {
-  '分监区一': 1,
-  '分监区二': 2,
-  '分监区三': 3,
-  '分监区四': 4,
-  '分监区五': 5,
-  '分监区六': 6,
-  '分监区七': 7,
+  '监区一': 1,
+  '监区二': 2,
+  '监区三': 3,
+  '监区四': 4,
+  '监区五': 5,
+  '监区六': 6,
+  '监区七': 7,
 };
 
 const ReturnStatistics = () => {

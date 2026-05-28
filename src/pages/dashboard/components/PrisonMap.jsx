@@ -24,13 +24,13 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
   const currentPrisonName = getStoredPrisonName();
 
   const mCont = [
-    { name: '分监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区二', province: '云南', code: '530000', coordinates: [101.34, 25.04], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区三', province: '贵州', code: '520000', coordinates: [106.71, 26.60], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区四', province: '广西', code: '450000', coordinates: [108.33, 22.84], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区五', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, yearlyExitCount: 0 },
-    { name: '分监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区一', province: '四川', code: '510000', coordinates: [104.06, 30.67], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区二', province: '云南', code: '530000', coordinates: [101.34, 25.04], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区三', province: '贵州', code: '520000', coordinates: [106.71, 26.60], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区四', province: '广西', code: '450000', coordinates: [108.33, 22.84], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区五', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区六', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, yearlyExitCount: 0 },
+    { name: '监区七', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, yearlyExitCount: 0 },
     { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, yearlyExitCount: 0 },
   ];
 

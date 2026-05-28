@@ -137,7 +137,7 @@ const Dashboard = () => {
                 onClick={() => setEnterModalOpen(true)}
                 className="exit-btn"
               >
-                入监确认
+                回监确认
               </Button>
             </>
           )}

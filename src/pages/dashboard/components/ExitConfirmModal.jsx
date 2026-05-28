@@ -8,13 +8,13 @@ import './ExitConfirmModal.less';
 const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
-  { value: 1, label: '分监区一' },
-  { value: 2, label: '分监区二' },
-  { value: 3, label: '分监区三' },
-  { value: 4, label: '分监区四' },
-  { value: 5, label: '分监区五' },
-  { value: 6, label: '分监区六' },
-  { value: 7, label: '分监区七' },
+  { value: 1, label: '监区一' },
+  { value: 2, label: '监区二' },
+  { value: 3, label: '监区三' },
+  { value: 4, label: '监区四' },
+  { value: 5, label: '监区五' },
+  { value: 6, label: '监区六' },
+  { value: 7, label: '监区七' },
 ];
 
 const HOSPITALS_CENTER = [
@@ -258,10 +258,10 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
 
         <Form.Item
           name="prisonArea"
-          label="分监区"
-          rules={[{ required: true, message: '请选择分监区' }]}
+          label="监区"
+          rules={[{ required: true, message: '请选择监区' }]}
         >
-          <Select placeholder="请选择分监区" options={PRISON_AREAS} />
+          <Select placeholder="请选择监区" options={PRISON_AREAS} />
         </Form.Item>
 
         <Form.Item

@@ -74,17 +74,17 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
 
         <Form.Item
           name="prisonArea"
-          label="分监区"
-          rules={[{ required: true, message: '请选择分监区' }]}
+          label="监区"
+          rules={[{ required: true, message: '请选择监区' }]}
         >
-          <Select placeholder="请选择分监区" options={[
-            { value: '分监区一', label: '分监区一' },
-            { value: '分监区二', label: '分监区二' },
-            { value: '分监区三', label: '分监区三' },
-            { value: '分监区四', label: '分监区四' },
-            { value: '分监区五', label: '分监区五' },
-            { value: '分监区六', label: '分监区六' },
-            { value: '分监区七', label: '分监区七' },
+          <Select placeholder="请选择监区" options={[
+            { value: '监区一', label: '监区一' },
+            { value: '监区二', label: '监区二' },
+            { value: '监区三', label: '监区三' },
+            { value: '监区四', label: '监区四' },
+            { value: '监区五', label: '监区五' },
+            { value: '监区六', label: '监区六' },
+            { value: '监区七', label: '监区七' },
           ]} />
         </Form.Item>
       </Form>
