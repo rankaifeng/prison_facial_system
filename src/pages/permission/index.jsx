@@ -6,13 +6,13 @@ import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import http from '@/server/axios';
 
-const prisonAreas = [{ id: 1, name: '分监区一' },
-{ id: 2, name: '分监区二' },
-{ id: 3, name: '分监区三' },
-{ id: 4, name: '分监区四' },
-{ id: 5, name: '分监区五' },
-{ id: 6, name: '分监区六' },
-{ id: 7, name: '分监区七' }];
+const prisonAreas = [{ id: 1, name: '一监区' },
+{ id: 2, name: '二监区' },
+{ id: 3, name: '三监区' },
+{ id: 4, name: '四监区' },
+{ id: 5, name: '五监区' },
+{ id: 6, name: '六监区' },
+{ id: 7, name: '七监区' }];
 
 const AccountManagement = () => {
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ const AccountManagement = () => {
 
   const columns = [
     { title: '账号', dataIndex: 'username', key: 'username' },
-    { title: '所属分监区', dataIndex: 'prison_name', key: 'prison_name' },
+    { title: '所属监区', dataIndex: 'prison_name', key: 'prison_name' },
     {
       title: '操作',
       fixed: 'right',
@@ -136,10 +136,10 @@ const AccountManagement = () => {
 
           <Form.Item
             name="prison_id"
-            label="所属分监区"
-            rules={[{ required: true, message: '请选择分监区' }]}
+            label="所属监区"
+            rules={[{ required: true, message: '请选择监区' }]}
           >
-            <Select placeholder="请选择分监区" options={prisonAreas} fieldNames={{ label: 'name', value: 'id' }} />
+            <Select placeholder="请选择监区" options={prisonAreas} fieldNames={{ label: 'name', value: 'id' }} />
           </Form.Item>
         </Form>
       </Modal>

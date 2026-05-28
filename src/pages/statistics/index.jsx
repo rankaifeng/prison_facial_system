@@ -8,35 +8,32 @@ import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToExcel from '@/utils/export';
 import { exitType, recordExport } from '@/api/globApi';
-import AttachmentPreviewModal from './components/AttachmentPreviewModal';
 
 const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
-  { value: 1, label: '监区一' },
-  { value: 2, label: '监区二' },
-  { value: 3, label: '监区三' },
-  { value: 4, label: '监区四' },
-  { value: 5, label: '监区五' },
-  { value: 6, label: '监区六' },
-  { value: 7, label: '监区七' },
+  { value: 1, label: '一监区' },
+  { value: 2, label: '二监区' },
+  { value: 3, label: '三监区' },
+  { value: 4, label: '四监区' },
+  { value: 5, label: '五监区' },
+  { value: 6, label: '六监区' },
+  { value: 7, label: '七监区' },
 ];
 
 const PRISON_AREA_MAP = {
-  '监区一': 1,
-  '监区二': 2,
-  '监区三': 3,
-  '监区四': 4,
-  '监区五': 5,
-  '监区六': 6,
-  '监区七': 7,
+  '一监区': 1,
+  '二监区': 2,
+  '三监区': 3,
+  '四监区': 4,
+  '五监区': 5,
+  '六监区': 6,
+  '七监区': 7,
 };
 
 const Statistics = () => {
   const [searchParams] = useSearchParams();
   const [exitReasons, setExitReasons] = useState([]);
-  const [previewAttachments, setPreviewAttachments] = useState([]);
-  const [previewVisible, setPreviewVisible] = useState(false);
   const [searchItems, setSearchItems] = useState([
     {
       label: '监区',
@@ -147,7 +144,7 @@ const Statistics = () => {
   };
 
   const exportColumns = [
-    { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name' },
+    { title: '监区', dataIndex: 'prison_area_name', key: 'prison_area_name' },
     { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name' },
     { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no' },
     { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date' },
@@ -160,7 +157,7 @@ const Statistics = () => {
   ];
 
   const columns = [
-    { title: '分监区', dataIndex: 'prison_area_name', key: 'prison_area_name', width: 150 },
+    { title: '监区', dataIndex: 'prison_area_name', key: 'prison_area_name', width: 150 },
     { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name', width: 100 },
     { title: '罪犯编号', dataIndex: 'prisoner_no', key: 'prisoner_no', width: 120 },
     { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date', width: 160 },
@@ -211,27 +208,6 @@ const Statistics = () => {
         return <VideoPlayer src={val} />
       }
     },
-    {
-      title: '附件',
-      dataIndex: 'attachments',
-      key: 'attachments',
-      width: 120,
-      render: (val) => {
-        if (!val || val.length === 0) return '-';
-        return (
-          <span
-            style={{ color: '#00f0ff', cursor: 'pointer' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setPreviewAttachments(val);
-              setPreviewVisible(true);
-            }}
-          >
-            {val.length} 个附件
-          </span>
-        );
-      }
-    },
   ];
 
   return (
@@ -253,11 +229,6 @@ const Statistics = () => {
         tableProps={tableProps}
         loading={loading}
         columns={columns}
-      />
-      <AttachmentPreviewModal
-        visible={previewVisible}
-        attachments={previewAttachments}
-        onClose={() => setPreviewVisible(false)}
       />
     </div>
   );

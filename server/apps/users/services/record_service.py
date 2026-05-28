@@ -119,7 +119,7 @@ class RecordService(BaseService):
     @staticmethod
     def create_entry_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
-        entry_date, police_face, operator_id, operator_name
+        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None
     ):
         with transaction.atomic():
             # 查找该罪犯的最后一条出监记录，获取出监原因
@@ -138,7 +138,8 @@ class RecordService(BaseService):
                 police_name=operator_name,
                 operator_id=operator_id,
                 operator_name=operator_name,
-                status='completed',
+                status=entry_status or 'normal',
+                abnormal_reason=abnormal_reason or '',
             )
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)

@@ -100,6 +100,8 @@ class EntryRecordController(APIView):
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')
         police_face = data.get('police_face')
+        entry_status = data.get('entry_status', 'normal')
+        abnormal_reason = data.get('abnormal_reason', '')
 
         if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
             return Response({
@@ -120,6 +122,8 @@ class EntryRecordController(APIView):
             police_face=police_face_path,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
+            entry_status=entry_status,
+            abnormal_reason=abnormal_reason,
         )
 
         if not success:

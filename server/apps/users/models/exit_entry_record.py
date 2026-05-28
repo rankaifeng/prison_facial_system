@@ -7,11 +7,16 @@ class ExitEntryRecord(models.Model):
         ('entry', '入监'),
     ]
 
+    STATUS_CHOICES = [
+        ('normal', '正常'),
+        ('abnormal', '异常'),
+    ]
+
     prisoner_no = models.CharField('罪犯编号', max_length=32)
     prisoner_name = models.CharField('罪犯姓名', max_length=64)
     prisoner_photo = models.CharField('罪犯照片', max_length=255, blank=True)
-    prison_area = models.CharField('分监区ID', max_length=32, blank=True)
-    prison_area_name = models.CharField('分监区名称', max_length=128, blank=True)
+    prison_area = models.CharField('监区ID', max_length=32, blank=True)
+    prison_area_name = models.CharField('监区名称', max_length=128, blank=True)
     type = models.CharField('类型', max_length=16, choices=TYPE_CHOICES)
     reason = models.CharField('出监原因', max_length=32, blank=True)
     exit_date = models.DateField('出监日期', null=True, blank=True)
@@ -27,6 +32,7 @@ class ExitEntryRecord(models.Model):
     operator_id = models.IntegerField('操作人ID', null=True)
     operator_name = models.CharField('操作人', max_length=64, blank=True)
     status = models.CharField('状态', max_length=16, default='processing')
+    abnormal_reason = models.CharField('异常原因', max_length=255, blank=True)
     attachments = models.JSONField('附件', default=list, blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)

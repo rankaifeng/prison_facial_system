@@ -23,7 +23,7 @@ class StatisticsService(BaseService):
         if not all_reasons:
             all_reasons = ['刑满释放', '外出就医', '外出教育', '离监探亲', '押回重审']
 
-        # 按分监区分组统计（从每日统计表）
+        # 按监区分组统计（从每日统计表）
         area_stats = queryset.values(
             'prison_area',
             'prison_area_name'
@@ -36,7 +36,7 @@ class StatisticsService(BaseService):
         # 汇总 reason_stats
         total_reason_stats = {reason: 0 for reason in all_reasons}
 
-        # 按分监区统计的列表（供地图使用）
+        # 按监区统计的列表（供地图使用）
         area_list = []
         total_exit = 0
         total_entry = 0
@@ -60,7 +60,7 @@ class StatisticsService(BaseService):
                 'prison_area_name': item['prison_area_name']
             }
 
-        # 按分监区处理数据，以 area_stats 为主（如有），否则用 yearly_stats 补充
+        # 按监区处理数据，以 area_stats 为主（如有），否则用 yearly_stats 补充
         processed_areas = set()
         if area_stats:
             for stat in area_stats:
@@ -72,11 +72,11 @@ class StatisticsService(BaseService):
                 total_entry += entry_cnt
                 total_in_prison += in_prison_cnt
 
-                # 获取该分监区的 reason_stats JSONField
+                # 获取该监区的 reason_stats JSONField
                 db_stat = queryset.filter(prison_area=stat['prison_area']).first()
                 reason_stats = db_stat.reason_stats if db_stat and db_stat.reason_stats else {}
 
-                # 按分监区的统计，包含各出监原因
+                # 按监区的统计，包含各出监原因
                 area_reasons = []
                 for reason in all_reasons:
                     count = reason_stats.get(reason, 0)

@@ -2,8 +2,8 @@ from django.db import models
 
 
 class HistoryStatistics(models.Model):
-    prison_area = models.CharField('分监区ID', max_length=32)
-    prison_area_name = models.CharField('分监区名称', max_length=128)
+    prison_area = models.CharField('监区ID', max_length=32)
+    prison_area_name = models.CharField('监区名称', max_length=128)
     date = models.DateField('统计日期')
     exit_count = models.IntegerField('出监总人数', default=0)
     exit_reason_1 = models.IntegerField('刑满释放', default=0)

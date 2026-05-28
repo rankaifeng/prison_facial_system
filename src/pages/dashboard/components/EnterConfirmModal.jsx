@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import { entryRecord } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const EnterConfirmModal = ({ open, onCancel, onOk }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
+
+  const entryStatus = Form.useWatch('entryStatus', form);
 
   const handleNext = async () => {
     if (current === 0) {
@@ -29,15 +32,29 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
     setCurrent(current - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const values = form.getFieldsValue();
-    const data = {
-      ...values,
-      policeImage,
-    };
-    message.success('提交成功');
-    onOk?.(data);
-    handleReset();
+    try {
+      const formData = new FormData();
+      formData.append('prisoner_no', values.prisonerNo);
+      formData.append('prisoner_name', values.prisonerName);
+      formData.append('prison_area', values.prisonArea);
+      formData.append('entry_date', values.enterDate ? values.enterDate.format('YYYY-MM-DD') : null);
+      formData.append('police_face', policeImage);
+      formData.append('entry_status', values.entryStatus || 'normal');
+      formData.append('abnormal_reason', values.abnormalReason || '');
+
+      const res = await entryRecord.submit(formData);
+      if (res.code === 1) {
+        message.success('提交成功');
+        onOk?.(values);
+        handleReset();
+      } else {
+        message.error(res.msg || '提交失败');
+      }
+    } catch (error) {
+      message.error('提交失败');
+    }
   };
 
   const handleReset = () => {
@@ -78,15 +95,36 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
           rules={[{ required: true, message: '请选择监区' }]}
         >
           <Select placeholder="请选择监区" options={[
-            { value: '监区一', label: '监区一' },
-            { value: '监区二', label: '监区二' },
-            { value: '监区三', label: '监区三' },
-            { value: '监区四', label: '监区四' },
-            { value: '监区五', label: '监区五' },
-            { value: '监区六', label: '监区六' },
-            { value: '监区七', label: '监区七' },
+            { value: '一监区', label: '一监区' },
+            { value: '二监区', label: '二监区' },
+            { value: '三监区', label: '三监区' },
+            { value: '四监区', label: '四监区' },
+            { value: '五监区', label: '五监区' },
+            { value: '六监区', label: '六监区' },
+            { value: '七监区', label: '七监区' },
           ]} />
         </Form.Item>
+
+        <Form.Item
+          name="entryStatus"
+          label="状态"
+          rules={[{ required: true, message: '请选择状态' }]}
+        >
+          <Select placeholder="请选择状态" options={[
+            { value: 'normal', label: '正常' },
+            { value: 'abnormal', label: '异常' },
+          ]} />
+        </Form.Item>
+
+        {entryStatus === 'abnormal' && (
+          <Form.Item
+            name="abnormalReason"
+            label="异常原因"
+            rules={[{ required: true, message: '请输入异常原因' }]}
+          >
+            <Input.TextArea placeholder="请输入异常原因" rows={3} />
+          </Form.Item>
+        )}
       </Form>
     </div>
   );

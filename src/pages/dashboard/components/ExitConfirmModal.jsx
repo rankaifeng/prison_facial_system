@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme, Upload } from 'antd';
-import { UserOutlined, SafetyOutlined, TeamOutlined, UploadOutlined } from '@ant-design/icons';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
+import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
 import { exitRecord, exitType, prison } from '@/api/globApi';
 import './ExitConfirmModal.less';
@@ -8,13 +8,13 @@ import './ExitConfirmModal.less';
 const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
-  { value: 1, label: '监区一' },
-  { value: 2, label: '监区二' },
-  { value: 3, label: '监区三' },
-  { value: 4, label: '监区四' },
-  { value: 5, label: '监区五' },
-  { value: 6, label: '监区六' },
-  { value: 7, label: '监区七' },
+  { value: 1, label: '一监区' },
+  { value: 2, label: '二监区' },
+  { value: 3, label: '三监区' },
+  { value: 4, label: '四监区' },
+  { value: 5, label: '五监区' },
+  { value: 6, label: '六监区' },
+  { value: 7, label: '七监区' },
 ];
 
 const HOSPITALS_CENTER = [
@@ -42,7 +42,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
-  const [attachments, setAttachments] = useState([]);
 
   const exitReason = Form.useWatch('exitReason', form);
   const hospitalType = Form.useWatch('hospital', form);
@@ -57,7 +56,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
       setPoliceImage(null);
       setSwatImage(null);
       setArmedPoliceSignature(null);
-      setAttachments([]);
       // 获取出监原因列表
       const fetchExitTypes = async () => {
         try {
@@ -138,12 +136,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     formData.append('swat_face', swatImage);
     formData.append('armed_police_signature', armedPoliceSignature);
     formData.append('hospital_name', hospitalName || '');
-    // 添加附件
-    attachments.forEach(file => {
-      if (file.originFileObj) {
-        formData.append('attachments', file.originFileObj);
-      }
-    });
     const res = await exitRecord.submit(formData);
     if (res.code === 1) {
       message.success('提交成功');
@@ -162,7 +154,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     setPoliceImage(null);
     setSwatImage(null);
     setArmedPoliceSignature(null);
-    setAttachments([]);
     onCancel?.();
   };
   console.log("exitReason", exitReason);
@@ -262,19 +253,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           rules={[{ required: true, message: '请选择监区' }]}
         >
           <Select placeholder="请选择监区" options={PRISON_AREAS} />
-        </Form.Item>
-
-        <Form.Item
-          label="上传附件"
-        >
-          <Upload
-            multiple
-            beforeUpload={() => false}
-            onChange={({ fileList }) => setAttachments(fileList)}
-            fileList={attachments}
-          >
-            <Button icon={<UploadOutlined />}>选择文件</Button>
-          </Upload>
         </Form.Item>
       </Form>
     </div>
