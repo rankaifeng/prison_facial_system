@@ -3,12 +3,13 @@ import { BellOutlined, RightOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { prisonMessages } from '@/api/globApi';
+import './RightPanel.less';
 
 const RightPanel = ({ onDataUpdate }) => {
   const [messages, setMessages] = useState([]);
-  const [isScrolling, setIsScrolling] = useState(false);
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const animRef = useRef(null);
 
   useEffect(() => {
     fetchMessages();
@@ -20,61 +21,78 @@ const RightPanel = ({ onDataUpdate }) => {
     }
   }, [onDataUpdate]);
 
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    // 内容超过容器高度且消息多于1条时滚动
-    const shouldScroll = messages.length > 3;
-    setIsScrolling(shouldScroll);
-  }, [messages]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || !isScrolling) return;
-
-    let animationId;
-    let scrollTop = 0;
-    const speed = 0.3;
-    // 由于内容被复制了两份，滚动到一半就是一组内容的长度
-    const maxScroll = container.scrollHeight / 2;
-
-    const scroll = () => {
-      scrollTop += speed;
-      if (scrollTop >= maxScroll) {
-        scrollTop = 0;
-      }
-      container.scrollTop = scrollTop;
-      animationId = requestAnimationFrame(scroll);
-    };
-
-    animationId = requestAnimationFrame(scroll);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [isScrolling]);
-
   const fetchMessages = async () => {
     try {
       const res = await prisonMessages.list({ page: 1, limit: 60 });
       const data = Array.isArray(res) ? res : (res?.data || []);
-      //只取data的前五条
       setMessages(data);
     } catch (error) {
       console.error('获取监狱消息失败:', error);
     }
   };
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || messages.length <= 3) {
+      if (animRef.current) {
+        cancelAnimationFrame(animRef.current);
+      }
+      return;
+    }
 
+    let scrollTop = 0;
+    const speed = 40; // pixels per second
+
+    const animate = () => {
+      scrollTop += speed / 60; // approximate for 60fps
+      if (scrollTop >= el.scrollHeight / 2) {
+        scrollTop = 0;
+      }
+      el.scrollTop = scrollTop;
+      animRef.current = requestAnimationFrame(animate);
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animRef.current) {
+        cancelAnimationFrame(animRef.current);
+      }
+    };
+  }, [messages.length]);
 
   const renderEmptyState = () => (
     <div className="message-empty">
       <BellOutlined className="empty-icon" />
       <span className="empty-text">暂无消息</span>
     </div>
+  );
+
+  const renderMessages = () => (
+    <>
+      {messages.map((msg, index) => (
+        <div key={`a-${msg.id || index}`} className="message-item">
+          <div className="message-dot" />
+          <div className="message-text">
+            <span className="person-name">{msg.prisoner_name}</span>
+            <span className="date">{msg.exit_date}</span>
+            <span className="reason">{msg.reason}</span>
+            {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
+          </div>
+        </div>
+      ))}
+      {messages.map((msg, index) => (
+        <div key={`b-${msg.id || index}`} className="message-item">
+          <div className="message-dot" />
+          <div className="message-text">
+            <span className="person-name">{msg.prisoner_name}</span>
+            <span className="date">{msg.exit_date}</span>
+            <span className="reason">{msg.reason}</span>
+            {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
+          </div>
+        </div>
+      ))}
+    </>
   );
 
   return (
@@ -99,39 +117,9 @@ const RightPanel = ({ onDataUpdate }) => {
           详情 <RightOutlined />
         </Button>
       </div>
-      <div
-        className="message-list"
-        ref={scrollRef}
-      >
+      <div className="message-list" ref={scrollRef}>
         <div className="message-scroll">
-          {messages.length === 0 ? (
-            renderEmptyState()
-          ) : (
-            <>
-              {messages.map((msg, index) => (
-                <div key={`orig-${msg.id || index}`} className="message-item">
-                  <div className="message-dot" />
-                  <div className="message-text">
-                    <span className="person-name">{msg.prisoner_name}</span>
-                    <span className="date">{msg.exit_date}</span>
-                    <span className="reason">{msg.reason}</span>
-                    {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
-                  </div>
-                </div>
-              ))}
-              {messages.map((msg, index) => (
-                <div key={`dup-${msg.id || index}`} className="message-item">
-                  <div className="message-dot" />
-                  <div className="message-text">
-                    <span className="person-name">{msg.prisoner_name}</span>
-                    <span className="date">{msg.exit_date}</span>
-                    <span className="reason">{msg.reason}</span>
-                    {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
+          {messages.length === 0 ? renderEmptyState() : renderMessages()}
         </div>
       </div>
     </div>

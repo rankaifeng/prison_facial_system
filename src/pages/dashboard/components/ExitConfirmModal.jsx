@@ -3,7 +3,6 @@ import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigP
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
 import { exitRecord, exitType, prison } from '@/api/globApi';
-import { exitRecord, exitType, prison } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const { RangePicker } = DatePicker;
