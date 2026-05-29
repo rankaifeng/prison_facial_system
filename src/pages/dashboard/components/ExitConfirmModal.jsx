@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
+import { exitRecord, exitType, prison } from '@/api/globApi';
 import { exitRecord, exitType, prison } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
@@ -42,6 +43,9 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
+
+  const policeInputRef = useRef(null);
+  const swatInputRef = useRef(null);
 
   const exitReason = Form.useWatch('exitReason', form);
   const hospitalType = Form.useWatch('hospital', form);
@@ -87,10 +91,8 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
         return;
       }
     } else if (current === 1) {
-      setPoliceImage('/imgs/face.png');
       setCurrent(2);
     } else if (current === 2) {
-      setSwatImage('/imgs/face.png');
       setCurrent(3);
     } else {
       if (!armedPoliceSignature) {
@@ -260,6 +262,20 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
 
   const renderStep2 = () => (
     <div className="step-content confirm-step" style={{ display: current === 1 ? 'flex' : 'none' }}>
+      <input
+        type="file"
+        ref={policeInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setPoliceImage(ev.target.result);
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
       <div className="confirm-image">
         {policeImage ? (
           <img src={policeImage} alt="民警照片1" />
@@ -270,7 +286,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </div>
         )}
       </div>
-      <Button type="primary" onClick={() => setPoliceImage('/imgs/face.png')}>
+      <Button type="primary" onClick={() => policeInputRef.current?.click()}>
         确认
       </Button>
     </div>
@@ -278,6 +294,20 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
 
   const renderStep3 = () => (
     <div className="step-content confirm-step" style={{ display: current === 2 ? 'flex' : 'none' }}>
+      <input
+        type="file"
+        ref={swatInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setSwatImage(ev.target.result);
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
       <div className="confirm-image">
         {swatImage ? (
           <img src={swatImage} alt="特警照片" />
@@ -288,7 +318,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
           </div>
         )}
       </div>
-      <Button type="primary" onClick={() => setSwatImage('/imgs/face.png')}>
+      <Button type="primary" onClick={() => swatInputRef.current?.click()}>
         确认
       </Button>
     </div>

@@ -22,6 +22,7 @@ import {
   EXIT_TYPE_ADD,
   EXIT_TYPE_UPDATE,
   EXIT_TYPE_DELETE,
+  RETURN_RECORD,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -41,6 +42,10 @@ export const exitRecord = {
 
 export const entryRecord = {
   submit: (data) => http.post(ENTRY_RECORD, data),
+};
+
+export const returnRecord = {
+  submit: (data) => http.post(RETURN_RECORD, data),
 };
 
 export const record = {

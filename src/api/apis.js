@@ -4,6 +4,7 @@ export const PRISONER_LIST = '/prison_manage/prisoner_info/prisoner_info_list';
 export const PRISONER_DETAIL = '/prison_manage/prisoner_info/prisoner_info_detail';
 export const EXIT_RECORD = '/user_manage/exit_record/submit';
 export const ENTRY_RECORD = '/prison_manage/entry_record/submit';
+export const RETURN_RECORD = '/user_manage/return_record/submit';
 export const RECORD_LIST = '/user_manage/record/list';
 export const RECORD_EXPORT = '/user_manage/record/export';
 export const REALTIME_STATISTICS = '/user_manage/statistics/realtime';

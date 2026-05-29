@@ -140,6 +140,69 @@ class EntryRecordController(APIView):
         })
 
 
+class ReturnRecordController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+
+        prisoner_no = data.get('prisoner_no')
+        prisoner_name = data.get('prisoner_name')
+        prisoner_photo = data.get('prisoner_photo')
+        prison_area = data.get('prison_area')  # 前端传入的是 ID
+        prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
+        entry_date = data.get('entry_date')
+        police_face = data.get('police_face')
+        entry_status = data.get('entry_status', 'normal')
+        abnormal_reason = data.get('abnormal_reason', '')
+
+        if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
+            return Response({
+                'code': 0,
+                'msg': '缺少必要参数',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 解析日期时间，支持 'YYYY-MM-DD' 和 'YYYY-MM-DD HH:mm' 格式
+        entry_datetime = RecordService.parse_datetime(entry_date)
+        if not entry_datetime:
+            return Response({
+                'code': 0,
+                'msg': '日期格式错误，请使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm 格式',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        police_face_path = RecordService.save_image(police_face, 'police')
+
+        success, message, result = RecordService.create_return_record(
+            prisoner_no=prisoner_no,
+            prisoner_name=prisoner_name,
+            prisoner_photo=prisoner_photo,
+            prison_area=prison_area,
+            prison_area_name=prison_area_name,
+            entry_date=entry_datetime,
+            police_face=police_face_path,
+            operator_id=request.user.id,
+            operator_name=request.user.first_name or request.user.username,
+            entry_status=entry_status,
+            abnormal_reason=abnormal_reason,
+        )
+
+        if not success:
+            return Response({
+                'code': 0,
+                'msg': message,
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'code': 1,
+            'msg': message,
+            'data': result
+        })
+
+
 class RecordListController(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

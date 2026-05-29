@@ -8,6 +8,7 @@ import StatisticsChart from './components/StatisticsChart';
 import StatusPieChart from './components/StatusPieChart';
 import PrisonMap from './components/PrisonMap';
 import ExitConfirmModal from './components/ExitConfirmModal';
+import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
 import { realtimeStatistics } from '@/api/globApi';
@@ -30,6 +31,7 @@ const getGreeting = () => {
 const Dashboard = () => {
   const [realtimeData, setRealtimeData] = useState({});
   const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userName, setUserName] = useState('');
@@ -134,7 +136,7 @@ const Dashboard = () => {
               <Button
                 type="primary"
                 icon={<LoginOutlined />}
-                onClick={() => setEnterModalOpen(true)}
+                onClick={() => setReturnModalOpen(true)}
                 className="exit-btn"
               >
                 回监确认
@@ -219,6 +221,11 @@ const Dashboard = () => {
         open={enterModalOpen}
         onCancel={() => setEnterModalOpen(false)}
         onOk={() => { setEnterModalOpen(false); handleDataUpdate(); }}
+      />
+      <ReturnConfirmModal
+        open={returnModalOpen}
+        onCancel={() => setReturnModalOpen(false)}
+        onOk={() => { setReturnModalOpen(false); handleDataUpdate(); }}
       />
     </div>
   );

@@ -18,7 +18,9 @@
       "Bash(curl -s http://127.0.0.1:8000/)",
       "Bash(curl *)",
       "Bash(docker build *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(python manage.py check)",
+      "Bash(python server/manage.py check)"
     ]
   }
 }

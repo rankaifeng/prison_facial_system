@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { entryRecord } from '@/api/globApi';
+import { returnRecord } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
-const EnterConfirmModal = ({ open, onCancel, onOk }) => {
+const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
   const [formValues, setFormValues] = useState({});
   const policeInputRef = useRef(null);
 
+  // 当弹窗打开时重置状态
   useEffect(() => {
     if (open) {
       form.resetFields();
@@ -50,12 +51,12 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
       formData.append('prisoner_no', formValues.prisonerNo);
       formData.append('prisoner_name', formValues.prisonerName);
       formData.append('prison_area', formValues.prisonArea);
-      formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD') : null);
+      formData.append('entry_date', formValues.returnDate ? formValues.returnDate.format('YYYY-MM-DD HH:mm') : null);
       formData.append('police_face', policeImage);
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
 
-      const res = await entryRecord.submit(formData);
+      const res = await returnRecord.submit(formData);
       if (res.code === 1) {
         message.success('提交成功');
         onOk?.(formValues);
@@ -82,22 +83,22 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
           name="prisonerName"
           label="罪犯姓名"
         >
-          <Input placeholder="罪犯姓名（自动带出）" />
+          <Input placeholder="罪犯姓名（可手动输入）" />
         </Form.Item>
 
         <Form.Item
           name="prisonerNo"
           label="罪犯编号"
         >
-          <Input placeholder="罪犯编号（自动带出）" />
+          <Input placeholder="罪犯编号（可手动输入）" />
         </Form.Item>
 
         <Form.Item
-          name="enterDate"
-          label="入监日期"
-          rules={[{ required: true, message: '请选择入监日期' }]}
+          name="returnDate"
+          label="回监日期"
+          rules={[{ required: true, message: '请选择回监日期' }]}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="请选择入监日期" />
+          <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} placeholder="请选择回监日期" />
         </Form.Item>
 
         <Form.Item
@@ -106,13 +107,13 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
           rules={[{ required: true, message: '请选择监区' }]}
         >
           <Select placeholder="请选择监区" options={[
-            { value: '一监区', label: '一监区' },
-            { value: '二监区', label: '二监区' },
-            { value: '三监区', label: '三监区' },
-            { value: '四监区', label: '四监区' },
-            { value: '五监区', label: '五监区' },
-            { value: '六监区', label: '六监区' },
-            { value: '七监区', label: '七监区' },
+            { value: '1', label: '一监区' },
+            { value: '2', label: '二监区' },
+            { value: '3', label: '三监区' },
+            { value: '4', label: '四监区' },
+            { value: '5', label: '五监区' },
+            { value: '6', label: '六监区' },
+            { value: '7', label: '七监区' },
           ]} />
         </Form.Item>
 
@@ -193,7 +194,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
       }}
     >
       <Modal
-        title="入监确认"
+        title="回监确认"
         open={open}
         onCancel={handleReset}
         width={680}
@@ -220,4 +221,4 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
   );
 };
 
-export default EnterConfirmModal;
+export default ReturnConfirmModal;

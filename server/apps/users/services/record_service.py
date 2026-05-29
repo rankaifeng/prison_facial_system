@@ -46,6 +46,22 @@ class RecordService(BaseService):
             return None
 
     @staticmethod
+    def parse_datetime(value):
+        """解析日期时间字符串，支持 'YYYY-MM-DD' 和 'YYYY-MM-DD HH:mm' 格式"""
+        if not value:
+            return None
+        from datetime import datetime
+        try:
+            # 尝试带时分的格式
+            return datetime.strptime(value, '%Y-%m-%d %H:%M')
+        except ValueError:
+            try:
+                # 尝试不带时分的格式
+                return datetime.strptime(value, '%Y-%m-%d')
+            except ValueError:
+                return None
+
+    @staticmethod
     def save_file(file):
         """保存上传的文件"""
         if not file:
@@ -122,6 +138,36 @@ class RecordService(BaseService):
         entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None
     ):
         with transaction.atomic():
+            record = RecordRepository.create(
+                prisoner_no=prisoner_no,
+                prisoner_name=prisoner_name,
+                prisoner_photo=prisoner_photo,
+                prison_area=prison_area,
+                prison_area_name=prison_area_name,
+                type='entry',
+                entry_date=entry_date,
+                police_face=police_face,
+                police_name=operator_name,
+                operator_id=operator_id,
+                operator_name=operator_name,
+                status=entry_status or 'normal',
+                abnormal_reason=abnormal_reason or '',
+            )
+
+            stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
+            stat.entry_count += 1
+            stat.save()
+            logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
+
+            return True, '提交成功', {'id': record.id, 'status': record.status}
+
+    @staticmethod
+    def create_return_record(
+        prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
+        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None
+    ):
+        """回监记录：与入监类似，但需要处理同一编号回监时的统计回退逻辑"""
+        with transaction.atomic():
             # 查找该罪犯的最后一条出监记录，获取出监原因
             exit_record = RecordRepository.get_last_exit_by_prisoner_no(prisoner_no)
             exit_reason = exit_record.reason if exit_record else None
@@ -144,17 +190,22 @@ class RecordService(BaseService):
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
             stat.entry_count += 1
-            stat.exit_count = max(0, stat.exit_count - 1)
 
-            # 使用 JSONField 减少对应的出监原因计数
-            if exit_reason:
-                reason_stats = stat.reason_stats or {}
-                current_count = reason_stats.get(exit_reason, 0)
-                reason_stats[exit_reason] = max(0, current_count - 1)
-                stat.reason_stats = reason_stats
+            # 如果有对应的出监记录（同一编号回监），需要回退统计数据
+            if exit_record:
+                stat.exit_count = max(0, stat.exit_count - 1)
+                stat.in_prison_count += 1
+                if exit_reason:
+                    reason_stats = stat.reason_stats or {}
+                    current_count = reason_stats.get(exit_reason, 0)
+                    reason_stats[exit_reason] = max(0, current_count - 1)
+                    stat.reason_stats = reason_stats
+            else:
+                # 没有对应出监记录，说明该编号之前不在统计数据中（可能是新收入监）
+                stat.in_prison_count += 1
 
             stat.save()
-            logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
+            logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -196,8 +247,8 @@ class RecordService(BaseService):
                 'type': record.type,
                 'reason': record.reason,  # 入监时填写的理由（可为空）
                 'exit_reason': exit_reason,  # 出监原因（入监记录特有）
-                'exit_date': record.exit_date,
-                'entry_date': record.entry_date,
+                'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
+                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
                 'police_face': build_image_url(record.police_face),
                 'police_name': record.police_name,
                 'swat_face': build_image_url(record.swat_face),
@@ -263,8 +314,8 @@ class RecordService(BaseService):
             'prison_area_name': record.prison_area_name,
             'type': record.type,
             'reason': record.reason,
-            'exit_date': record.exit_date,
-            'entry_date': record.entry_date,
+            'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
+            'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
             'police_face': build_image_url(record.police_face),
             'police_name': record.police_name,
             'swat_face': build_image_url(record.swat_face),

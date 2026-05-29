@@ -1,6 +1,6 @@
 from .auth_controller import LoginController
 from .account_controller import AccountListController, AccountDeleteController
-from .record_controller import ExitRecordController, EntryRecordController, RecordListController, RecordExportController
+from .record_controller import ExitRecordController, EntryRecordController, RecordListController, RecordExportController, ReturnRecordController
 from .statistics_controller import RealtimeStatisticsController, WorkStatisticsController
 from .exit_type_controller import (
     ExitTypeListController,
@@ -16,6 +16,7 @@ __all__ = [
     'AccountDeleteController',
     'ExitRecordController',
     'EntryRecordController',
+    'ReturnRecordController',
     'RecordListController',
     'RecordExportController',
     'RealtimeStatisticsController',
