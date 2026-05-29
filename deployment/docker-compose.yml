@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  backend:
+    image: prison-backend:latest
+    container_name: prison-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=your-secret-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=prison_system
+      - DB_USER=root
+      - DB_PASSWORD=123456
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - prison-network
+
+  frontend:
+    image: prison-frontend:latest
+    container_name: prison-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - prison-network
+
+  mysql:
+    image: docker.1ms.run/library/mysql:8.0
+    container_name: prison-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=prison_system
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - prison-network
+
+  redis:
+    image: docker.1ms.run/library/redis:7-alpine
+    container_name: prison-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - prison-network
+
+networks:
+  prison-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

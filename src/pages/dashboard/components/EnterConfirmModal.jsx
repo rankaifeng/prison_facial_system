@@ -71,14 +71,14 @@ const EnterConfirmModal = ({ open, onCancel, onOk }) => {
           name="prisonerName"
           label="罪犯姓名"
         >
-          <Input placeholder="罪犯姓名（自动带出）" disabled />
+          <Input placeholder="罪犯姓名（自动带出）" />
         </Form.Item>
 
         <Form.Item
           name="prisonerNo"
           label="罪犯编号"
         >
-          <Input placeholder="罪犯编号（自动带出）" disabled />
+          <Input placeholder="罪犯编号（自动带出）" />
         </Form.Item>
 
         <Form.Item
