@@ -29,7 +29,7 @@ class RecordRepository:
             # 支持字符串或整数类型的时间戳
             if isinstance(start_timestamp, str):
                 start_timestamp = int(start_timestamp)
-            start_date = datetime.fromtimestamp(start_timestamp / 1000) if start_timestamp else None
+            start_date = datetime.fromtimestamp(start_timestamp / 1000).date() if start_timestamp else None
             if type == 'exit':
                 queryset = queryset.filter(exit_date__gte=start_date)
             elif type == 'entry':
@@ -42,7 +42,7 @@ class RecordRepository:
         if end_timestamp:
             if isinstance(end_timestamp, str):
                 end_timestamp = int(end_timestamp)
-            end_date = datetime.fromtimestamp(end_timestamp / 1000) if end_timestamp else None
+            end_date = datetime.fromtimestamp(end_timestamp / 1000).date() if end_timestamp else None
             if type == 'exit':
                 queryset = queryset.filter(exit_date__lte=end_date)
             elif type == 'entry':

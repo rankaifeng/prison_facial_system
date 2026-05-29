@@ -52,12 +52,11 @@ class RecordService(BaseService):
             return None
         from datetime import datetime
         try:
-            # 尝试带时分的格式
-            return datetime.strptime(value, '%Y-%m-%d %H:%M')
+            dt = datetime.strptime(value, '%Y-%m-%d %H:%M')
+            return dt.date()  # 返回日期部分，忽略时间
         except ValueError:
             try:
-                # 尝试不带时分的格式
-                return datetime.strptime(value, '%Y-%m-%d')
+                return datetime.strptime(value, '%Y-%m-%d').date()
             except ValueError:
                 return None
 
@@ -248,7 +247,7 @@ class RecordService(BaseService):
                 'reason': record.reason,  # 入监时填写的理由（可为空）
                 'exit_reason': exit_reason,  # 出监原因（入监记录特有）
                 'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
-                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
+                'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
                 'police_face': build_image_url(record.police_face),
                 'police_name': record.police_name,
                 'swat_face': build_image_url(record.swat_face),
@@ -315,7 +314,7 @@ class RecordService(BaseService):
             'type': record.type,
             'reason': record.reason,
             'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
-            'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
+            'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
             'police_face': build_image_url(record.police_face),
             'police_name': record.police_name,
             'swat_face': build_image_url(record.swat_face),
