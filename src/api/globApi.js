@@ -23,6 +23,8 @@ import {
   EXIT_TYPE_UPDATE,
   EXIT_TYPE_DELETE,
   RETURN_RECORD,
+  VIDEO_STREAM_URL,
+  CAMERA_LIST,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -89,4 +91,9 @@ export const exitType = {
 
 export const prisonMessages = {
   list: (data) => http.get(PRISON_MESSAGES, data).then((res) => res?.data),
+};
+
+export const video = {
+  getStreamUrl: (data) => http.get(VIDEO_STREAM_URL, data).then((res) => res?.data),
+  getCameraList: (data) => http.get(CAMERA_LIST, data).then((res) => res?.data),
 };

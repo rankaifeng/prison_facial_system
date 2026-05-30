@@ -15,6 +15,8 @@ from .controllers import (
     ExitTypeUpdateController,
     ExitTypeDeleteController,
     PrisonMessagesController,
+    VideoStreamUrlController,
+    CameraListController,
 )
 
 urlpatterns = [
@@ -34,4 +36,6 @@ urlpatterns = [
     re_path(r'^exit_type/add/?$', ExitTypeAddController.as_view(), name='exit_type_add'),
     re_path(r'^exit_type/update/?$', ExitTypeUpdateController.as_view(), name='exit_type_update'),
     re_path(r'^exit_type/delete/?$', ExitTypeDeleteController.as_view(), name='exit_type_delete'),
+    re_path(r'^video/stream_url/?$', VideoStreamUrlController.as_view(), name='video_stream_url'),
+    re_path(r'^video/camera_list/?$', CameraListController.as_view(), name='camera_list'),
 ]

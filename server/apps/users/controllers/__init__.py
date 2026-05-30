@@ -9,6 +9,7 @@ from .exit_type_controller import (
     ExitTypeDeleteController,
 )
 from .message_controller import PrisonMessagesController
+from .video_controller import VideoStreamUrlController, CameraListController
 
 __all__ = [
     'LoginController',
@@ -26,4 +27,6 @@ __all__ = [
     'ExitTypeUpdateController',
     'ExitTypeDeleteController',
     'PrisonMessagesController',
+    'VideoStreamUrlController',
+    'CameraListController',
 ]
