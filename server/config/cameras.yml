@@ -1,14 +1,16 @@
 # 摄像头配置
+# camera_index 0 = 出监摄像头 (exit camera)
+# camera_index 1 = 回监摄像头 (return camera)
 cameras:
   - channel: "1601"
-    name: "摄像头1"
+    name: "出监摄像头"
     enabled: true
     rtsp_url: "rtsp://admin:root123a@192.168.100.150:554/Streaming/tracks/1601"
     # 是否启用认证
     auth_enabled: true
 
   - channel: "1602"
-    name: "摄像头2"
+    name: "回监摄像头"
     enabled: false
     rtsp_url: ""
     # 是否启用认证

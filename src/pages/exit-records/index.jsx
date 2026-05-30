@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
+import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 
 const ExitRecords = () => {
@@ -47,6 +48,19 @@ const ExitRecords = () => {
       render: (val) => val ? '✓' : '✗',
     },
     { title: '入监时间', dataIndex: 'entry_date', key: 'entry_date', width: 160 },
+    {
+      title: '录像',
+      dataIndex: 'video',
+      key: 'video',
+      width: 100,
+      render: (_, record) => {
+        return <VideoPlayer
+          startTime={record.start_time}
+          endTime={record.end_time}
+          cameraIndex={0}
+        />
+      }
+    },
   ];
 
   const searchItems = useMemo(() => [

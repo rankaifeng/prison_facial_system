@@ -94,6 +94,6 @@ export const prisonMessages = {
 };
 
 export const video = {
-  getStreamUrl: (data) => http.get(VIDEO_STREAM_URL, data).then((res) => res?.data),
+  getStreamUrl: (data, timeout) => http.get(VIDEO_STREAM_URL, data, timeout).then((res) => res?.data),
   getCameraList: (data) => http.get(CAMERA_LIST, data).then((res) => res?.data),
 };

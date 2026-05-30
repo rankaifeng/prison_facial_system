@@ -116,7 +116,7 @@ const ReturnStatistics = () => {
         return <VideoPlayer
           startTime={record.start_time}
           endTime={record.end_time}
-          cameraIndex={0}
+          cameraIndex={1}
         />
       }
     },

@@ -188,11 +188,15 @@ service.interceptors.response.use(
 );
 
 const http = {
-    get(url, params) {
+    get(url, params, timeout) {
         if (USE_MOCK) {
             return mockHandler(url, params);
         }
-        return service.get(url, { params });
+        const config = { params };
+        if (timeout) {
+            config.timeout = timeout;
+        }
+        return service.get(url, config);
     },
     post(url, data) {
         if (USE_MOCK) {
