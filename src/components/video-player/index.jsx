@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Modal, Spin, message } from 'antd';
-import { VideoCameraOutlined } from '@ant-design/icons';
+import { VideoCameraOutlined, ReloadOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { video as videoApi } from '@/api/globApi';
 import Hls from 'hls.js';
 
@@ -11,6 +11,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
   const [videoError, setVideoError] = useState(null);
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoEl, setVideoEl] = useState(null);
+  const [cameraName, setCameraName] = useState('');
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
@@ -71,7 +72,6 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
   };
 
   useEffect(() => {
-    // 当弹窗关闭时清理
     if (!modalOpen) {
       destroyHls();
       setVideoLoading(false);
@@ -88,14 +88,14 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
     setVideoError(null);
     destroyHls();
     try {
-      // 使用较长的超时时间，等待HLS转换完成
       const res = await videoApi.getStreamUrl({
         start_time: startTime,
         end_time: endTime,
         camera: cameraIndex,
-      }, 20000); // 20秒超时
+      }, 20000);
       if (res?.url) {
         setStreamUrl(res.url);
+        setCameraName(res.camera_name || `摄像头 ${cameraIndex + 1}`);
         setModalOpen(true);
         setVideoLoading(true);
       } else {
@@ -125,6 +125,11 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
     }, 100);
   };
 
+  const formatTime = (t) => {
+    if (!t) return '';
+    return t.replace('T', ' ').replace('Z', '');
+  };
+
   return (
     <>
       <div
@@ -140,6 +145,15 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
           justifyContent: 'center',
           cursor: 'pointer',
           margin: '0 auto',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 240, 255, 0.2)';
+          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 240, 255, 0.1)';
+          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.3)';
         }}
       >
         {loading ? (
@@ -149,48 +163,166 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
         )}
       </div>
       <Modal
-        title="录像播放"
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            color: '#fff',
+          }}>
+            <VideoCameraOutlined style={{ color: '#00f0ff' }} />
+            <span>录像播放</span>
+          </div>
+        }
         open={modalOpen}
         onCancel={handleClose}
         footer={null}
-        width={800}
+        width={860}
         centered
         destroyOnClose
+        styles={{
+          content: {
+            background: '#1a1a2e',
+            borderRadius: 8,
+            padding: 0,
+            overflow: 'hidden',
+          },
+          header: {
+            background: '#16213e',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            padding: '12px 16px',
+            margin: 0,
+          },
+        }}
       >
-        <div style={{ position: 'relative', minHeight: 300, background: '#000', borderRadius: 4, overflow: 'hidden' }}>
-          {videoLoading && (
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexDirection: 'column', gap: 12, zIndex: 1,
-            }}>
-              <Spin size="large" />
-              <span style={{ color: '#fff' }}>正在加载视频流...</span>
-            </div>
-          )}
-          {videoError && (
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexDirection: 'column', gap: 12, zIndex: 1,
-            }}>
-              <span style={{ color: '#ff4d4f', fontSize: 16 }}>{videoError}</span>
-            </div>
-          )}
-          {streamUrl && (
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: 450,
+          background: '#0a0a15',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}>
+          {/* 视频 */}
+          {streamUrl && !videoError && (
             <video
               ref={(el) => {
                 videoRef.current = el;
                 setVideoEl(el);
-                // video元素挂载后立即尝试播放
                 if (el && streamUrl) {
                   playHls(streamUrl);
                 }
               }}
               controls
               autoPlay
-              style={{ width: '100%', maxHeight: '70vh', display: 'block' }}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                display: videoLoading ? 'none' : 'block',
+              }}
             />
+          )}
+
+          {/* 加载中 */}
+          {videoLoading && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#0a0a15',
+              zIndex: 3,
+            }}>
+              <div style={{
+                width: 50,
+                height: 50,
+                borderRadius: '50%',
+                border: '3px solid rgba(0, 240, 255, 0.2)',
+                borderTopColor: '#00f0ff',
+                animation: 'spin 1s linear infinite',
+              }} />
+              <span style={{ color: '#fff', marginTop: 16, fontSize: 14 }}>正在加载视频流...</span>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, marginTop: 6 }}>
+                正在连接摄像头，请稍候
+              </span>
+            </div>
+          )}
+
+          {/* 错误状态 */}
+          {videoError && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#0a0a15',
+              zIndex: 3,
+            }}>
+              <ExclamationCircleOutlined style={{ fontSize: 44, color: '#ff4d4f' }} />
+              <span style={{ color: '#ff4d4f', fontSize: 14, marginTop: 14 }}>{videoError}</span>
+              <div
+                onClick={handlePlay}
+                style={{
+                  marginTop: 16,
+                  padding: '8px 24px',
+                  background: 'rgba(0, 240, 255, 0.08)',
+                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                  borderRadius: 4,
+                  color: '#00f0ff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 13,
+                }}
+              >
+                <ReloadOutlined />
+                重试
+              </div>
+            </div>
+          )}
+
+          {/* 顶部信息栏 */}
+          {!videoLoading && !videoError && streamUrl && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              padding: '10px 14px',
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12 }}>
+                <span style={{ marginRight: 14 }}>
+                  {startTime && `开始: ${formatTime(startTime)}`}
+                </span>
+                <span>
+                  {endTime && `结束: ${formatTime(endTime)}`}
+                </span>
+              </div>
+              <div style={{ color: '#00f0ff', fontSize: 12 }}>
+                {cameraName}
+              </div>
+            </div>
           )}
         </div>
       </Modal>
