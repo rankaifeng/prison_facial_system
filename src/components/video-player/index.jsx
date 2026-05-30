@@ -180,6 +180,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
         width={860}
         centered
         destroyOnClose
+        className="video-modal"
         styles={{
           content: {
             background: '#1a1a2e',
@@ -325,7 +326,28 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
             </div>
           )}
         </div>
+        {/* 底部控制栏 */}
+        <div style={{
+          padding: '10px 16px',
+          background: '#16213e',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+            RTSP流媒体服务 · HLS播放
+          </div>
+        </div>
       </Modal>
+      <style>{`
+        .video-modal .ant-modal-close-icon {
+          color: rgba(255,255,255,0.8) !important;
+        }
+        .video-modal .ant-modal-close:hover .ant-modal-close-icon {
+          color: #fff !important;
+        }
+      `}</style>
     </>
   );
 };
