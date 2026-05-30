@@ -27,6 +27,8 @@ class ExitRecordController(APIView):
         swat_face = data.get('swat_face')
         armed_police_signature = data.get('armed_police_signature')
         hospital_name = data.get('hospital_name')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
         attachments = request.FILES.getlist('attachments') if request.FILES else []
 
         if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason, police_face, swat_face, armed_police_signature]):
@@ -70,6 +72,8 @@ class ExitRecordController(APIView):
             operator_name=request.user.first_name or request.user.username,
             hospital_name=hospital_name,
             attachments=attachment_paths,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         if not success:
@@ -156,6 +160,8 @@ class ReturnRecordController(APIView):
         police_face = data.get('police_face')
         entry_status = data.get('entry_status', 'normal')
         abnormal_reason = data.get('abnormal_reason', '')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
 
         if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
             return Response({
@@ -187,6 +193,8 @@ class ReturnRecordController(APIView):
             operator_name=request.user.first_name or request.user.username,
             entry_status=entry_status,
             abnormal_reason=abnormal_reason,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         if not success:

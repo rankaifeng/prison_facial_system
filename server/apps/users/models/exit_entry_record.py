@@ -34,6 +34,8 @@ class ExitEntryRecord(models.Model):
     status = models.CharField('状态', max_length=16, default='processing')
     abnormal_reason = models.CharField('异常原因', max_length=255, blank=True)
     attachments = models.JSONField('附件', default=list, blank=True)
+    start_time = models.CharField('开始时间', max_length=20, blank=True)
+    end_time = models.CharField('结束时间', max_length=20, blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 

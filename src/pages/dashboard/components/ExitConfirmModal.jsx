@@ -42,6 +42,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
+  const [startTime, setStartTime] = useState(null);
 
   const policeInputRef = useRef(null);
   const swatInputRef = useRef(null);
@@ -84,6 +85,16 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
         const values = await form.validateFields();
         console.log("步骤0表单值:", JSON.stringify(values));
         setFormValues(values);  // 保存表单值
+        // 开始时间 = 当前时间往前推2分钟，格式：YYYYMMDDTHHmmss
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - 2);
+        const start = now.getFullYear().toString().padStart(4, '0') +
+          (now.getMonth() + 1).toString().padStart(2, '0') +
+          now.getDate().toString().padStart(2, '0') + 'T' +
+          now.getHours().toString().padStart(2, '0') +
+          now.getMinutes().toString().padStart(2, '0') +
+          now.getSeconds().toString().padStart(2, '0');
+        setStartTime(start);
         setCurrent(1);
       } catch (error) {
         console.log("验证失败:", error);
@@ -107,7 +118,16 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const handleSubmit = async () => {
-    // 使用步骤0保存的表单值
+    // 结束时间 = 当前时间往后推2分钟，格式：YYYYMMDDTHHmmss
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 2);
+    const end = now.getFullYear().toString().padStart(4, '0') +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + 'T' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0') +
+      now.getSeconds().toString().padStart(2, '0');
+
     console.log("提交表单值:", JSON.stringify(formValues));
     console.log("prisonArea:", formValues.prisonArea);
     console.log("exitReason:", formValues.exitReason);
@@ -137,6 +157,8 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     formData.append('swat_face', swatImage);
     formData.append('armed_police_signature', armedPoliceSignature);
     formData.append('hospital_name', hospitalName || '');
+    formData.append('start_time', startTime);
+    formData.append('end_time', end);
     const res = await exitRecord.submit(formData);
     if (res.code === 1) {
       message.success('提交成功');
@@ -155,6 +177,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk }) => {
     setPoliceImage(null);
     setSwatImage(null);
     setArmedPoliceSignature(null);
+    setStartTime(null);
     onCancel?.();
   };
   console.log("exitReason", exitReason);

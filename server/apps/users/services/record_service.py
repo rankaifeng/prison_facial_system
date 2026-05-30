@@ -86,7 +86,8 @@ class RecordService(BaseService):
     def create_exit_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         exit_date, reason, police_face, swat_face, armed_police_signature,
-        operator_id, operator_name, hospital_name=None, attachments=None
+        operator_id, operator_name, hospital_name=None, attachments=None,
+        start_time=None, end_time=None
     ):
         with transaction.atomic():
             # 保存武警签名为图片文件
@@ -110,6 +111,8 @@ class RecordService(BaseService):
                 hospital_name=hospital_name,
                 status='completed',
                 attachments=attachments or [],
+                start_time=start_time,
+                end_time=end_time,
             )
 
             # 刑满释放不计入统计（因为不会回来）
@@ -163,7 +166,8 @@ class RecordService(BaseService):
     @staticmethod
     def create_return_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
-        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None
+        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None,
+        start_time=None, end_time=None
     ):
         """回监记录：与入监类似，但需要处理同一编号回监时的统计回退逻辑"""
         with transaction.atomic():
@@ -185,6 +189,8 @@ class RecordService(BaseService):
                 operator_name=operator_name,
                 status=entry_status or 'normal',
                 abnormal_reason=abnormal_reason or '',
+                start_time=start_time,
+                end_time=end_time,
             )
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
@@ -255,6 +261,8 @@ class RecordService(BaseService):
                 'armed_police_signature': build_image_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name,
                 'hospital_name': record.hospital_name,
+                'start_time': record.start_time,
+                'end_time': record.end_time,
                 'attachments': [build_image_url(a) for a in (record.attachments or [])],
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -323,6 +331,8 @@ class RecordService(BaseService):
             'armed_police_name': record.armed_police_name,
             'hospital_type': record.hospital_type,
             'hospital_name': record.hospital_name,
+            'start_time': record.start_time,
+            'end_time': record.end_time,
             'status': record.status,
         }
 

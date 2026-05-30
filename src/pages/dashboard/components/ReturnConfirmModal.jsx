@@ -9,6 +9,7 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
   const [formValues, setFormValues] = useState({});
+  const [startTime, setStartTime] = useState(null);
   const policeInputRef = useRef(null);
 
   // 当弹窗打开时重置状态
@@ -28,6 +29,16 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
       try {
         const values = await form.validateFields();
         setFormValues(values);
+        // 开始时间 = 当前时间往前推2分钟，格式：YYYYMMDDTHHmmss
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - 2);
+        const start = now.getFullYear().toString().padStart(4, '0') +
+          (now.getMonth() + 1).toString().padStart(2, '0') +
+          now.getDate().toString().padStart(2, '0') + 'T' +
+          now.getHours().toString().padStart(2, '0') +
+          now.getMinutes().toString().padStart(2, '0') +
+          now.getSeconds().toString().padStart(2, '0');
+        setStartTime(start);
         setCurrent(1);
       } catch {
         return;
@@ -46,6 +57,16 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
   };
 
   const handleSubmit = async () => {
+    // 结束时间 = 当前时间往后推2分钟，格式：YYYYMMDDTHHmmss
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 2);
+    const end = now.getFullYear().toString().padStart(4, '0') +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + 'T' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0') +
+      now.getSeconds().toString().padStart(2, '0');
+
     try {
       const formData = new FormData();
       formData.append('prisoner_no', formValues.prisonerNo);
@@ -55,6 +76,8 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
       formData.append('police_face', policeImage);
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
+      formData.append('start_time', startTime);
+      formData.append('end_time', end);
 
       const res = await returnRecord.submit(formData);
       if (res.code === 1) {
@@ -73,6 +96,7 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
     setCurrent(0);
     setPoliceImage(null);
     setFormValues({});
+    setStartTime(null);
     onCancel?.();
   };
 
