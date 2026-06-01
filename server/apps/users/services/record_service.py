@@ -113,6 +113,7 @@ class RecordService(BaseService):
                 attachments=attachments or [],
                 start_time=start_time,
                 end_time=end_time,
+                video_url='',
             )
 
             # 刑满释放不计入统计（因为不会回来）

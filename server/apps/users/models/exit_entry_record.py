@@ -36,6 +36,7 @@ class ExitEntryRecord(models.Model):
     attachments = models.JSONField('附件', default=list, blank=True)
     start_time = models.CharField('开始时间', max_length=20, blank=True)
     end_time = models.CharField('结束时间', max_length=20, blank=True)
+    video_url = models.CharField('录像存储URL', max_length=512, blank=True, null=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
