@@ -92,7 +92,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
         start_time: startTime,
         end_time: endTime,
         camera: cameraIndex,
-      }, 20000);
+      }, 150000);
       if (res?.url) {
         setStreamUrl(res.url);
         setCameraName(res.camera_name || `摄像头 ${cameraIndex + 1}`);

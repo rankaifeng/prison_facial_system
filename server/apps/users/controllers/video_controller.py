@@ -209,7 +209,7 @@ class VideoStreamUrlController(APIView):
             session_dir = HLS_ROOT / session_id
             session_dir.mkdir(parents=True, exist_ok=True)
 
-            max_wait = 8 if i == len(rtsp_urls) - 1 else 6
+            max_wait = 120 if i == len(rtsp_urls) - 1 else 90
             success, error = _try_ffmpeg_hls(rtsp_url, session_dir, max_wait=max_wait)
             if success:
                 # Save session metadata for recovery

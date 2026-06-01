@@ -20,7 +20,12 @@
       "Bash(docker build *)",
       "Bash(npm run *)",
       "Bash(python manage.py check)",
-      "Bash(python server/manage.py check)"
+      "Bash(python server/manage.py check)",
+      "Bash(pkill -9 -f ffmpeg)",
+      "Bash(rm -rf /tmp/hls_streams/*)",
+      "Bash(mkdir -p /tmp/hls_streams/test_hls)",
+      "Bash(timeout 5 ffmpeg -loglevel error -rtsp_transport tcp -i \"rtsp://admin:root123a@192.168.100.150:554/Streaming/tracks/1601?starttime=20260601T151944Z&endtime=20260601T152734Z\" -c copy -t 3 -y /tmp/test_quick.mp4)",
+      "Read(//tmp/**)"
     ]
   }
 }
