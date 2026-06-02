@@ -62,17 +62,20 @@ def _calc_duration_seconds(start_time, end_time):
         return 60  # 默认60秒
 
 
-def _get_video_cache_path(start_time, end_time, camera_index):
+def _get_video_cache_path(start_time, end_time, camera_index, record_id=None):
     """根据时间范围和摄像头索引生成缓存文件路径"""
     # 清理时间字符串，生成唯一文件名
     start_clean = start_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
     end_clean = end_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
+    # 加入 record_id 确保每个记录有唯一文件，避免并发冲突
+    if record_id:
+        return VIDEOS_ROOT / f"cam{camera_index}_{start_clean}_{end_clean}_r{record_id}.mp4"
     return VIDEOS_ROOT / f"cam{camera_index}_{start_clean}_{end_clean}.mp4"
 
 
-def _video_exists_cached(start_time, end_time, camera_index):
+def _video_exists_cached(start_time, end_time, camera_index, record_id=None):
     """检查视频是否已缓存"""
-    cache_path = _get_video_cache_path(start_time, end_time, camera_index)
+    cache_path = _get_video_cache_path(start_time, end_time, camera_index, record_id)
     if cache_path.exists() and cache_path.stat().st_size > 10000:
         print(f"[Cache] 视频已缓存: {cache_path}")
         return cache_path

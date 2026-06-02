@@ -63,7 +63,7 @@ def generate_exit_video(record_id):
     logger.info(f"记录 {record_id} 开始生成视频, 时长: {duration}秒")
 
     # 检查是否已有缓存
-    cached_path = _video_exists_cached(record.start_time, record.end_time, camera_index)
+    cached_path = _video_exists_cached(record.start_time, record.end_time, camera_index, record_id)
     if cached_path:
         video_url = f"/media/videos/{cached_path.name}"
         record.video_url = video_url
@@ -73,7 +73,7 @@ def generate_exit_video(record_id):
 
     # 生成视频
     rtsp_urls = _build_rtsp_urls(rtsp_base, record.start_time, record.end_time)
-    video_path = _get_video_cache_path(record.start_time, record.end_time, camera_index)
+    video_path = _get_video_cache_path(record.start_time, record.end_time, camera_index, record_id)
     video_path.parent.mkdir(parents=True, exist_ok=True)
 
     last_error = None
