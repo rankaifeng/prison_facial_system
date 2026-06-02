@@ -28,7 +28,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
 
     destroyHls();
 
-    // Safari
+    // Safari native HLS
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
       video.addEventListener('loadedmetadata', () => {
@@ -71,6 +71,22 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
     setVideoLoading(false);
   };
 
+  const playVideo = (url) => {
+    const video = videoEl;
+    if (!video) return;
+
+    destroyHls();
+    video.src = url;
+    video.addEventListener('loadedmetadata', () => {
+      setVideoLoading(false);
+      video.play().catch(() => {});
+    }, { once: true });
+    video.addEventListener('error', () => {
+      setVideoError('视频加载失败');
+      setVideoLoading(false);
+    }, { once: true });
+  };
+
   useEffect(() => {
     if (!modalOpen) {
       destroyHls();
@@ -92,7 +108,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
         start_time: startTime,
         end_time: endTime,
         camera: cameraIndex,
-      }, 150000);
+      }, 240000);
       if (res?.url) {
         setStreamUrl(res.url);
         setCameraName(res.camera_name || `摄像头 ${cameraIndex + 1}`);
@@ -214,7 +230,11 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
                 videoRef.current = el;
                 setVideoEl(el);
                 if (el && streamUrl) {
-                  playHls(streamUrl);
+                  if (streamUrl.endsWith('.mp4')) {
+                    playVideo(streamUrl);
+                  } else {
+                    playHls(streamUrl);
+                  }
                 }
               }}
               controls
@@ -336,7 +356,7 @@ const VideoPlayer = ({ startTime, endTime, cameraIndex = 0 }) => {
           alignItems: 'center',
         }}>
           <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-            RTSP流媒体服务 · HLS播放
+            {streamUrl?.endsWith('.mp4') ? '录像回放 · MP4播放(支持拖动)' : 'RTSP流媒体服务 · HLS播放'}
           </div>
         </div>
       </Modal>

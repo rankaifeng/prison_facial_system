@@ -16,8 +16,13 @@ from apps.users.config import JWTAuthentication
 
 logger = logging.getLogger(__name__)
 
-HLS_ROOT = Path('/tmp/hls_streams')
-HLS_ROOT.mkdir(parents=True, exist_ok=True)
+# 视频存储根目录 (server/media/videos)
+SERVER_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+VIDEOS_ROOT = SERVER_ROOT / 'media' / 'videos'
+VIDEOS_ROOT.mkdir(parents=True, exist_ok=True)
+
+# 兼容旧代码 (HLS相关功能)
+HLS_ROOT = VIDEOS_ROOT
 
 
 def load_cameras_config():
@@ -31,6 +36,47 @@ def load_cameras_config():
     except Exception as e:
         logger.error(f"Failed to load camera config: {e}")
         return {'cameras': []}
+
+
+def _parse_iso_time(t):
+    """解析ISO 8601时间字符串，返回UTC时间戳"""
+    t = t.replace('Z', '')
+    # 2026-06-01T15:19:44 或 20260601T151944
+    if len(t) == 15 and 'T' in t:  # 紧凑格式 20260601T151944
+        date, time_str = t.split('T')
+        t = f"{date[:4]}-{date[4:6]}-{date[6:]}T{time_str[:2]}:{time_str[2:4]}:{time_str[4:]}"
+    from datetime import datetime
+    return datetime.fromisoformat(t.replace('T', ' '))
+
+
+def _calc_duration_seconds(start_time, end_time):
+    """计算两个时间字符串之间的秒数"""
+    try:
+        start = _parse_iso_time(start_time)
+        end = _parse_iso_time(end_time)
+        delta = end - start
+        seconds = int(delta.total_seconds())
+        return max(seconds, 1)  # 至少1秒
+    except Exception as e:
+        logger.warning(f"Failed to parse time: {e}")
+        return 60  # 默认60秒
+
+
+def _get_video_cache_path(start_time, end_time, camera_index):
+    """根据时间范围和摄像头索引生成缓存文件路径"""
+    # 清理时间字符串，生成唯一文件名
+    start_clean = start_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
+    end_clean = end_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
+    return VIDEOS_ROOT / f"cam{camera_index}_{start_clean}_{end_clean}.mp4"
+
+
+def _video_exists_cached(start_time, end_time, camera_index):
+    """检查视频是否已缓存"""
+    cache_path = _get_video_cache_path(start_time, end_time, camera_index)
+    if cache_path.exists() and cache_path.stat().st_size > 10000:
+        print(f"[Cache] 视频已缓存: {cache_path}")
+        return cache_path
+    return None
 
 
 def _build_rtsp_urls(rtsp_base, start_time, end_time):
@@ -50,6 +96,20 @@ def _build_rtsp_urls(rtsp_base, start_time, end_time):
     start_iso = to_iso(start_time)
     end_iso = to_iso(end_time)
     sep = '/' if not rtsp_base.endswith('/') else ''
+    # ====================== 这里打印最终URL ======================
+    print("="*80)
+    print("📌 最终生成的RTSP回放地址：")
+    urls_to_print = [
+        f"{rtsp_base}{sep}?starttime={start}&endtime={end}",
+        f"{rtsp_base}?starttime={start}&endtime={end}",
+        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
+        f"{rtsp_base}?starttime={start_iso}&endtime={end_iso}",
+        rtsp_base.rstrip('/'),
+    ]
+    for url in urls_to_print:
+        print(url)
+    print("="*80)
+    # ============================================================
 
     return [
         f"{rtsp_base}{sep}?starttime={start}&endtime={end}",
@@ -60,35 +120,31 @@ def _build_rtsp_urls(rtsp_base, start_time, end_time):
     ]
 
 
-def _try_ffmpeg_hls(rtsp_url, session_dir, max_wait=10):
-    """尝试用FFmpeg将RTSP转为HLS"""
-    playlist_path = session_dir / 'playlist.m3u8'
-    seg_pattern = str(session_dir / 'seg_%03d.ts')
-
+def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
+    """尝试用FFmpeg将RTSP下载为MP4（支持拖动快进）"""
     ffmpeg_cmd = [
         'ffmpeg',
         '-loglevel', 'error',
         '-rtsp_transport', 'tcp',
-        '-timeout', '10000000',
+        '-timeout', '30000000',
         '-i', rtsp_url,
         '-c', 'copy',
-        '-f', 'hls',
-        '-hls_time', '1',
-        '-hls_list_size', '0',
-        '-hls_segment_filename', seg_pattern,
-        '-hls_flags', 'independent_segments',
+        '-t', str(duration),  # 指定录制时长
         '-y',
-        str(playlist_path),
+        str(output_path),
     ]
 
-    logger.info(f"FFmpeg HLS: {rtsp_url}")
+    mp4_path = output_path
+
+    logger.info(f"FFmpeg MP4: {rtsp_url}")
+    print(f"[FFmpeg] 开始转换, URL: {rtsp_url}")
+    print(f"[FFmpeg] 等待文件生成, 最大等待: {max_wait}秒")
     process = subprocess.Popen(
         ffmpeg_cmd,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
     )
 
-    # Save PID for targeted cleanup
     try:
         with open(session_dir / '.pid', 'w') as f:
             f.write(str(process.pid))
@@ -103,33 +159,38 @@ def _try_ffmpeg_hls(rtsp_url, session_dir, max_wait=10):
 
     start_wait = time.time()
     while time.time() - start_wait < max_wait:
-        if playlist_path.exists():
-            segs = sorted(session_dir.glob('seg_*.ts'))
-            if segs:
-                # Verify m3u8 actually has segment entries (not just header)
-                try:
-                    content = playlist_path.read_text()
-                    if 'EXTINF' in content and 'seg_' in content:
-                        logger.info(f"HLS ready: {playlist_path.name}, {len(segs)} segs, {len(content)}b")
-                        # Keep FFmpeg running in background, PID saved for later cleanup
-                        return True, None
-                except Exception:
-                    pass  # File not fully written yet, keep waiting
-
         if process.poll() is not None:
-            stderr = process.stderr.read().decode('utf-8', errors='replace')
-            error_lines = [l.strip() for l in stderr.split('\n') if l.strip()]
-            real_errors = [l for l in error_lines if not l.startswith('ffmpeg version')]
-            last_error = real_errors[-1] if real_errors else '未知错误'
-            _reap()
-            logger.error(f"FFmpeg exit(code={process.returncode}): {stderr[:500]}")
-            return False, last_error
+            if process.returncode != 0:
+                stderr = process.stderr.read().decode('utf-8', errors='replace')
+                logger.error(f"FFmpeg exit(code={process.returncode}): {stderr[:500]}")
+                print(f"[FFmpeg] ffmpeg进程异常退出, code={process.returncode}, stderr={stderr[:500]}")
+                return False, '下载录像失败'
+            break
 
-        time.sleep(0.3)
+        # 检查文件是否已经有一定大小
+        if mp4_path.exists():
+            size = mp4_path.stat().st_size
+            print(f"[FFmpeg] 文件已生成, 大小: {size} bytes")
+            if size > 10000:
+                print(f"[FFmpeg] 文件大小满足要求({size} > 10000), 等待ffmpeg结束...")
 
-    process.kill()
-    _reap()
-    return False, '连接摄像头超时'
+        time.sleep(0.5)
+
+    if process.poll() is not None:
+        _reap()
+    else:
+        process.kill()
+        _reap()
+        print(f"[FFmpeg] 等待超时, kill掉ffmpeg进程")
+        return False, '下载录像超时'
+
+    if not mp4_path.exists() or mp4_path.stat().st_size < 10000:
+        print(f"[FFmpeg] 文件无效或大小不足")
+        return False, '下载录像文件无效'
+
+    print(f"[FFmpeg] MP4生成成功: {mp4_path.name}, size={mp4_path.stat().st_size}")
+    logger.info(f"MP4 ready: {mp4_path.name}, size={mp4_path.stat().st_size}")
+    return True, None
 
 
 def recover_hls_stream(session_id):
@@ -202,35 +263,33 @@ class VideoStreamUrlController(APIView):
         cleanup_old_streams()
 
         rtsp_urls = _build_rtsp_urls(rtsp_base, start_time, end_time)
+        logger.info("Recovered HLS stream for session {rtsp_urls}")
+
+        # 计算录像时长（秒）
+        duration = _calc_duration_seconds(start_time, end_time)
+        print(f"[FFmpeg] 录像时长: {duration} 秒")
+
+        # 先检查是否已有缓存
+        cached_path = _video_exists_cached(start_time, end_time, camera_index)
+        if cached_path:
+            print(f"[Cache] 命中缓存，直接返回: {cached_path}")
+            return self._build_response(request, cached_path.name, camera, False, is_cached=True)
 
         last_error = None
         for i, rtsp_url in enumerate(rtsp_urls):
-            session_id = uuid.uuid4().hex[:12]
-            session_dir = HLS_ROOT / session_id
-            session_dir.mkdir(parents=True, exist_ok=True)
+            # 直接下载到 videos 目录
+            video_path = _get_video_cache_path(start_time, end_time, camera_index)
+            video_path.parent.mkdir(parents=True, exist_ok=True)
 
-            max_wait = 120 if i == len(rtsp_urls) - 1 else 90
-            success, error = _try_ffmpeg_hls(rtsp_url, session_dir, max_wait=max_wait)
+            max_wait = duration + 30  # 时长 + 30秒缓冲
+            success, error = _try_ffmpeg_mp4(rtsp_url, video_path, duration, max_wait=max_wait)
             if success:
-                # Save session metadata for recovery
-                is_live = (i == len(rtsp_urls) - 1)
-                try:
-                    with open(session_dir / '.session.json', 'w') as f:
-                        json.dump({
-                            'rtsp_url': rtsp_url,
-                            'camera_index': camera_index,
-                            'start_time': start_time,
-                            'end_time': end_time,
-                            'is_live': is_live,
-                            'created_at': time.time(),
-                        }, f)
-                except Exception as e:
-                    logger.warning(f"Failed to save session metadata: {e}")
-                return self._build_response(request, session_id, camera, is_live)
+                print(f"[FFmpeg] 视频下载完成: {video_path}")
+                return self._build_response(request, video_path.name, camera, False, is_cached=False)
 
             if error:
                 last_error = error
-            shutil.rmtree(session_dir, ignore_errors=True)
+                print(f"[FFmpeg] URL {i+1} 失败: {error}")
 
         user_msg = self._translate_error(last_error or '未知错误')
         return Response({
@@ -253,19 +312,21 @@ class VideoStreamUrlController(APIView):
             return '无效的RTSP视频流'
         return msg.strip()[:80]
 
-    def _build_response(self, request, session_id, camera, is_live=False):
+    def _build_response(self, request, filename, camera, is_live=False, is_cached=False):
         import time
         ts = int(time.time())
-        m3u8_url = f"{request.scheme}://{request.get_host()}/media/hls/{session_id}/playlist.m3u8?v={ts}"
+        # 视频文件直接通过 media/videos/ 路径访问
+        mp4_url = f"{request.scheme}://{request.get_host()}/media/videos/{filename}?v={ts}"
         return Response({
             'code': 1,
-            'msg': 'success' if not is_live else '未找到录像，当前为实时画面',
+            'msg': '缓存命中' if is_cached else ('success' if not is_live else '未找到录像，当前为实时画面'),
             'data': {
-                'url': m3u8_url,
-                'session_id': session_id,
+                'url': mp4_url,
+                'filename': filename,
                 'camera_name': camera.get('name'),
                 'channel': camera.get('channel'),
                 'is_live': is_live,
+                'is_cached': is_cached,
             }
         })
 
@@ -395,6 +456,15 @@ def serve_hls(request, path):
         if generated:
             logger.info(f"Serving m3u8 with {generated.count('#EXTINF')} segments for {session_id}")
             return _m3u8_response(generated)
+
+    # .mp4: 直接返回文件
+    if path.endswith('.mp4'):
+        if not os.path.exists(real_path):
+            return HttpResponseNotFound('File not found')
+        resp = FileResponse(open(real_path, 'rb'), content_type='video/mp4')
+        resp['Access-Control-Allow-Origin'] = '*'
+        resp['Cache-Control'] = 'no-cache'
+        return resp
 
     # .ts分片: 直接返回文件
     if not os.path.exists(real_path):
