@@ -1,11 +1,21 @@
 import logging
 import base64
 import uuid
+import threading
 from django.db import transaction
 from apps.users.repositories import RecordRepository, StatisticsRepository
 from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
+
+
+def _run_video_generation_async(record_id):
+    """在新线程中异步执行视频生成，不阻塞主线程"""
+    from apps.users.tasks import generate_exit_video
+    try:
+        generate_exit_video(record_id)
+    except Exception as e:
+        logger.error(f"视频生成线程异常: record_id={record_id}, error={e}")
 
 
 class RecordService(BaseService):
@@ -119,6 +129,9 @@ class RecordService(BaseService):
             # 刑满释放不计入统计（因为不会回来）
             if reason == '刑满释放':
                 logger.info(f"Exit record created (刑满释放，不统计): id={record.id}, prisoner={prisoner_no}")
+                # 刑满释放也生成视频
+                t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
+                t.start()
                 return True, '提交成功', {'id': record.id, 'status': record.status}
 
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
@@ -132,6 +145,10 @@ class RecordService(BaseService):
             stat.save()
 
             logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}, total={stat.exit_count}")
+
+            # 启动后台线程生成视频
+            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
+            t.start()
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -213,6 +230,10 @@ class RecordService(BaseService):
             stat.save()
             logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 
+            # 启动后台线程生成视频
+            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
+            t.start()
+
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
     @staticmethod
@@ -229,9 +250,9 @@ class RecordService(BaseService):
 
         data = []
         for record in records:
-            # 构建完整的 HTTP 图片 URL
-            # path 格式: /media/faces/xxx.jpg
-            def build_image_url(path):
+            # 构建完整的 HTTP URL
+            # path 格式: /media/faces/xxx.jpg 或 /media/videos/xxx.mp4
+            def build_url(path):
                 if not path:
                     return None
                 if path.startswith('http'):
@@ -248,23 +269,24 @@ class RecordService(BaseService):
                 'id': record.id,
                 'prisoner_no': record.prisoner_no,
                 'prisoner_name': record.prisoner_name,
-                'prisoner_photo': build_image_url(record.prisoner_photo),
+                'prisoner_photo': build_url(record.prisoner_photo),
                 'prison_area_name': record.prison_area_name,
                 'type': record.type,
                 'reason': record.reason,  # 入监时填写的理由（可为空）
                 'exit_reason': exit_reason,  # 出监原因（入监记录特有）
                 'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
                 'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
-                'police_face': build_image_url(record.police_face),
+                'police_face': build_url(record.police_face),
                 'police_name': record.police_name,
-                'swat_face': build_image_url(record.swat_face),
+                'swat_face': build_url(record.swat_face),
                 'swat_name': record.swat_name,
-                'armed_police_signature': build_image_url(record.armed_police_signature),
+                'armed_police_signature': build_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name,
                 'hospital_name': record.hospital_name,
                 'start_time': record.start_time,
                 'end_time': record.end_time,
-                'attachments': [build_image_url(a) for a in (record.attachments or [])],
+                'video_url': build_url(record.video_url),
+                'attachments': [build_url(a) for a in (record.attachments or [])],
                 'status': record.status,
                 'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             })
@@ -306,7 +328,7 @@ class RecordService(BaseService):
         if not record:
             return False, '记录不存在', None
 
-        def build_image_url(path):
+        def build_url(path):
             if not path:
                 return None
             if path.startswith('http'):
@@ -317,23 +339,24 @@ class RecordService(BaseService):
             'id': record.id,
             'prisoner_no': record.prisoner_no,
             'prisoner_name': record.prisoner_name,
-            'prisoner_photo': build_image_url(record.prisoner_photo),
+            'prisoner_photo': build_url(record.prisoner_photo),
             'prison_area': record.prison_area,
             'prison_area_name': record.prison_area_name,
             'type': record.type,
             'reason': record.reason,
             'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
             'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
-            'police_face': build_image_url(record.police_face),
+            'police_face': build_url(record.police_face),
             'police_name': record.police_name,
-            'swat_face': build_image_url(record.swat_face),
+            'swat_face': build_url(record.swat_face),
             'swat_name': record.swat_name,
-            'armed_police_signature': build_image_url(record.armed_police_signature),
+            'armed_police_signature': build_url(record.armed_police_signature),
             'armed_police_name': record.armed_police_name,
             'hospital_type': record.hospital_type,
             'hospital_name': record.hospital_name,
             'start_time': record.start_time,
             'end_time': record.end_time,
+            'video_url': build_url(record.video_url),
             'status': record.status,
         }
 
@@ -348,7 +371,7 @@ class RecordService(BaseService):
 
         records = queryset[:5000]  # 限制最多导出5000条
 
-        def build_image_url(path):
+        def build_url(path):
             if not path:
                 return ''
             if path.startswith('http'):
@@ -372,11 +395,11 @@ class RecordService(BaseService):
                 'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
                 'reason': record.reason or '',
                 'exit_reason': exit_reason or '',
-                'police_face': build_image_url(record.police_face),
+                'police_face': build_url(record.police_face),
                 'police_name': record.police_name or '',
-                'swat_face': build_image_url(record.swat_face),
+                'swat_face': build_url(record.swat_face),
                 'swat_name': record.swat_name or '',
-                'armed_police_signature': build_image_url(record.armed_police_signature),
+                'armed_police_signature': build_url(record.armed_police_signature),
                 'armed_police_name': record.armed_police_name or '',
                 'hospital_name': record.hospital_name if record.reason == '外出就医' else '',
                 'video': 'https://www.w3schools.com/html/mov_bbb.mp4',

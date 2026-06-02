@@ -10,6 +10,91 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
+def generate_exit_video(record_id):
+    """
+    异步生成出监/回监记录的录像
+    """
+    from apps.users.models import ExitEntryRecord
+    from apps.users.controllers.video_controller import (
+        _build_rtsp_urls, _try_ffmpeg_mp4, _calc_duration_seconds,
+        _get_video_cache_path, _video_exists_cached, VIDEOS_ROOT
+    )
+    import shutil
+
+    try:
+        record = ExitEntryRecord.objects.get(id=record_id)
+    except ExitEntryRecord.DoesNotExist:
+        logger.error(f"记录不存在: id={record_id}")
+        return f"记录不存在: {record_id}"
+
+    # 检查是否已经有视频
+    if record.video_url:
+        logger.info(f"记录 {record_id} 已有视频: {record.video_url}")
+        return f"已有视频: {record.video_url}"
+
+    # 检查是否有时间范围
+    if not record.start_time or not record.end_time:
+        logger.info(f"记录 {record_id} 没有时间范围，跳过视频生成")
+        return f"没有时间范围"
+
+    # 从配置获取摄像头信息
+    from apps.users.controllers.video_controller import load_cameras_config
+    config = load_cameras_config()
+    cameras = config.get('cameras', [])
+
+    # 出监用摄像头0，回监也用摄像头0（根据配置调整）
+    camera_index = 0
+    if camera_index >= len(cameras):
+        logger.error(f"摄像头索引 {camera_index} 不存在")
+        return f"摄像头不存在"
+
+    camera = cameras[camera_index]
+    if not camera.get('enabled'):
+        logger.error(f"摄像头未启用: {camera_index}")
+        return f"摄像头未启用"
+
+    rtsp_base = camera.get('rtsp_url', '')
+    if not rtsp_base:
+        logger.error(f"摄像头RTSP地址未配置")
+        return f"RTSP地址未配置"
+
+    # 计算录像时长
+    duration = _calc_duration_seconds(record.start_time, record.end_time)
+    logger.info(f"记录 {record_id} 开始生成视频, 时长: {duration}秒")
+
+    # 检查是否已有缓存
+    cached_path = _video_exists_cached(record.start_time, record.end_time, camera_index)
+    if cached_path:
+        video_url = f"/media/videos/{cached_path.name}"
+        record.video_url = video_url
+        record.save(update_fields=['video_url'])
+        logger.info(f"记录 {record_id} 使用缓存视频: {video_url}")
+        return f"使用缓存: {video_url}"
+
+    # 生成视频
+    rtsp_urls = _build_rtsp_urls(rtsp_base, record.start_time, record.end_time)
+    video_path = _get_video_cache_path(record.start_time, record.end_time, camera_index)
+    video_path.parent.mkdir(parents=True, exist_ok=True)
+
+    last_error = None
+    for i, rtsp_url in enumerate(rtsp_urls):
+        max_wait = duration + 30
+        success, error = _try_ffmpeg_mp4(rtsp_url, video_path, duration, max_wait=max_wait)
+        if success:
+            video_url = f"/media/videos/{video_path.name}"
+            record.video_url = video_url
+            record.save(update_fields=['video_url'])
+            logger.info(f"记录 {record_id} 视频生成成功: {video_url}")
+            return f"成功: {video_url}"
+
+        last_error = error
+        logger.warning(f"记录 {record_id} URL {i+1} 失败: {error}")
+
+    logger.error(f"记录 {record_id} 视频生成全部失败: {last_error}")
+    return f"失败: {last_error}"
+
+
+@shared_task
 def reset_daily_stats():
     """
     每天凌晨执行：同步昨日数据到历史记录，并重置当日统计
