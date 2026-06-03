@@ -123,3 +123,54 @@ class StatisticsService(BaseService):
         }
 
         return True, '获取成功', result
+
+    @staticmethod
+    def get_work_statistics(prison_area=None):
+        today = date.today()
+        queryset = StatisticsRepository.get_daily_stats(prison_area, today)
+
+        area_stats = queryset.values(
+            'prison_area',
+            'prison_area_name'
+        ).annotate(
+            work_count=Sum('work_count'),
+            in_prison_count=Sum('in_prison_count'),
+            exit_count=Sum('exit_count'),
+            entry_count=Sum('entry_count'),
+        )
+
+        by_area = []
+        total_work = 0
+        total_in_prison = 0
+        total_exit = 0
+        total_entry = 0
+
+        for stat in area_stats:
+            work_count = stat['work_count'] or 0
+            in_prison_count = stat['in_prison_count'] or 0
+            exit_count = stat['exit_count'] or 0
+            entry_count = stat['entry_count'] or 0
+
+            total_work += work_count
+            total_in_prison += in_prison_count
+            total_exit += exit_count
+            total_entry += entry_count
+
+            by_area.append({
+                'prison_area': stat['prison_area'],
+                'prison_area_name': stat['prison_area_name'],
+                'work_count': work_count,
+                'in_prison_count': in_prison_count,
+                'exit_count': exit_count,
+                'entry_count': entry_count,
+            })
+
+        return True, '获取成功', {
+            'total': {
+                'work_count': total_work,
+                'in_prison_count': total_in_prison,
+                'exit_count': total_exit,
+                'entry_count': total_entry,
+            },
+            'by_area': by_area,
+        }

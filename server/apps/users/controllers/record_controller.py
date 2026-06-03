@@ -224,7 +224,7 @@ class RecordListController(APIView):
         prisoner_no = request.query_params.get('prisoner_no')
         reason = request.query_params.get('reason')
         page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 10))
+        page_size = int(request.query_params.get('limit', request.query_params.get('page_size', 10)))
 
         if request.user.role != 'admin':
             prison_area = request.user.prison_id

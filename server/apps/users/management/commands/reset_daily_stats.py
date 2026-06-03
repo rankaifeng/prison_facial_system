@@ -2,11 +2,25 @@
 同步每日统计数据到历史记录，并重置每日统计
 每天凌晨 00:00 执行
 """
+import logging
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from apps.users.models import DailyStatistics, HistoryStatistics
 
 logger = logging.getLogger(__name__)
+
+HISTORY_REASON_FIELDS = [
+    ('刑满释放', 'exit_reason_1'),
+    ('外出就医', 'exit_reason_2'),
+    ('外出教育', 'exit_reason_3'),
+    ('离监探亲', 'exit_reason_4'),
+    ('押回重审', 'exit_reason_5'),
+]
+
+
+def build_history_reason_counts(reason_stats):
+    reason_stats = reason_stats or {}
+    return {field: reason_stats.get(reason, 0) for reason, field in HISTORY_REASON_FIELDS}
 
 
 class Command(BaseCommand):
@@ -30,28 +44,25 @@ class Command(BaseCommand):
                 prison_area_name=stat.prison_area_name,
                 date=yesterday,
                 exit_count=stat.exit_count,
-                exit_reason_1=stat.exit_reason_1,
-                exit_reason_2=stat.exit_reason_2,
-                exit_reason_3=stat.exit_reason_3,
-                exit_reason_4=stat.exit_reason_4,
-                exit_reason_5=stat.exit_reason_5,
+                **build_history_reason_counts(stat.reason_stats),
                 entry_count=stat.entry_count,
-                in_prison_count=stat.in_prison_count,
-                work_count=stat.work_count,
             )
             self.stdout.write(f'已同步: {stat.prison_area} - {yesterday}')
 
-        # 重置今日统计（为新的一天做准备）
+        # 初始化今日统计（为新的一天做准备）
         for stat in daily_stats:
-            stat.exit_count = 0
-            stat.exit_reason_1 = 0
-            stat.exit_reason_2 = 0
-            stat.exit_reason_3 = 0
-            stat.exit_reason_4 = 0
-            stat.exit_reason_5 = 0
-            stat.entry_count = 0
-            stat.date = today
-            stat.save()
+            DailyStatistics.objects.get_or_create(
+                prison_area=stat.prison_area,
+                date=today,
+                defaults={
+                    'prison_area_name': stat.prison_area_name,
+                    'exit_count': 0,
+                    'entry_count': 0,
+                    'in_prison_count': stat.in_prison_count,
+                    'work_count': 0,
+                    'reason_stats': {},
+                }
+            )
             self.stdout.write(f'已重置: {stat.prison_area}')
 
         self.stdout.write(self.style.SUCCESS(f'完成: {yesterday}数据已同步，{today}统计已重置'))

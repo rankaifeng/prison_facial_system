@@ -8,6 +8,19 @@ from apps.users.models import DailyStatistics, HistoryStatistics
 
 logger = logging.getLogger(__name__)
 
+HISTORY_REASON_FIELDS = [
+    ('刑满释放', 'exit_reason_1'),
+    ('外出就医', 'exit_reason_2'),
+    ('外出教育', 'exit_reason_3'),
+    ('离监探亲', 'exit_reason_4'),
+    ('押回重审', 'exit_reason_5'),
+]
+
+
+def _build_history_reason_counts(reason_stats):
+    reason_stats = reason_stats or {}
+    return {field: reason_stats.get(reason, 0) for reason, field in HISTORY_REASON_FIELDS}
+
 
 @shared_task
 def generate_exit_video(record_id):
@@ -119,27 +132,23 @@ def reset_daily_stats():
             prison_area_name=stat.prison_area_name,
             date=yesterday,
             exit_count=stat.exit_count,
-            exit_reason_1=stat.exit_reason_1,
-            exit_reason_2=stat.exit_reason_2,
-            exit_reason_3=stat.exit_reason_3,
-            exit_reason_4=stat.exit_reason_4,
-            exit_reason_5=stat.exit_reason_5,
+            **_build_history_reason_counts(stat.reason_stats),
             entry_count=stat.entry_count,
-            in_prison_count=stat.in_prison_count,
-            work_count=stat.work_count,
         )
         synced_count += 1
 
-        # 重置为新的一天
-        stat.exit_count = 0
-        stat.exit_reason_1 = 0
-        stat.exit_reason_2 = 0
-        stat.exit_reason_3 = 0
-        stat.exit_reason_4 = 0
-        stat.exit_reason_5 = 0
-        stat.entry_count = 0
-        stat.date = today
-        stat.save()
+        DailyStatistics.objects.get_or_create(
+            prison_area=stat.prison_area,
+            date=today,
+            defaults={
+                'prison_area_name': stat.prison_area_name,
+                'exit_count': 0,
+                'entry_count': 0,
+                'in_prison_count': stat.in_prison_count,
+                'work_count': 0,
+                'reason_stats': {},
+            }
+        )
         reset_count += 1
 
     message = f'完成: {yesterday}数据已同步({synced_count}条)，{today}统计已重置({reset_count}条)'

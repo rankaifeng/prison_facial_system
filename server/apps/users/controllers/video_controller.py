@@ -171,12 +171,6 @@ def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
         stderr=subprocess.PIPE,
     )
 
-    try:
-        with open(session_dir / '.pid', 'w') as f:
-            f.write(str(process.pid))
-    except Exception:
-        pass
-
     def _reap():
         try:
             process.wait(timeout=3)
@@ -234,13 +228,8 @@ def recover_hls_stream(session_id):
         logger.error(f"Failed to read session metadata: {e}")
         return False
 
-    session_dir.mkdir(parents=True, exist_ok=True)
-    success, error = _try_ffmpeg_hls(meta['rtsp_url'], session_dir, max_wait=10)
-    if success:
-        logger.info(f"Recovered HLS stream for session {session_id}")
-    else:
-        logger.error(f"Failed to recover HLS stream: {error}")
-    return success
+    logger.info(f"HLS recovery is disabled for session {session_id}; MP4 playback is used instead")
+    return False
 
 
 class VideoStreamUrlController(APIView):

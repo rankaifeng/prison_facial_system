@@ -105,3 +105,87 @@ class AccountDeleteController(APIView):
             'msg': message,
             'data': None
         })
+
+
+class AccountUpdateController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin':
+            return Response({
+                'code': 0,
+                'msg': '无权限访问',
+                'data': None
+            }, status=status.HTTP_200_OK)
+
+        account_id = request.data.get('id')
+        if not account_id:
+            return Response({
+                'code': 400,
+                'msg': '缺少账号ID',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        prison_id = request.data.get('prison_id', '')
+        role = request.data.get('role', 'user')
+        update_data = {
+            'first_name': request.data.get('name', ''),
+            'role': role,
+            'role_name': '管理员' if role == 'admin' else '普通用户',
+            'prison_id': prison_id,
+            'prison_name': get_prison_area_name(prison_id) if prison_id else '',
+        }
+        password = request.data.get('password')
+        if password:
+            update_data['password'] = password
+
+        success, message, data = AccountService.update_account(account_id, **update_data)
+        if not success:
+            return Response({
+                'code': 404,
+                'msg': message,
+                'data': None
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            'code': 1,
+            'msg': message,
+            'data': data
+        })
+
+
+class AccountResetPasswordController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin':
+            return Response({
+                'code': 0,
+                'msg': '无权限访问',
+                'data': None
+            }, status=status.HTTP_200_OK)
+
+        account_id = request.data.get('id')
+        if not account_id:
+            return Response({
+                'code': 400,
+                'msg': '缺少账号ID',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        new_password = request.data.get('password') or request.data.get('new_password') or '123456'
+        success, message, data = AccountService.update_account(account_id, password=new_password)
+        if not success:
+            return Response({
+                'code': 404,
+                'msg': message,
+                'data': None
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            'code': 1,
+            'msg': '重置成功',
+            'data': data
+        })
