@@ -20,5 +20,8 @@ pip3 install -r requirements.txt
 echo "=== 6. 运行迁移 ==="
 python3 manage.py migrate
 
-echo "=== 7. 启动 Django ==="
+echo "=== 7. 同步罪犯档案数据 ==="
+python3 manage.py sync_prisoner_data --real-api
+
+echo "=== 8. 启动 Django ==="
 python3 manage.py runserver 0.0.0.0:8000

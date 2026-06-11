@@ -16,7 +16,8 @@ import {
   ACCOUNT_UPDATE,
   ACCOUNT_DELETE,
   RESET_PASSWORD,
-  PRISONER_ARCHIVE,
+  ARCHIVE_LIST,
+  ARCHIVE_DETAIL,
   PRISON_MESSAGES,
   EXIT_TYPE_LIST,
   EXIT_TYPE_ADD,
@@ -78,8 +79,9 @@ export const account = {
   resetPwd: (data) => http.post(RESET_PASSWORD, data),
 };
 
-export const prisonerArchive = {
-  list: (data) => http.get(PRISONER_ARCHIVE, data).then((res) => res?.data),
+export const archive = {
+  list: (data) => http.get(ARCHIVE_LIST, data).then((res) => res?.data),
+  detail: (data) => http.get(ARCHIVE_DETAIL, data).then((res) => res?.data),
 };
 
 export const exitType = {

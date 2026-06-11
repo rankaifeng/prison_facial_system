@@ -19,6 +19,8 @@ from .controllers import (
     PrisonMessagesController,
     VideoStreamUrlController,
     CameraListController,
+    ArchiveListController,
+    ArchiveDetailController,
 )
 
 urlpatterns = [
@@ -42,4 +44,6 @@ urlpatterns = [
     re_path(r'^exit_type/delete/?$', ExitTypeDeleteController.as_view(), name='exit_type_delete'),
     re_path(r'^video/stream_url/?$', VideoStreamUrlController.as_view(), name='video_stream_url'),
     re_path(r'^video/camera_list/?$', CameraListController.as_view(), name='camera_list'),
+    re_path(r'^archive/list/?$', ArchiveListController.as_view(), name='archive_list'),
+    re_path(r'^archive/detail/?$', ArchiveDetailController.as_view(), name='archive_detail'),
 ]

@@ -3,5 +3,6 @@ from .exit_entry_record import ExitEntryRecord
 from .daily_statistics import DailyStatistics
 from .history_statistics import HistoryStatistics
 from .exit_type import ExitType
+from .prisoner_archive import PrisonerArchive
 
-__all__ = ['User', 'ExitEntryRecord', 'DailyStatistics', 'HistoryStatistics', 'ExitType']
+__all__ = ['User', 'ExitEntryRecord', 'DailyStatistics', 'HistoryStatistics', 'ExitType', 'PrisonerArchive']
