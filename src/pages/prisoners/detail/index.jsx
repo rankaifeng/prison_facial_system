@@ -6,12 +6,11 @@ import {
   UserOutlined,
   ManOutlined,
   WomanOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
   LockOutlined,
+  FileTextOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
-import { prisoner, exitRecord } from '@/api/globApi';
+import { archive, record } from '@/api/globApi';
 import TableLayout from '@/components/table-layout';
 
 const PrisonerDetail = () => {
@@ -29,12 +28,16 @@ const PrisonerDetail = () => {
   const fetchDetail = async () => {
     setLoading(true);
     try {
-      const [detailData, exitData] = await Promise.all([
-        prisoner.detail({ id }),
-        exitRecord.list({ prisonerId: id }),
+      const [detailRes, exitRes] = await Promise.all([
+        archive.detail({ prisoner_no: id }),
+        record.list({ prisoner_no: id, type: 'exit', limit: 100 }),
       ]);
-      setDetail(detailData?.data || {});
-      const records = Array.isArray(exitData) ? exitData : [];
+
+      if (detailRes?.code === 1 && detailRes?.data) {
+        setDetail(detailRes.data);
+      }
+
+      const records = Array.isArray(exitRes) ? exitRes : [];
       setExitRecords(records);
       setExitPagination(prev => ({ ...prev, total: records.length }));
     } catch (error) {
@@ -45,51 +48,40 @@ const PrisonerDetail = () => {
   };
 
   const exitColumns = [
-    { title: '出监时间', dataIndex: 'exitTime', key: 'exitTime', width: 160 },
-    { title: '出监原因', dataIndex: 'exitReason', key: 'exitReason', width: 120 },
-    { title: '就医医院', dataIndex: 'hospital', key: 'hospital', width: 150 },
+    { title: '出监时间', dataIndex: 'exit_date', key: 'exit_date', width: 120 },
+    { title: '出监原因', dataIndex: 'reason', key: 'reason', width: 120 },
+    { title: '监区', dataIndex: 'prison_area_name', key: 'prison_area_name', width: 100 },
     {
       title: '民警确认',
-      dataIndex: 'policeConfirm',
-      key: 'policeConfirm',
+      dataIndex: 'police_face',
+      key: 'police_face',
       width: 100,
       render: (val) => val ? (
-        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+        <Tag color="default">未录入</Tag>
       ),
     },
     {
       title: '特警确认',
-      dataIndex: 'swatConfirm',
-      key: 'swatConfirm',
+      dataIndex: 'swat_face',
+      key: 'swat_face',
       width: 100,
       render: (val) => val ? (
-        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
+        <Tag color="default">未录入</Tag>
       ),
     },
-    {
-      title: '武警确认',
-      dataIndex: 'armedPoliceConfirm',
-      key: 'armedPoliceConfirm',
-      width: 100,
-      render: (val) => val ? (
-        <img src="/imgs/face.png" alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
-      ) : (
-        <img src="/imgs/face.png" alt="未确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', opacity: 0.4 }} />
-      ),
-    },
-    { title: '回监时间', dataIndex: 'returnTime', key: 'returnTime', width: 160 },
+    { title: '出监时间', dataIndex: 'created_at', key: 'created_at', width: 120 },
     {
       title: '监控录像',
-      dataIndex: 'videoRecord',
-      key: 'videoRecord',
+      dataIndex: 'video_url',
+      key: 'video_url',
       width: 120,
       render: (val) => val ? (
         <video
-          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          src={val}
           controls
           style={{ width: 100, height: 50, objectFit: 'cover', borderRadius: 4 }}
         />
@@ -140,28 +132,26 @@ const PrisonerDetail = () => {
           <Card
             loading={loading}
             className="profile-card"
-            style={{ borderRadius: 12, height: '100%', overflow: 'hidden' }}
+            style={{ borderRadius: 12, height: '100%', overflow: 'auto' }}
             bodyStyle={{ padding: 0, height: '100%', overflow: 'auto' }}
           >
             <div className="profile-banner">
               <div className="banner-bg"></div>
               <div className="profile-content">
                 <div className="profile-photo-large">
-                  {detail?.photo ? (
-                    <img src={detail.photo} alt={detail?.name} />
-                  ) : (
-                    <div className="photo-placeholder-large">
-                      <UserOutlined style={{ fontSize: 50, color: '#fff' }} />
-                    </div>
-                  )}
+                  <img
+                    src={detail?.mtxx?.[0]?.xp || '/imgs/face.png'}
+                    alt={detail?.xm || '照片'}
+                    onError={(e) => { e.target.src = '/imgs/face.png'; }}
+                  />
                 </div>
-                <h2 className="profile-title">{detail?.name || '未知姓名'}</h2>
+                <h2 className="profile-title">{detail?.xm || '未知姓名'}</h2>
                 <div className="profile-tags">
-                  <Tag color={detail?.gender === '男' ? 'blue' : 'pink'} className="gender-tag">
-                    {detail?.gender === '男' ? <ManOutlined /> : <WomanOutlined />}
-                    {' '}{detail?.gender || '未知'}
+                  <Tag color={detail?.xb === '男' ? 'blue' : 'pink'} className="gender-tag">
+                    {detail?.xb === '男' ? <ManOutlined /> : <WomanOutlined />}
+                    {' '}{detail?.xb || '未知'}
                   </Tag>
-                  <Tag color="gold" className="no-tag">{detail?.prisonerNo || '暂无编号'}</Tag>
+                  <Tag color="gold" className="no-tag">{detail?.bh || '暂无编号'}</Tag>
                 </div>
               </div>
             </div>
@@ -178,14 +168,14 @@ const PrisonerDetail = () => {
                 <div className="stat-box">
                   <div className="stat-icon sentence-icon"><LockOutlined /></div>
                   <div className="stat-info">
-                    <span className="stat-num">{detail?.sentence || '-'}</span>
+                    <span className="stat-num">{detail?.ypxq || '-'}</span>
                     <span className="stat-desc">刑期</span>
                   </div>
                 </div>
                 <div className="stat-box">
                   <div className="stat-icon ethnic-icon"><FileTextOutlined /></div>
                   <div className="stat-info">
-                    <span className="stat-num">{detail?.ethnicity || '-'}</span>
+                    <span className="stat-num">{detail?.mz || '-'}</span>
                     <span className="stat-desc">民族</span>
                   </div>
                 </div>
@@ -197,16 +187,16 @@ const PrisonerDetail = () => {
                 </div>
                 <div className="info-grid">
                   <div className="info-cell">
-                    <span className="cell-label">入狱原因</span>
-                    <span className="cell-value">{detail?.incarcerationReason || '-'}</span>
+                    <span className="cell-label">罪名</span>
+                    <span className="cell-value">{detail?.zm || '-'}</span>
                   </div>
                   <div className="info-cell">
-                    <span className="cell-label">入狱日期</span>
-                    <span className="cell-value">{detail?.incarcerationDate || '-'}</span>
+                    <span className="cell-label">入监日期</span>
+                    <span className="cell-value">{detail?.rjrq || '-'}</span>
                   </div>
                   <div className="info-cell">
-                    <span className="cell-label">出狱日期</span>
-                    <span className="cell-value highlight">{detail?.releaseDate || '-'}</span>
+                    <span className="cell-label">刑期止日</span>
+                    <span className="cell-value highlight">{detail?.syxq || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -218,19 +208,35 @@ const PrisonerDetail = () => {
                 <div className="info-list">
                   <div className="info-row">
                     <span className="info-label">身份证号</span>
-                    <span className="info-value mono">{detail?.idCard || '-'}</span>
+                    <span className="info-value mono">{detail?.sfzh || '-'}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">婚姻状况</span>
-                    <span className="info-value">{detail?.maritalStatus || '-'}</span>
+                    <span className="info-value">{detail?.hy || '-'}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">籍贯</span>
-                    <span className="info-value">{detail?.birthplace || '-'}</span>
+                    <span className="info-value">{detail?.jg || '-'}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">户籍地址</span>
-                    <span className="info-value">{detail?.registeredAddress || '-'}</span>
+                    <span className="info-value">{detail?.hjzz || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">家庭地址</span>
+                    <span className="info-value">{detail?.jtmx || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">文化程度</span>
+                    <span className="info-value">{detail?.bqwhcd || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">监区</span>
+                    <span className="info-value">{detail?.db || '-'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">监室号/床号</span>
+                    <span className="info-value">{detail?.jsh || '-'} / {detail?.cwh || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -239,18 +245,18 @@ const PrisonerDetail = () => {
         </Col>
 
         <Col xs={24} sm={24} md={24} lg={14} xl={16} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Card
+          <Card
+            loading={loading}
+            title={<span><FileTextOutlined />出监记录</span>}
+            style={{ borderRadius: 12, flex: 1, display: 'flex', flexDirection: 'column' }}
+            bodyStyle={{ flex: 1, overflow: 'hidden', padding: 0 }}
+          >
+            <TableLayout
+              tableProps={exitTableProps}
               loading={loading}
-              title={<span><FileTextOutlined />出监记录</span>}
-              style={{ borderRadius: 12, flex: 1, display: 'flex', flexDirection: 'column' }}
-              bodyStyle={{ flex: 1, overflow: 'hidden', padding: 0 }}
-            >
-              <TableLayout
-                tableProps={exitTableProps}
-                loading={loading}
-                columns={exitColumns}
-              />
-            </Card>
+              columns={exitColumns}
+            />
+          </Card>
         </Col>
       </Row>
 
@@ -264,7 +270,6 @@ const PrisonerDetail = () => {
           position: relative;
           padding: 40px 20px 30px;
           text-align: center;
-          overflow: hidden;
         }
 
         .banner-bg {
@@ -287,24 +292,18 @@ const PrisonerDetail = () => {
           height: 130px;
           margin: 0 auto 16px;
           border-radius: 12px;
-          overflow: hidden;
+          overflow: visible;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
           border: 4px solid #fff;
+          position: relative;
+          z-index: 2;
         }
 
         .profile-photo-large img {
           width: 100%;
-          height: 100%;
+          height: 130px;
           object-fit: cover;
-        }
-
-        .photo-placeholder-large {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 8px;
         }
 
         .profile-title {
