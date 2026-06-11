@@ -46,7 +46,7 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
       const area = byArea.find(a => a.prison_area_name === item.name);
       return {
         ...item,
-        totalCount: 22 || 0,
+        totalCount: area?.in_prison_count || 0,
         yearlyExitCount: area?.yearly_exit_count || 0,
       };
     });
