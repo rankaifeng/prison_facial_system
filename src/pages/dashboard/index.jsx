@@ -136,10 +136,10 @@ const Dashboard = () => {
               <Button
                 type="primary"
                 icon={<LoginOutlined />}
-                onClick={() => setReturnModalOpen(true)}
+                onClick={() => setEnterModalOpen(true)}
                 className="exit-btn"
               >
-                回监确认
+                入监确认
               </Button>
             </>
           )}
@@ -216,11 +216,13 @@ const Dashboard = () => {
         open={exitModalOpen}
         onCancel={() => setExitModalOpen(false)}
         onOk={() => { setExitModalOpen(false); handleDataUpdate(); }}
+        prisonerNo="5106003856"
       />
       <EnterConfirmModal
         open={enterModalOpen}
         onCancel={() => setEnterModalOpen(false)}
         onOk={() => { setEnterModalOpen(false); handleDataUpdate(); }}
+        prisonerNo="5106003856"
       />
       <ReturnConfirmModal
         open={returnModalOpen}

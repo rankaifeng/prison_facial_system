@@ -81,7 +81,7 @@ export const account = {
 
 export const archive = {
   list: (data) => http.get(ARCHIVE_LIST, data).then((res) => res?.data),
-  detail: (data) => http.get(ARCHIVE_DETAIL, data).then((res) => res?.data),
+  detail: (data) => http.get(ARCHIVE_DETAIL, data),
 };
 
 export const exitType = {
