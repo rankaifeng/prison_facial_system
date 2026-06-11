@@ -30,7 +30,7 @@ def generate_exit_video(record_id):
     from apps.users.models import ExitEntryRecord
     from apps.users.controllers.video_controller import (
         _build_rtsp_urls, _try_ffmpeg_mp4, _calc_duration_seconds,
-        _get_video_cache_path, _video_exists_cached, VIDEOS_ROOT
+        _get_video_cache_path, _video_exists_cached, VIDEOS_ROOT,
     )
     import shutil
 
@@ -85,13 +85,15 @@ def generate_exit_video(record_id):
         return f"使用缓存: {video_url}"
 
     # 生成视频
-    rtsp_urls = _build_rtsp_urls(rtsp_base, record.start_time, record.end_time)
     video_path = _get_video_cache_path(record.start_time, record.end_time, camera_index, record_id)
     video_path.parent.mkdir(parents=True, exist_ok=True)
+    max_wait = duration + 30
 
+    # 使用 ffmpeg 直接下载
+    rtsp_urls = _build_rtsp_urls(rtsp_base, record.start_time, record.end_time)
     last_error = None
     for i, rtsp_url in enumerate(rtsp_urls):
-        max_wait = duration + 30
+        print(f"[Video] 尝试URL {i+1}: {rtsp_url}")
         success, error = _try_ffmpeg_mp4(rtsp_url, video_path, duration, max_wait=max_wait)
         if success:
             video_url = f"/media/videos/{video_path.name}"

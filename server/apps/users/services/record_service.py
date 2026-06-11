@@ -126,19 +126,11 @@ class RecordService(BaseService):
                 video_url='',
             )
 
-            # 刑满释放不计入统计（因为不会回来）
-            if reason == '刑满释放':
-                logger.info(f"Exit record created (刑满释放，不统计): id={record.id}, prisoner={prisoner_no}")
-                # 刑满释放也生成视频
-                t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
-                t.start()
-                return True, '提交成功', {'id': record.id, 'status': record.status}
-
+            # 更新统计（所有出监原因都计入）
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
             stat.exit_count += 1
             stat.in_prison_count -= 1
 
-            # 使用 JSONField 存储原因统计
             reason_stats = stat.reason_stats or {}
             reason_stats[reason] = reason_stats.get(reason, 0) + 1
             stat.reason_stats = reason_stats
