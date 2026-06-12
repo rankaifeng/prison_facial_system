@@ -2,9 +2,6 @@ import json
 import subprocess
 import logging
 import os
-import re
-import socket
-import hashlib
 import yaml
 import uuid
 import time
@@ -85,19 +82,6 @@ def _video_exists_cached(start_time, end_time, camera_index, record_id=None):
     return None
 
 
-def _to_iso_format(t):
-    """将时间转换为ISO格式 YYYY-MM-DDThh:mm:ssZ"""
-    t_clean = t.replace('Z', '')
-    # 紧凑格式 20260601T151944
-    if len(t_clean) == 15 and 'T' in t_clean:
-        date_part, time_part = t_clean.split('T')
-        return f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]}T{time_part[:2]}:{time_part[2:4]}:{time_part[4:]}Z"
-    # 已经是ISO格式
-    if 'T' in t_clean and '-' in t_clean:
-        return t_clean + 'Z'
-    return t_clean + 'Z'
-
-
 def _to_compact(t):
     """将时间转换为紧凑格式 YYYYMMDDThhmmssZ"""
     t_clean = t.replace('Z', '')
@@ -114,430 +98,55 @@ def _to_compact(t):
     return t_clean + 'Z'
 
 
-def _to_clock_format(t):
-    """将时间转换为海康威视Range头的紧凑格式 YYYYMMDDThhmmssZ"""
-    t_clean = t.replace('Z', '')
-    if len(t_clean) == 15 and 'T' in t_clean:
-        return t_clean + 'Z'
-    if 'T' in t_clean and '-' in t_clean:
-        date_part, time_part = t_clean.split('T')
-        date_part = date_part.replace('-', '')
-        time_part = time_part.replace(':', '')
-        return date_part + 'T' + time_part[:6] + 'Z'
-    return t_clean + 'Z'
-
-
-def _parse_rtsp_url(rtsp_url):
-    """从RTSP URL中解析出 user, password, host, port, channel"""
-    match = re.match(r'rtsp://([^:]+):([^@]+)@([^:]+):?(\d+)?(.*)', rtsp_url)
-    if not match:
-        return None
-    user, password, host, port, path = match.groups()
-    port = port or '554'
-    channel_match = re.search(r'/tracks/(\d+)', path)
-    channel = channel_match.group(1) if channel_match else None
-    return {'user': user, 'password': password, 'host': host, 'port': port, 'channel': channel}
-
-
-def _build_isapi_urls(rtsp_base, start_time, end_time):
-    """构建海康威视ISAPI HTTP回放URL（ffmpeg能正确处理时间参数）"""
-    info = _parse_rtsp_url(rtsp_base)
-    if not info or not info['channel']:
-        return []
-
-    start_iso = _to_iso_format(start_time)
-    end_iso = _to_iso_format(end_time)
-
-    user = info['user']
-    pwd = info['password']
-    host = info['host']
-    channel = info['channel']
-
-    # 海康威视ISAPI HTTP回放接口
-    return [
-        f"http://{user}:{pwd}@{host}/ISAPI/ContentMgmt/tracks/{channel}?starttime={start_iso}&endtime={end_iso}",
-        f"http://{user}:{pwd}@{host}:80/ISAPI/ContentMgmt/tracks/{channel}?starttime={start_iso}&endtime={end_iso}",
-    ]
-
-
 def _build_rtsp_urls(rtsp_base, start_time, end_time):
-    """生成多种回放URL格式，按优先级排列：ISAPI HTTP优先，RTSP作为备选"""
-    urls = []
-
-    # 优先使用海康威视ISAPI HTTP接口（ffmpeg能正确处理时间参数）
-    isapi_urls = _build_isapi_urls(rtsp_base, start_time, end_time)
-    urls.extend(isapi_urls)
-
-    # RTSP回放作为备选
+    """生成多种RTSP URL格式，按优先级排列"""
+    # 转换为紧凑格式
     start_compact = _to_compact(start_time)
     end_compact = _to_compact(end_time)
-    start_iso = _to_iso_format(start_time)
-    end_iso = _to_iso_format(end_time)
+
+    # ISO 格式（作为备选）
+    def to_iso(t):
+        t_clean = t.replace('Z', '')
+        if 'T' in t_clean and len(t_clean.split('T')[0]) == 8 and '-' not in t_clean:
+            d, tm = t_clean.split('T')
+            d = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+            tm = f"{tm[:2]}:{tm[2:4]}:{tm[4:]}"
+            return f"{d}T{tm}Z"
+        return t if t.endswith('Z') else f"{t}Z"
+
+    start_iso = to_iso(start_time)
+    end_iso = to_iso(end_time)
 
     sep = '/' if not rtsp_base.endswith('/') else ''
 
-    urls.extend([
-        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
-        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
-        rtsp_base.rstrip('/'),
-    ])
-
+    # 打印最终使用的URL
     print("="*80)
-    print("📌 最终生成的回放地址：")
-    for url in urls:
+    print("📌 最终生成的RTSP回放地址：")
+    urls_to_print = [
+        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
+        f"{rtsp_base}?starttime={start_compact}&endtime={end_compact}",
+        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
+        f"{rtsp_base}?starttime={start_iso}&endtime={end_iso}",
+        rtsp_base.rstrip('/'),
+    ]
+    for url in urls_to_print:
         print(url)
     print("="*80)
+    # ============================================================
 
-    return urls
-
-
-def _rtsp_digest_auth(method, uri, params, user, password):
-    """计算RTSP Digest认证头（海康威视不使用qop）"""
-    realm = params.get('realm', '')
-    nonce = params.get('nonce', '')
-    ha1 = hashlib.md5(f'{user}:{realm}:{password}'.encode()).hexdigest()
-    ha2 = hashlib.md5(f'{method}:{uri}'.encode()).hexdigest()
-    response = hashlib.md5(f'{ha1}:{nonce}:{ha2}'.encode()).hexdigest()
-    return f'Digest username="{user}", realm="{realm}", nonce="{nonce}", uri="{uri}", response="{response}"'
-
-
-def _parse_rtsp_digest_params(resp_text):
-    """从401响应中提取Digest认证参数"""
-    for line in resp_text.split('\r\n'):
-        if line.lower().startswith('www-authenticate:'):
-            www_auth = line.split(':', 1)[1].strip()
-            params = {}
-            for m in re.finditer(r'(\w+)="([^"]*)"', www_auth):
-                params[m.group(1)] = m.group(2)
-            for m in re.finditer(r'(\w+)=([^,\s"]+)', www_auth):
-                if m.group(1) not in params:
-                    params[m.group(1)] = m.group(2)
-            return params
-    return {}
-
-
-def _rtsp_send(sock, method, uri, cseq, extra_headers=''):
-    """发送RTSP请求并接收响应"""
-    msg = f'{method} {uri} RTSP/1.0\r\nCSeq: {cseq}\r\n{extra_headers}\r\n'
-    sock.send(msg.encode())
-    resp = b''
-    while True:
-        try:
-            data = sock.recv(4096)
-            if not data:
-                break
-            resp += data
-            if b'\r\n\r\n' in resp:
-                break
-        except Exception:
-            break
-    return resp.decode('utf-8', errors='replace')
-
-
-def _rtsp_auth_send(sock, method, uri, cseq, user, password, digest_params, extra_headers=''):
-    """发送带Digest认证的RTSP请求"""
-    auth = _rtsp_digest_auth(method, uri, digest_params, user, password)
-    headers = f'Authorization: {auth}\r\n{extra_headers}'
-    return _rtsp_send(sock, method, uri, cseq, headers)
-
-
-def _download_rtsp_with_range(rtsp_url, start_time, end_time, output_path, duration, max_wait=120):
-    """
-    通过RTSP协议的Range头实现时间回放下载。
-    解决海康威视NVR不响应URL中starttime/endtime参数的问题。
-    方式：手动RTSP协商 + Range头指定时间段 → 提取RTP中的H.264数据 → ffmpeg封装为MP4。
-    """
-    info = _parse_rtsp_url(rtsp_url)
-    if not info:
-        return False, '无法解析RTSP地址'
-
-    host = info['host']
-    port = int(info['port'])
-    user = info['user']
-    password = info['password']
-
-    start_clock = _to_clock_format(start_time)
-    end_clock = _to_clock_format(end_time)
-
-    sock = None
-
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(15)
-        sock.connect((host, port))
-
-        cseq = 1
-
-        # Step 1: OPTIONS 获取Digest challenge
-        resp = _rtsp_send(sock, 'OPTIONS', rtsp_url, cseq)
-        cseq += 1
-        if '401' not in resp.split('\r\n')[0]:
-            return False, 'RTSP OPTIONS未返回401'
-
-        digest_params = _parse_rtsp_digest_params(resp)
-        if not digest_params:
-            return False, '无法解析Digest参数'
-
-        # Step 2: OPTIONS + auth
-        resp = _rtsp_auth_send(sock, 'OPTIONS', rtsp_url, cseq, user, password, digest_params)
-        cseq += 1
-        if '200' not in resp.split('\r\n')[0]:
-            return False, f'OPTIONS认证失败'
-
-        # Step 3: DESCRIBE + auth
-        resp = _rtsp_auth_send(sock, 'DESCRIBE', rtsp_url, cseq, user, password,
-                               digest_params, 'Accept: application/sdp\r\n')
-        cseq += 1
-        if '200' not in resp.split('\r\n')[0]:
-            return False, f'DESCRIBE失败'
-
-        # 解析SDP获取track control URL和编码信息
-        sdp = resp.split('\r\n\r\n', 1)[1] if '\r\n\r\n' in resp else ''
-        control_match = re.search(r'a=control:(trackID=\S+)', sdp)
-        track_url = f'{rtsp_url}/{control_match.group(1)}' if control_match else rtsp_url
-
-        # Step 4: SETUP (TCP interleaved, RTP/AVP)
-        resp = _rtsp_auth_send(sock, 'SETUP', track_url, cseq, user, password,
-                               digest_params, 'Transport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n')
-        cseq += 1
-        if '200' not in resp.split('\r\n')[0]:
-            return False, f'SETUP失败'
-
-        session = ''
-        for line in resp.split('\r\n'):
-            if line.lower().startswith('session:'):
-                session = line.split(':', 1)[1].strip().split(';')[0]
-
-        # Step 5: PLAY with Range头 — 指定时间段回放（海康威视要求紧凑格式无Z）
-        range_header = f'Range: clock={start_clock}-{end_clock}\r\n'
-        session_header = f'Session: {session}\r\n' if session else ''
-        resp = _rtsp_auth_send(sock, 'PLAY', rtsp_url, cseq, user, password,
-                               digest_params, f'{session_header}{range_header}')
-        cseq += 1
-        if '200' not in resp.split('\r\n')[0]:
-            return False, f'PLAY失败'
-
-        print(f"[RTSP-Range] PLAY成功, 开始接收RTP数据...")
-
-        # Step 6: 接收RTP数据，解析提取H.264 NAL单元，写入临时文件
-        h264_path = output_path.with_suffix('.h264')
-
-        rtp_buf = b''
-        total_bytes = 0
-        h264_bytes = 0
-        start_wait = time.time()
-        nal_types_seen = set()
-
-        empty_count = 0
-        recv_count = 0
-        with open(h264_path, 'wb') as h264_f:
-            while time.time() - start_wait < max_wait:
-                try:
-                    data = sock.recv(65536)
-                    if not data:
-                        empty_count += 1
-                        elapsed = time.time() - start_wait
-                        print(f"[RTSP-Range] 连接空读 #{empty_count}, 已接收{elapsed:.0f}秒, h264={h264_bytes}字节")
-                        if empty_count >= 3:
-                            print(f"[RTSP-Range] NVR连续3次空读，停止接收")
-                            break
-                        time.sleep(1)
-                        continue
-                    empty_count = 0
-                    recv_count += 1
-                    if recv_count % 500 == 0:
-                        elapsed = time.time() - start_wait
-                        print(f"[RTSP-Range] 接收中: {elapsed:.0f}秒, rtp={total_bytes}, h264={h264_bytes}")
-                    rtp_buf += data
-                except socket.timeout:
-                    elapsed = time.time() - start_wait
-                    print(f"[RTSP-Range] socket timeout, 已接收{elapsed:.0f}秒")
-                    continue
-
-                # 解析RTSP interleaved数据
-                while len(rtp_buf) >= 4:
-                    if rtp_buf[0:1] == b'$':
-                        # Interleaved frame: $ + channel + length(2 bytes)
-                        if len(rtp_buf) < 4:
-                            break
-                        channel = rtp_buf[1]
-                        pkt_len = (rtp_buf[2] << 8) | rtp_buf[3]
-                        if len(rtp_buf) < 4 + pkt_len:
-                            break
-                        rtp_packet = rtp_buf[4:4 + pkt_len]
-                        rtp_buf = rtp_buf[4 + pkt_len:]
-
-                        # 只处理RTP数据通道(channel 0)，跳过RTCP(channel 1)
-                        if channel == 0 and len(rtp_packet) >= 12:
-                            rtp_b0 = rtp_packet[0]
-                            padding_flag = (rtp_b0 >> 5) & 1
-                            extension_flag = (rtp_b0 >> 4) & 1
-                            cc = rtp_b0 & 0x0F
-                            header_len = 12 + cc * 4
-                            # 跳过扩展头
-                            if extension_flag and len(rtp_packet) > header_len + 4:
-                                ext_word_count = (rtp_packet[header_len + 2] << 8) | rtp_packet[header_len + 3]
-                                header_len += 4 + ext_word_count * 4
-                            # 计算payload长度（减去padding）
-                            payload_end = len(rtp_packet)
-                            if padding_flag and len(rtp_packet) > 0:
-                                pad_len = rtp_packet[-1]
-                                if pad_len > 0 and pad_len <= payload_end - header_len:
-                                    payload_end -= pad_len
-                            if payload_end > header_len:
-                                payload = rtp_packet[header_len:payload_end]
-                                if len(payload) < 1:
-                                    continue
-
-                                nal_header = payload[0]
-                                nal_type = nal_header & 0x1F
-                                nal_types_seen.add(nal_type)
-
-                                if 1 <= nal_type <= 23:
-                                    # Single NAL unit (标准H.264)
-                                    h264_f.write(b'\x00\x00\x00\x01' + payload)
-                                    h264_bytes += 4 + len(payload)
-                                elif nal_type == 28:
-                                    # FU-A (Fragmentation Unit)
-                                    if len(payload) >= 2:
-                                        fu_header = payload[1]
-                                        start_bit = (fu_header >> 7) & 1
-                                        nal_type_orig = fu_header & 0x1F
-                                        if start_bit:
-                                            # FU-A start: 写入start code + 重建的NAL头 + payload
-                                            reconstructed_nal = bytes([(nal_header & 0xE0) | nal_type_orig])
-                                            h264_f.write(b'\x00\x00\x00\x01' + reconstructed_nal + payload[2:])
-                                            h264_bytes += 4 + 1 + len(payload) - 2
-                                        else:
-                                            # FU-A continuation/end: 只写payload数据
-                                            h264_f.write(payload[2:])
-                                            h264_bytes += len(payload) - 2
-                                elif nal_type == 24:
-                                    # STAP-A (Single-Time Aggregation)
-                                    offset = 1
-                                    while offset + 2 <= len(payload):
-                                        nal_size = (payload[offset] << 8) | payload[offset + 1]
-                                        offset += 2
-                                        if offset + nal_size <= len(payload):
-                                            h264_f.write(b'\x00\x00\x00\x01' + payload[offset:offset + nal_size])
-                                            h264_bytes += 4 + nal_size
-                                        offset += nal_size
-                                # nal_type == 0: 海康威视元数据包，跳过
-                                # 其他未知类型也跳过
-
-                        total_bytes += pkt_len
-                    elif rtp_buf[0:1] in (b'R', b'S', b'D', b'T', b'P', b'O', b'I'):
-                        # RTSP响应消息（如录制结束后的NOTIFY），跳过
-                        end_idx = rtp_buf.find(b'\r\n\r\n')
-                        if end_idx >= 0:
-                            rtp_buf = rtp_buf[end_idx + 4:]
-                        else:
-                            break
-                    else:
-                        # 未知数据，跳过一个字节
-                        rtp_buf = rtp_buf[1:]
-
-        sock.close()
-        sock = None
-
-        elapsed = time.time() - start_wait
-        print(f"[RTSP-Range] RTP接收完成: 耗时{elapsed:.0f}秒, rtp={total_bytes}, h264={h264_bytes}, nal_types={sorted(nal_types_seen)}")
-
-        if h264_bytes < 1000:
-            try:
-                h264_path.unlink()
-            except:
-                pass
-            return False, f'H.264数据不足: {h264_bytes} bytes'
-
-        # Step 7: 用ffmpeg将H.264文件转换为MP4
-        # 先用 -c copy 快速封装
-        ffmpeg_cmd = [
-            'ffmpeg',
-            '-loglevel', 'warning',
-            '-f', 'h264',
-            '-i', str(h264_path),
-            '-c', 'copy',
-            '-movflags', '+faststart',
-            '-y',
-            str(output_path),
-        ]
-
-        print(f"[RTSP-Range] ffmpeg转换H.264到MP4 (copy模式)...")
-        result = subprocess.run(ffmpeg_cmd, capture_output=True, timeout=120)
-
-        # 检查生成的视频时长，如果比请求的短很多，说明NVR丢帧了，需要重编码修正
-        if output_path.exists() and duration > 0:
-            probe = subprocess.run(
-                ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(output_path)],
-                capture_output=True, text=True, timeout=10
-            )
-            try:
-                actual_duration = float(probe.stdout.strip())
-            except (ValueError, AttributeError):
-                actual_duration = 0
-
-            if actual_duration > 0 and actual_duration < duration * 0.7:
-                # 时长不足请求的70%，NVR丢帧了，重编码修正
-                # 用实际帧数和请求时长计算输入帧率
-                frame_count_probe = subprocess.run(
-                    ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-count_frames',
-                     '-show_entries', 'stream=nb_read_frames', '-of', 'csv=p=0', str(output_path)],
-                    capture_output=True, text=True, timeout=120
-                )
-                try:
-                    frame_count = int(frame_count_probe.stdout.strip())
-                except (ValueError, AttributeError):
-                    frame_count = int(actual_duration * 25)
-                input_fps = frame_count / duration if duration > 0 else 1
-                input_fps = max(0.5, min(input_fps, 25))
-                print(f"[RTSP-Range] 时长不足({actual_duration:.0f}s < {duration}s, {frame_count}帧), 重编码: input_fps={input_fps:.2f}")
-                ffmpeg_reencode = [
-                    'ffmpeg',
-                    '-loglevel', 'warning',
-                    '-r', f'{input_fps:.4f}',
-                    '-f', 'h264',
-                    '-i', str(h264_path),
-                    '-r', '25',
-                    '-c:v', 'libx264',
-                    '-preset', 'fast',
-                    '-movflags', '+faststart',
-                    '-y',
-                    str(output_path),
-                ]
-                result = subprocess.run(ffmpeg_reencode, capture_output=True, timeout=600)
-
-        # 清理临时h264文件
-        try:
-            h264_path.unlink()
-        except:
-            pass
-
-        if result.returncode != 0:
-            stderr = result.stderr.decode('utf-8', errors='replace')
-            print(f"[RTSP-Range] ffmpeg失败: {stderr[:300]}")
-            return False, f'ffmpeg转换失败: {stderr[:200]}'
-
-        if not output_path.exists() or output_path.stat().st_size < 10000:
-            return False, '生成文件无效'
-
-        print(f"[RTSP-Range] 下载成功: {output_path.name}, size={output_path.stat().st_size}")
-        return True, None
-
-    except Exception as e:
-        logger.error(f"RTSP Range下载失败: {e}")
-        print(f"[RTSP-Range] 异常: {e}")
-        return False, str(e)
-    finally:
-        if sock:
-            try:
-                sock.close()
-            except:
-                pass
+    # 紧凑格式优先，ISO 格式其次
+    return [
+        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
+        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
+        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
+        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
+        rtsp_base.rstrip('/'),
+    ]
 
 
 def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
-    """尝试用FFmpeg将RTSP下载为MP4（直接连接，无时间控制）"""
+    """尝试用FFmpeg将RTSP下载为MP4"""
+    # 流拷贝模式：保留原编码，快速下载
     ffmpeg_cmd = [
         'ffmpeg',
         '-loglevel', 'warning',
