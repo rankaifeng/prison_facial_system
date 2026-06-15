@@ -4,23 +4,34 @@ import TableLayout from '@/components/table-layout';
 import VideoPlayer from '@/components/video-player';
 import useQueryTable from '@/hooks/useQueryTable';
 
+const PRISON_AREAS = [
+  { value: 1, label: '一监区' },
+  { value: 2, label: '二监区' },
+  { value: 3, label: '三监区' },
+  { value: 4, label: '四监区' },
+  { value: 5, label: '五监区' },
+  { value: 6, label: '六监区' },
+  { value: 7, label: '七监区' },
+];
+
 const ExitRecords = () => {
   const { tableProps, loading, form, search } = useQueryTable({
-    url: '/prison_manage/exit_record/exit_record_list',
+    url: '/user_manage/record/list',
     rowKey: 'id',
+    defaultParams: { type: 'exit' },
   });
 
   const columns = [
     { title: '罪犯姓名', dataIndex: 'prisoner_name', key: 'prisoner_name', width: 100 },
     { title: '出监日期', dataIndex: 'exit_date', key: 'exit_date', width: 120 },
-    { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason', width: 120 },
+    { title: '出监原因', dataIndex: 'reason', key: 'reason', width: 120 },
     {
       title: '就医医院',
       dataIndex: 'hospital_name',
       key: 'hospital_name',
       width: 150,
       render: (val, record) => {
-        if (record.exit_reason === '外出就医' && val) {
+        if (record.reason === '外出就医' && val) {
           return val;
         }
         return '';
@@ -65,14 +76,20 @@ const ExitRecords = () => {
 
   const searchItems = useMemo(() => [
     {
+      label: '监区',
+      name: 'prison_area',
+      type: 'select',
+      props: { placeholder: '请选择监区', options: PRISON_AREAS }
+    },
+    {
       label: '罪犯姓名',
-      name: 'prisonerName',
+      name: 'prisoner_name',
       type: 'input',
       props: { placeholder: '请输入罪犯姓名' }
     },
     {
       label: '出监原因',
-      name: 'exitReason',
+      name: 'reason',
       type: 'input',
       props: { placeholder: '请输入出监原因' }
     },

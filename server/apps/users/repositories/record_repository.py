@@ -53,7 +53,13 @@ class RecordRepository:
                     Q(exit_date__lte=end_date) | Q(entry_date__lte=end_date)
                 )
         if prison_area:
-            queryset = queryset.filter(prison_area=prison_area)
+            from django.db.models import Q
+            from apps.users.dict import get_prison_area_name
+            area_name = get_prison_area_name(prison_area)
+            q = Q(prison_area=prison_area) | Q(prison_area_name=prison_area)
+            if area_name:
+                q = q | Q(prison_area=area_name) | Q(prison_area_name=area_name)
+            queryset = queryset.filter(q)
         if prisoner_name:
             queryset = queryset.filter(prisoner_name__icontains=prisoner_name)
         if prisoner_no:
@@ -102,7 +108,13 @@ class RecordRepository:
             status='completed'
         )
         if prison_area:
-            queryset = queryset.filter(prison_area=prison_area)
+            from django.db.models import Q
+            from apps.users.dict import get_prison_area_name
+            area_name = get_prison_area_name(prison_area)
+            q = Q(prison_area=prison_area) | Q(prison_area_name=prison_area)
+            if area_name:
+                q = q | Q(prison_area=area_name) | Q(prison_area_name=area_name)
+            queryset = queryset.filter(q)
         return queryset.order_by('-created_at')
 
     @staticmethod

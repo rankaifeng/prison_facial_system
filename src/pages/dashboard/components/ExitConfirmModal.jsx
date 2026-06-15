@@ -23,14 +23,19 @@ const SOCIAL_HOSPITALS = [
 ];
 
 const PRISON_AREAS = [
-  { value: '一监区', label: '一监区' },
-  { value: '二监区', label: '二监区' },
-  { value: '三监区', label: '三监区' },
-  { value: '四监区', label: '四监区' },
-  { value: '五监区', label: '五监区' },
-  { value: '六监区', label: '六监区' },
-  { value: '七监区', label: '七监区' },
+  { value: '1', label: '一监区' },
+  { value: '2', label: '二监区' },
+  { value: '3', label: '三监区' },
+  { value: '4', label: '四监区' },
+  { value: '5', label: '五监区' },
+  { value: '6', label: '六监区' },
+  { value: '7', label: '七监区' },
 ];
+
+const PRISON_AREA_NAME_TO_ID = {
+  '一监区': '1', '二监区': '2', '三监区': '3', '四监区': '4',
+  '五监区': '5', '六监区': '6', '七监区': '7',
+};
 
 const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
   const [form] = Form.useForm();
@@ -81,7 +86,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
             form.setFieldsValue({
               prisonerNo: d.bh || prisonerNo,
               prisonerName: d.xm || '',
-              prisonArea: d.db || '',
+              prisonArea: PRISON_AREA_NAME_TO_ID[d.db] || d.db || '',
             });
           } else {
             message.error(res?.msg || '未找到该罪犯');
