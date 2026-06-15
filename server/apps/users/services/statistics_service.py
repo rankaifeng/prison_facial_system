@@ -45,18 +45,30 @@ class StatisticsService(BaseService):
         total_exit = 0
         total_entry = 0
 
-        # 年度出监统计
+        # 年度出监统计（按监区名称归一化合并）
         year_start = date(today.year, 1, 1)
-        yearly_stats = {}
+        from apps.users.dict import get_prison_area_name, get_prison_area_id
+
+        yearly_by_area = {}  # key=监区名称, value=count
         yearly_records = ExitEntryRecord.objects.filter(
             type='exit', exit_date__gte=year_start, exit_date__lte=today
-        ).values('prison_area', 'prison_area_name').annotate(yearly_exit=Count('id'))
+        ).values('prison_area', 'prison_area_name')
 
         for item in yearly_records:
-            yearly_stats[item['prison_area']] = {
-                'yearly_exit': item['yearly_exit'],
-                'prison_area_name': item['prison_area_name']
-            }
+            # 归一化：优先用 prison_area_name，没有则从 prison_area ID 转换
+            name = item['prison_area_name'] or get_prison_area_name(item['prison_area'])
+            if not name:
+                continue
+            yearly_by_area[name] = yearly_by_area.get(name, 0) + 1
+
+        # 构建 yearly_stats，同时用名称和 ID 作为 key
+        yearly_stats = {}
+        for name, count in yearly_by_area.items():
+            entry = {'yearly_exit': count, 'prison_area_name': name}
+            yearly_stats[name] = entry
+            area_id = get_prison_area_id(name)
+            if area_id:
+                yearly_stats[str(area_id)] = entry
 
         processed_areas = set()
         if area_stats:
