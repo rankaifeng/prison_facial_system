@@ -6,13 +6,16 @@
   python manage.py sync_prisoner_data              # 模拟数据（开发/测试）
   python manage.py sync_prisoner_data --real-api   # 真实接口（部署到公安内网后）
 """
+import base64
 import logging
 import os
 import re
 import time
 import requests
+import yaml
 from xml.etree import ElementTree as ET
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from apps.users.models import PrisonerArchive
@@ -173,6 +176,10 @@ class Command(BaseCommand):
             '--batch-size', type=int, default=50,
             help='每批处理数量，批间休息2秒（默认50）',
         )
+        parser.add_argument(
+            '--dahua', action='store_true', default=False,
+            help='同步完成后推送到大华门禁平台',
+        )
 
     def handle(self, *args, **options):
         use_real_api = options['real_api']
@@ -222,6 +229,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'同步完成! 成功: {success}, 失败: {fail}'))
         self.stdout.write(self.style.SUCCESS(f'档案表 prisoner_archive 共 {PrisonerArchive.objects.count()} 条记录'))
         self.stdout.write(self.style.SUCCESS('=' * 50))
+
+        # ── 大华门禁平台同步 ──
+        if options['dahua']:
+            self._sync_to_dahua()
 
     # ==================== 接口调用 ====================
 
@@ -366,3 +377,146 @@ class Command(BaseCommand):
                 'media_info': media_list,
             },
         )
+
+    # ==================== 大华门禁平台同步 ====================
+
+    def _load_dahua_config(self):
+        """从 cameras.yml 加载大华配置"""
+        config_path = os.path.join(settings.BASE_DIR, 'config', 'cameras.yml')
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        return config.get('dahua', {})
+
+    def _load_placeholder_face(self, dahua_config):
+        """加载占位人脸图片并转为 base64（不含 data URI 前缀）"""
+        face_path = os.path.join(settings.BASE_DIR, dahua_config.get('placeholder_face', 'imgs/face.jpeg'))
+        if not os.path.exists(face_path):
+            self.stdout.write(self.style.ERROR(f'占位人脸图片不存在: {face_path}'))
+            return None
+        with open(face_path, 'rb') as f:
+            return base64.b64encode(f.read()).decode('utf-8')
+
+    def _dahua_auth(self, base_url, auth):
+        """验证大华平台连通性"""
+        url = f"{base_url}/cgi-bin/magicBox.cgi?action=getDeviceType"
+        try:
+            resp = requests.get(url, auth=auth, timeout=10)
+            text = resp.text.strip()
+            self.stdout.write(self.style.SUCCESS(f'    大华平台连接成功: {resp}'))
+            if text:
+                self.stdout.write(self.style.SUCCESS(f'    大华平台连接成功: {text}'))
+                return True
+            else:
+                self.stdout.write(self.style.ERROR(f'    大华平台返回为空'))
+                return False
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f'    大华平台连接失败: {e}'))
+            return False
+
+    def _dahua_insert_users(self, base_url, auth, prisoners):
+        """批量插入用户到大华门禁平台"""
+        url = f"{base_url}/cgi-bin/AccessUser.cgi?action=insertMulti"
+        users = []
+        for p in prisoners:
+            users.append({
+                'UserID': p['prisoner_no'],
+                'UserName': p['prisoner_name'],
+                'UserType': 0,
+                'UseTime': 1,
+                'IsFirstEnter': True,
+                'FirstEnterDoors': [0],
+                'UserStatus': 0,
+                'Authority': 2,
+                'CitizenIDNo': p.get('id_card', ''),
+                'Password': '123456',
+                'Doors': [0],
+                'ValidFrom': '2026-01-01 00:00:00',
+                'ValidTo': '2099-12-31 23:59:59',
+            })
+
+        payload = {'UserList': users}
+        try:
+            resp = requests.post(url, json=payload, auth=auth, timeout=30)
+            text = resp.text.strip().lower()
+            if 'ok' in text:
+                self.stdout.write(self.style.SUCCESS(f'    用户插入成功: {len(users)} 个'))
+                return True
+            else:
+                self.stdout.write(self.style.ERROR(f'    用户插入失败: {resp.text[:200]}'))
+                return False
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f'    用户插入请求失败: {e}'))
+            return False
+
+    def _dahua_insert_faces(self, base_url, auth, prisoners, face_base64):
+        """批量插入人脸照片到大华门禁平台"""
+        url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
+        faces = []
+        for p in prisoners:
+            faces.append({
+                'UserID': p['prisoner_no'],
+                'FaceData': [],
+                'PhotoData': [face_base64],
+                'PhotoURL': [],
+            })
+
+        # 大华 API 可能有单次请求限制，分批处理
+        batch_size = 50
+        total_success = 0
+        for i in range(0, len(faces), batch_size):
+            batch = faces[i:i + batch_size]
+            payload = {'FaceList': batch}
+            try:
+                resp = requests.post(url, json=payload, auth=auth, timeout=60)
+                text = resp.text.strip().lower()
+                if 'ok' in text:
+                    total_success += len(batch)
+                    self.stdout.write(f'    人脸批次 {i // batch_size + 1}: 插入 {len(batch)} 个')
+                else:
+                    self.stdout.write(self.style.ERROR(
+                        f'    人脸批次 {i // batch_size + 1} 失败: {resp.text[:200]}'))
+            except requests.RequestException as e:
+                self.stdout.write(self.style.ERROR(f'    人脸批次 {i // batch_size + 1} 请求失败: {e}'))
+
+        if total_success > 0:
+            self.stdout.write(self.style.SUCCESS(f'    人脸插入完成: {total_success}/{len(faces)}'))
+        return total_success == len(faces)
+
+    def _sync_to_dahua(self):
+        """将档案库数据同步到大华门禁平台"""
+        self.stdout.write('\n>>> 同步到大华门禁平台...')
+
+        dahua_config = self._load_dahua_config()
+        base_url = dahua_config.get('base_url', '')
+        if not base_url:
+            self.stdout.write(self.style.ERROR('    大华平台 base_url 未配置，请检查 config/cameras.yml'))
+            return
+
+        username = dahua_config.get('userName', '')
+        password = dahua_config.get('password', '')
+        auth = requests.auth.HTTPDigestAuth(username, password) if username else None
+
+        # 1. 验证连通性
+        if not self._dahua_auth(base_url, auth):
+            return
+
+        # 2. 加载占位人脸
+        face_base64 = self._load_placeholder_face(dahua_config)
+        if not face_base64:
+            return
+
+        # 3. 获取所有档案数据
+        archives = PrisonerArchive.objects.all()
+        prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card'))
+        if not prisoners:
+            self.stdout.write(self.style.WARNING('    档案库无数据，跳过大华同步'))
+            return
+        self.stdout.write(f'    待同步: {len(prisoners)} 人')
+
+        # 4. 插入用户
+        self._dahua_insert_users(base_url, auth, prisoners)
+
+        # 5. 插入人脸
+        self._dahua_insert_faces(base_url, auth, prisoners, face_base64)
+
+        self.stdout.write(self.style.SUCCESS('    大华门禁平台同步完成'))
