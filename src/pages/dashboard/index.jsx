@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined } from '@ant-design/icons';
+import { Typography, Dropdown, ConfigProvider, theme, Modal, Button, Badge } from 'antd';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined, BellOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -12,6 +12,7 @@ import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
 import { realtimeStatistics } from '@/api/globApi';
+import useDoorEvents from '@/hooks/useDoorEvents';
 import cache from '@/utils/cache';
 import './index.less';
 
@@ -36,7 +37,15 @@ const Dashboard = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userName, setUserName] = useState('');
   const [isAdmin, setIsAdmin] = useState(true);
+  const [doorEvents, setDoorEvents] = useState([]);
   const navigate = useNavigate();
+
+  const handleDoorEvent = useCallback((data) => {
+    if (!data.UserID) return;
+    setDoorEvents(prev => [data, ...prev].slice(0, 50));
+  }, []);
+
+  const { connected } = useDoorEvents({ onEvent: handleDoorEvent });
 
   useEffect(() => {
     const storedPrisonName = cache.getVal('prisonName');
@@ -209,6 +218,27 @@ const Dashboard = () => {
         <div className="right-area">
           <StatusPieChart data={realtimeData} />
           <RightPanel onDataUpdate={handleDataUpdate} />
+          <div className="door-events-panel">
+            <div className="panel-header">
+              <div className="header-left">
+                <Badge status={connected ? 'success' : 'error'} />
+                <span>门禁事件</span>
+              </div>
+              <div className="header-line"></div>
+            </div>
+            <div className="door-events-list">
+              {doorEvents.length === 0 ? (
+                <div className="event-empty">等待事件...</div>
+              ) : (
+                doorEvents.slice(0, 10).map((evt, idx) => (
+                  <div key={idx} className="door-event-item">
+                    <span className="event-user">用户ID: {evt.UserID}</span>
+                    {evt.Similarity !== undefined && <span className="event-sim">相似度: {evt.Similarity}%</span>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

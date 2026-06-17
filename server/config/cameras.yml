@@ -23,3 +23,5 @@ dahua:
   password: "sh123456"
   # 占位人脸图片路径（相对于 server 目录）
   placeholder_face: "imgs/face.jpeg"
+  # 事件订阅地址（设备IP可能与门禁平台不同）
+  event_url: "http://192.168.100.108/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=5"
