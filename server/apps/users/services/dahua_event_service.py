@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import re
@@ -335,14 +336,19 @@ class DahuaEventService:
                             continue
 
                         if '_image_data' in result:
-                            image_b64 = base64.b64encode(result['_image_data']).decode('ascii')
-                            print(f'[智能事件] 图片: {len(result["_image_data"])} bytes, base64: {len(image_b64)} chars')
+                            img_bytes = result['_image_data']
+                            img_hash = hashlib.md5(img_bytes).hexdigest()[:8]
+                            img_head = img_bytes[:4].hex()
+                            image_b64 = base64.b64encode(img_bytes).decode('ascii')
+                            print(f'[智能事件] === 图片 #{img_hash} ===')
+                            print(f'  大小: {len(img_bytes)} bytes, 文件头: {img_head}, base64: {len(image_b64)} chars')
                             if pending_event:
                                 pending_event['image_base64'] = image_b64
-                                print(f'[智能事件] 配对广播: code={pending_event.get("code")}')
+                                print(f'  配对广播: code={pending_event.get("code")} UserID={pending_event.get("UserID")}')
                                 cls._broadcast(pending_event)
                                 pending_event = None
                             else:
+                                print(f'  单独广播（无配对元数据）{image_b64}')
                                 cls._broadcast({'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64})
                         else:
                             if pending_event:
