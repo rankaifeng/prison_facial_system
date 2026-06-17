@@ -37,7 +37,7 @@ const PRISON_AREA_NAME_TO_ID = {
   '五监区': '5', '六监区': '6', '七监区': '7',
 };
 
-const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
+const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -99,6 +99,26 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
       }
     }
   }, [open, prisonerNo, form]);
+
+  // 通知父组件当前步骤
+  useEffect(() => {
+    onStepChange?.(current);
+  }, [current, onStepChange]);
+
+  // 自动填充民警/特警人脸图片
+  useEffect(() => {
+    if (policeFaceImage) {
+      console.log('[弹窗] 民警图片同步, 长度:', policeFaceImage.length);
+      setPoliceImage(policeFaceImage);
+    }
+  }, [policeFaceImage]);
+
+  useEffect(() => {
+    if (swatFaceImage) {
+      console.log('[弹窗] 特警图片同步, 长度:', swatFaceImage.length);
+      setSwatImage(swatFaceImage);
+    }
+  }, [swatFaceImage]);
 
   const handleNext = async () => {
     if (current === 0) {
@@ -343,6 +363,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
         open={open}
         onCancel={handleReset}
         width={680}
+        destroyOnClose
         className="exit-confirm-modal"
         footer={[
           <Button key="cancel" onClick={handleReset}>取消</Button>,

@@ -26,10 +26,8 @@ const useDoorEvents = ({ onEvent }) => {
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        if (data?.UserID) {
-          console.log('[WebSocket] 收到事件:', data);
-          onEvent?.(data);
-        }
+        console.log('[WebSocket] 收到事件:', data.type, data.code);
+        onEvent?.(data);
       } catch (err) {
         console.warn('[WebSocket] 解析消息失败:', e.data);
       }

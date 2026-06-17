@@ -16,10 +16,16 @@ cameras:
     # 是否启用认证
     auth_enabled: true
 
-# 大华门禁平台配置
+# 大华门禁平台配置（罪犯人脸识别设备）
 dahua:
   base_url: "http://192.168.100.108"
   userName: "admin"
   password: "sh123456"
   # 占位人脸图片路径（相对于 server 目录）
   placeholder_face: "imgs/face.jpeg"
+
+# 大华智能事件设备（民警/特警人脸抓拍设备）
+dahua_smart:
+  base_url: "http://192.168.100.155"
+  userName: "admin"
+  password: "sh123456"

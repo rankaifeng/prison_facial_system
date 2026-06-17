@@ -31,21 +31,41 @@ const getGreeting = () => {
 
 const Dashboard = () => {
   const [realtimeData, setRealtimeData] = useState({});
-  const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [exitModalOpen, setExitModalOpen] = useState(true);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userName, setUserName] = useState('');
   const [isAdmin, setIsAdmin] = useState(true);
   const [activePrisonerNo, setActivePrisonerNo] = useState(null);
+  const [policeFaceImage, setPoliceFaceImage] = useState(null);
+  const [swatFaceImage, setSwatFaceImage] = useState(null);
+  const [exitModalStep, setExitModalStep] = useState(0);
   const navigate = useNavigate();
 
   const handleDoorEvent = useCallback((data) => {
-    if (!data.UserID) return;
-    console.log('[门禁] 识别到用户:', data.UserID);
-    setActivePrisonerNo(data.UserID);
-    setExitModalOpen(true);
-  }, []);
+    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'step:', exitModalStep);
+    if (data.type === 'door' && data.UserID) {
+      console.log('[门禁] 识别到罪犯:', data.UserID);
+      setActivePrisonerNo(data.UserID);
+      setExitModalOpen(true);
+    } else if (data.type === 'face' && data.image_base64) {
+      const b64 = data.image_base64;
+      console.log('[智能事件] 收到图片 base64长度:', b64.length, '前50字符:', b64.substring(0, 50));
+      const img = 'data:image/jpeg;base64,' + b64;
+      if (exitModalStep === 1) {
+        console.log('[智能事件] → 存为民警图片');
+        setPoliceFaceImage(img);
+      } else if (exitModalStep === 2) {
+        console.log('[智能事件] → 存为特警图片');
+        setSwatFaceImage(img);
+      } else {
+        console.log('[智能事件] 当前步骤:', exitModalStep, '跳过');
+      }
+    } else {
+      console.log('[前端] 未知消息类型或缺少数据:', data);
+    }
+  }, [exitModalStep]);
 
   useDoorEvents({ onEvent: handleDoorEvent });
 
@@ -215,9 +235,12 @@ const Dashboard = () => {
 
       <ExitConfirmModal
         open={exitModalOpen}
-        onCancel={() => setExitModalOpen(false)}
-        onOk={() => { setExitModalOpen(false); handleDataUpdate(); }}
+        onCancel={() => { setExitModalOpen(false); setPoliceFaceImage(null); setSwatFaceImage(null); setExitModalStep(0); }}
+        onOk={() => { setExitModalOpen(false); setPoliceFaceImage(null); setSwatFaceImage(null); setExitModalStep(0); handleDataUpdate(); }}
         prisonerNo={activePrisonerNo}
+        policeFaceImage={policeFaceImage}
+        swatFaceImage={swatFaceImage}
+        onStepChange={setExitModalStep}
       />
       <EnterConfirmModal
         open={enterModalOpen}
