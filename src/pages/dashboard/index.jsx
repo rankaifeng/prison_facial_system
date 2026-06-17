@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Typography, Dropdown, ConfigProvider, theme, Modal, Button, Badge } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, PlusOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined, BellOutlined } from '@ant-design/icons';
+import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -37,15 +37,17 @@ const Dashboard = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userName, setUserName] = useState('');
   const [isAdmin, setIsAdmin] = useState(true);
-  const [doorEvents, setDoorEvents] = useState([]);
+  const [activePrisonerNo, setActivePrisonerNo] = useState(null);
   const navigate = useNavigate();
 
   const handleDoorEvent = useCallback((data) => {
     if (!data.UserID) return;
-    setDoorEvents(prev => [data, ...prev].slice(0, 50));
+    console.log('[门禁] 识别到用户:', data.UserID);
+    setActivePrisonerNo(data.UserID);
+    setExitModalOpen(true);
   }, []);
 
-  const { connected } = useDoorEvents({ onEvent: handleDoorEvent });
+  useDoorEvents({ onEvent: handleDoorEvent });
 
   useEffect(() => {
     const storedPrisonName = cache.getVal('prisonName');
@@ -133,24 +135,14 @@ const Dashboard = () => {
         </div>
         <div className="header-right">
           {isAdmin && (
-            <>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setExitModalOpen(true)}
-                className="exit-btn"
-              >
-                出监确认
-              </Button>
-              <Button
-                type="primary"
-                icon={<LoginOutlined />}
-                onClick={() => setEnterModalOpen(true)}
-                className="exit-btn"
-              >
-                入监确认
-              </Button>
-            </>
+            <Button
+              type="primary"
+              icon={<LoginOutlined />}
+              onClick={() => setEnterModalOpen(true)}
+              className="exit-btn"
+            >
+              入监确认
+            </Button>
           )}
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
@@ -218,27 +210,6 @@ const Dashboard = () => {
         <div className="right-area">
           <StatusPieChart data={realtimeData} />
           <RightPanel onDataUpdate={handleDataUpdate} />
-          <div className="door-events-panel">
-            <div className="panel-header">
-              <div className="header-left">
-                <Badge status={connected ? 'success' : 'error'} />
-                <span>门禁事件</span>
-              </div>
-              <div className="header-line"></div>
-            </div>
-            <div className="door-events-list">
-              {doorEvents.length === 0 ? (
-                <div className="event-empty">等待事件...</div>
-              ) : (
-                doorEvents.slice(0, 10).map((evt, idx) => (
-                  <div key={idx} className="door-event-item">
-                    <span className="event-user">用户ID: {evt.UserID}</span>
-                    {evt.Similarity !== undefined && <span className="event-sim">相似度: {evt.Similarity}%</span>}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -246,7 +217,7 @@ const Dashboard = () => {
         open={exitModalOpen}
         onCancel={() => setExitModalOpen(false)}
         onOk={() => { setExitModalOpen(false); handleDataUpdate(); }}
-        prisonerNo="5155016879"
+        prisonerNo={activePrisonerNo}
       />
       <EnterConfirmModal
         open={enterModalOpen}
