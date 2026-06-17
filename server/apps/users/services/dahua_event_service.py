@@ -132,10 +132,11 @@ class DahuaEventService:
         dahua_config = cls._load_config()
         username = dahua_config.get('userName', '')
         password = dahua_config.get('password', '')
-        url = dahua_config.get('event_url', '')
+        base_url = dahua_config.get('base_url', '').rstrip('/')
+        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=5'
 
-        if not url:
-            logger.error('大华 event_url 未配置')
+        if not base_url:
+            logger.error('大华 base_url 未配置')
             return
 
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
