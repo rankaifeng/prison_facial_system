@@ -300,7 +300,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
           <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
         )}
       </div>
-      <Button type="primary" onClick={() => policeInputRef.current?.click()}>确认</Button>
     </div>
   );
 
@@ -323,7 +322,6 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
           <div className="image-placeholder"><SafetyOutlined /><span>等待录入</span></div>
         )}
       </div>
-      <Button type="primary" onClick={() => swatInputRef.current?.click()}>确认</Button>
     </div>
   );
 
