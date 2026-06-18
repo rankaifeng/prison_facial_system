@@ -14,13 +14,25 @@ const PRISON_AREAS = [
   { value: '七监区', label: '七监区' },
 ];
 
-const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo }) => {
+const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
   const policeInputRef = useRef(null);
+
+  // 通知父组件当前步骤
+  useEffect(() => {
+    onStepChange?.(current);
+  }, [current, onStepChange]);
+
+  // 自动填充民警人脸图片
+  useEffect(() => {
+    if (policeFaceImage) {
+      setPoliceImage(policeFaceImage);
+    }
+  }, [policeFaceImage]);
 
   useEffect(() => {
     if (open) {

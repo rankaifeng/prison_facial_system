@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined, LoginOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -10,6 +10,7 @@ import PrisonMap from './components/PrisonMap';
 import ExitConfirmModal from './components/ExitConfirmModal';
 import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
+import OperationSelectModal from './components/OperationSelectModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
 import { realtimeStatistics } from '@/api/globApi';
 import useDoorEvents from '@/hooks/useDoorEvents';
@@ -41,91 +42,118 @@ const Dashboard = () => {
   const [policeFaceImage, setPoliceFaceImage] = useState(null);
   const [swatFaceImage, setSwatFaceImage] = useState(null);
   const [exitModalStep, setExitModalStep] = useState(0);
-  const stepRef = useRef(0);
+  const [enterModalStep, setEnterModalStep] = useState(0);
+  const [selectModalOpen, setSelectModalOpen] = useState(false);
+  const [activeOperation, setActiveOperation] = useState(null);
+  const exitStepRef = useRef(0);
+  const enterStepRef = useRef(0);
+  const activeOpRef = useRef(null);
   const navigate = useNavigate();
 
   // 同步 step 到 ref
   useEffect(() => {
-    stepRef.current = exitModalStep;
+    exitStepRef.current = exitModalStep;
   }, [exitModalStep]);
 
-  // 处理弹窗步骤变化
+  useEffect(() => {
+    enterStepRef.current = enterModalStep;
+  }, [enterModalStep]);
+
+  // 处理出监弹窗步骤变化
   const handleExitModalStepChange = useCallback((step) => {
-    console.log('[前端] 弹窗步骤变化:', step);
+    console.log('[前端] 出监弹窗步骤变化:', step);
     setExitModalStep(step);
-    
-    // 当步骤变化时，清理不再需要的图片
     if (step === 0) {
-      // 重置到信息填写步骤，清理所有图片
       setPoliceFaceImage(null);
       setSwatFaceImage(null);
     } else if (step === 1) {
-      // 进入民警确认步骤，清理特警图片（如果存在），保留民警图片
       setSwatFaceImage(null);
     } else if (step === 2) {
-      // 进入特警确认步骤，清理民警图片（如果存在），保留特警图片
+      setPoliceFaceImage(null);
+    }
+  }, []);
+
+  // 处理入监弹窗步骤变化
+  const handleEnterModalStepChange = useCallback((step) => {
+    console.log('[前端] 入监弹窗步骤变化:', step);
+    setEnterModalStep(step);
+    if (step === 0) {
       setPoliceFaceImage(null);
     }
   }, []);
 
   const handleDoorEvent = useCallback((data) => {
-    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'user_id:', data.user_id, 'step:', stepRef.current);
-    
+    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'user_id:', data.user_id);
+
     if (data.type === 'door' && data.UserID) {
-      // 门禁事件：罪犯识别
       console.log('[门禁] 识别到罪犯:', data.UserID);
       setActivePrisonerNo(data.UserID);
-      setExitModalOpen(true);
+      setSelectModalOpen(true);
     } else if (data.type === 'face' && data.image_base64) {
-      // 人脸图片事件
       const b64 = data.image_base64;
-      console.log('[智能事件] 收到图片 base64长度:', b64.length, 'user_id:', data.user_id, 'temp_id:', data.temp_id);
-      
-      // 检查是否是延迟的图片（超过3秒）
-      const currentTime = Date.now();
-      const eventTime = data.timestamp || currentTime;
-      const delay = currentTime - eventTime;
-      
-      if (delay > 3000) {
-        console.log('[智能事件] 跳过延迟图片，延迟:', delay, 'ms');
-        return;
-      }
-      
       const img = 'data:image/jpeg;base64,' + b64;
-      const currentStep = stepRef.current;
-      
-      // 检查图片是否应该分配给当前步骤
-      // 只有当弹窗打开且处于目标步骤时，才分配图片
-      if (!exitModalOpen) {
-        console.log('[前端] 弹窗未打开，跳过图片分配');
+      const op = activeOpRef.current;
+
+      if (!op) {
+        console.log('[前端] 未选择操作类型，跳过图片分配');
         return;
       }
-      
-      // 民警确认步骤（步骤1）
-      if (currentStep === 1) {
-        console.log('[智能事件] → 民警图片(最新)');
-        setPoliceFaceImage(img);
-        // 清除特警图片，确保只显示当前步骤的图片
-        setSwatFaceImage(null);
+
+      if (op === 'exit') {
+        const step = exitStepRef.current;
+        if (step === 1) {
+          console.log('[智能事件] → 出监民警图片');
+          setPoliceFaceImage(img);
+          setSwatFaceImage(null);
+        } else if (step === 2) {
+          console.log('[智能事件] → 出监特警图片');
+          setSwatFaceImage(img);
+          setPoliceFaceImage(null);
+        }
+      } else if (op === 'enter') {
+        const step = enterStepRef.current;
+        if (step === 1) {
+          console.log('[智能事件] → 入监民警图片');
+          setPoliceFaceImage(img);
+        }
       }
-      // 特警确认步骤（步骤2）
-      else if (currentStep === 2) {
-        console.log('[智能事件] → 特警图片(最新)');
-        setSwatFaceImage(img);
-        // 清除民警图片，确保只显示当前步骤的图片
-        setPoliceFaceImage(null);
-      } else {
-        console.log('[智能事件] 当前步骤:', currentStep, '跳过图片分配');
-      }
-    } else if (data.type === 'metadata' && data.user_id) {
-      // 元数据事件（用于调试）
-      console.log('[智能事件] 收到元数据 user_id:', data.user_id, 'code:', data.code);
-    } else {
-      console.log('[前端] 未知消息类型或缺少数据:', data);
     }
-  }, [exitModalOpen]);
+  }, []);
 
   useDoorEvents({ onEvent: handleDoorEvent });
+
+  const handleOperationSelect = useCallback((type) => {
+    setSelectModalOpen(false);
+    if (!type) return;
+
+    setActiveOperation(type);
+    activeOpRef.current = type;
+    setPoliceFaceImage(null);
+    setSwatFaceImage(null);
+
+    if (type === 'exit') {
+      setExitModalOpen(true);
+    } else if (type === 'enter') {
+      setEnterModalOpen(true);
+    }
+  }, []);
+
+  const resetExitModal = useCallback(() => {
+    setExitModalOpen(false);
+    setPoliceFaceImage(null);
+    setSwatFaceImage(null);
+    setExitModalStep(0);
+    setActiveOperation(null);
+    activeOpRef.current = null;
+  }, []);
+
+  const resetEnterModal = useCallback(() => {
+    setEnterModalOpen(false);
+    setPoliceFaceImage(null);
+    setEnterModalStep(0);
+    setActiveOperation(null);
+    activeOpRef.current = null;
+  }, []);
 
   useEffect(() => {
     const storedPrisonName = cache.getVal('prisonName');
@@ -212,16 +240,6 @@ const Dashboard = () => {
           <span className="welcome-name">{userName}</span>
         </div>
         <div className="header-right">
-          {isAdmin && (
-            <Button
-              type="primary"
-              icon={<LoginOutlined />}
-              onClick={() => setEnterModalOpen(true)}
-              className="exit-btn"
-            >
-              入监确认
-            </Button>
-          )}
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
             className="fullscreen-btn"
@@ -291,10 +309,15 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <OperationSelectModal
+        open={selectModalOpen}
+        onSelect={handleOperationSelect}
+        prisonerNo={activePrisonerNo}
+      />
       <ExitConfirmModal
         open={exitModalOpen}
-        onCancel={() => { setExitModalOpen(false); setPoliceFaceImage(null); setSwatFaceImage(null); setExitModalStep(0); }}
-        onOk={() => { setExitModalOpen(false); setPoliceFaceImage(null); setSwatFaceImage(null); setExitModalStep(0); handleDataUpdate(); }}
+        onCancel={resetExitModal}
+        onOk={() => { resetExitModal(); handleDataUpdate(); }}
         prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
         swatFaceImage={swatFaceImage}
@@ -302,9 +325,11 @@ const Dashboard = () => {
       />
       <EnterConfirmModal
         open={enterModalOpen}
-        onCancel={() => setEnterModalOpen(false)}
-        onOk={() => { setEnterModalOpen(false); handleDataUpdate(); }}
-        prisonerNo="5155016879"
+        onCancel={resetEnterModal}
+        onOk={() => { resetEnterModal(); handleDataUpdate(); }}
+        prisonerNo={activePrisonerNo}
+        policeFaceImage={policeFaceImage}
+        onStepChange={handleEnterModalStepChange}
       />
       <ReturnConfirmModal
         open={returnModalOpen}
