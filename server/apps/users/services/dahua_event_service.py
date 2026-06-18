@@ -220,7 +220,7 @@ class DahuaEventService:
             logger.error('大华 base_url 未配置')
             return
 
-        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[CitizenPictureCompare]&heartbeat=5'
+        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=5'
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
 
         while cls._running:
