@@ -773,6 +773,7 @@ curl -X GET "http://localhost:8000/user_manage/statistics/realtime" \
 cd server
 python3 manage.py runserver
 python3 manage.py cleanup_data
+python manage.py sync_prisoner_data --real-api --dahua
 ```
 
 服务将运行在 `http://localhost:8000`

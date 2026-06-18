@@ -114,7 +114,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
       formData.append('prisoner_no', formValues.prisonerNo);
       formData.append('prisoner_name', formValues.prisonerName);
       formData.append('prison_area', formValues.prisonArea);
-      formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD') : null);
+      formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD HH:mm') : null);
       formData.append('police_face', policeImage);
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
@@ -167,7 +167,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
             label="入监日期"
             rules={[{ required: true, message: '请选择入监日期' }]}
           >
-            <DatePicker style={{ width: '100%' }} placeholder="请选择入监日期" />
+            <DatePicker style={{ width: '100%' }} placeholder="请选择入监日期" showTime format="YYYY-MM-DD HH:mm" />
           </Form.Item>
 
           <Form.Item

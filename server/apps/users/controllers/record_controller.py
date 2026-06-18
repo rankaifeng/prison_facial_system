@@ -116,6 +116,14 @@ class EntryRecordController(APIView):
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        entry_datetime = RecordService.parse_datetime(entry_date)
+        if not entry_datetime:
+            return Response({
+                'code': 0,
+                'msg': '日期格式错误，请使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm 格式',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         police_face_path = RecordService.save_image(police_face, 'police')
 
         success, message, result = RecordService.create_entry_record(
@@ -124,7 +132,7 @@ class EntryRecordController(APIView):
             prisoner_photo=prisoner_photo,
             prison_area=prison_area,
             prison_area_name=prison_area_name,
-            entry_date=entry_date,
+            entry_date=entry_datetime,
             police_face=police_face_path,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,

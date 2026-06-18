@@ -225,7 +225,6 @@ class DahuaEventService:
 
         while cls._running:
             try:
-                logger.info(f'[门禁事件] 正在连接: {url}')
                 resp = requests.get(url, auth=auth, stream=True, timeout=(10, None))
                 logger.info(f'[门禁事件] 连接成功, status={resp.status_code}')
 
@@ -246,8 +245,6 @@ class DahuaEventService:
                         event = cls._parse_event(part)
                         if event:
                             event['type'] = 'door'
-                            print(f'[门禁事件] {event["code"]}: UserID={event.get("UserID", "")}')
-                            logger.info(f'[门禁事件] {event["code"]}')
                             cls._broadcast(event)
 
             except requests.RequestException as e:
@@ -286,7 +283,6 @@ class DahuaEventService:
         password = smart.get('password', dahua.get('password', ''))
         base_url = smart.get('base_url', '').rstrip('/')
 
-        print(f'[智能事件] 配置: base_url={base_url}, username={username}')
 
         if not base_url:
             print('[智能事件] 错误: base_url 未配置')
@@ -300,16 +296,13 @@ class DahuaEventService:
             'heartbeat': 5,
         }
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
-        print(f'[智能事件] 连接: {url}')
 
         while cls._running:
             try:
-                print('[智能事件] 正在连接...')
                 resp = requests.get(url, params=params, auth=auth, stream=True, timeout=(10, 120))
                 print(f'[智能事件] 连接成功, status={resp.status_code}')
 
                 if resp.status_code != 200:
-                    print(f'[智能事件] 请求失败: {resp.status_code}')
                     time.sleep(5)
                     continue
 
@@ -317,11 +310,9 @@ class DahuaEventService:
                 content_type = resp.headers.get('Content-Type', '')
                 boundary_match = re.search(r'boundary=(.+)', content_type)
                 if not boundary_match:
-                    print(f'[智能事件] 未找到 boundary, Content-Type: {content_type}')
                     time.sleep(5)
                     continue
                 boundary = boundary_match.group(1).strip()
-                print(f'[智能事件] Boundary: [{boundary}]')
 
                 raw = resp.raw
                 buf = b''
@@ -365,7 +356,6 @@ class DahuaEventService:
                         # 精确读取图片数据
                         body, buf = cls._read_bytes(raw, cl, buf)
                         image_b64 = base64.b64encode(body).decode('ascii')
-                        print(f'[智能事件] 图片: {len(body)} bytes, base64: {len(image_b64)} chars')
                         cls._broadcast({'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64})
 
                     elif 'text' in ct.lower() or 'plain' in ct.lower():
@@ -380,15 +370,12 @@ class DahuaEventService:
                                 eline = eline.strip()
                                 if '.UserID=' in eline:
                                     event_user_id = eline.split('=', 1)[1].strip()
-                            print(f'[智能事件] 事件数据: UserID={event_user_id}')
                             for eline in body_text.split('\n'):
                                 eline = eline.strip()
                                 if eline:
                                     print(f'  {eline}')
 
             except requests.RequestException as e:
-                print(f'[智能事件] 连接异常: {e}')
                 time.sleep(5)
             except Exception as e:
-                print(f'[智能事件] 未知异常: {type(e).__name__}: {e}')
                 time.sleep(5)
