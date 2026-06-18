@@ -113,11 +113,7 @@ const ReturnStatistics = () => {
       key: 'video',
       width: 100,
       render: (_, record) => {
-        return <VideoPlayer
-          startTime={record.start_time}
-          endTime={record.end_time}
-          cameraIndex={1}
-        />
+        return <VideoPlayer itemData={record} />
       }
     },
   ];

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Tag, Button } from 'antd';
+import { Card, Row, Col, Tag, Button, Image } from 'antd';
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -8,10 +8,10 @@ import {
   WomanOutlined,
   LockOutlined,
   FileTextOutlined,
-  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { archive, record } from '@/api/globApi';
 import TableLayout from '@/components/table-layout';
+import VideoPlayer from '@/components/video-player';
 
 const PrisonerDetail = () => {
   const { id } = useParams();
@@ -57,7 +57,7 @@ const PrisonerDetail = () => {
       key: 'police_face',
       width: 100,
       render: (val) => val ? (
-        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
         <Tag color="default">未录入</Tag>
       ),
@@ -68,7 +68,7 @@ const PrisonerDetail = () => {
       key: 'swat_face',
       width: 100,
       render: (val) => val ? (
-        <img src={val} alt="已确认" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
         <Tag color="default">未录入</Tag>
       ),
@@ -79,15 +79,7 @@ const PrisonerDetail = () => {
       dataIndex: 'video_url',
       key: 'video_url',
       width: 120,
-      render: (val) => val ? (
-        <video
-          src={val}
-          controls
-          style={{ width: 100, height: 50, objectFit: 'cover', borderRadius: 4 }}
-        />
-      ) : (
-        <Tag color="default" icon={<VideoCameraOutlined />}>无录像</Tag>
-      ),
+      render: (_, record) => <VideoPlayer itemData={record} />,
     },
   ];
 

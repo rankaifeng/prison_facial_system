@@ -291,21 +291,31 @@ class VideoStreamUrlController(APIView):
             print(f"[Cache] 命中缓存，直接返回: {cached_path}")
             return self._build_response(request, cached_path.name, camera, False, is_cached=True)
 
+        from apps.users.rtsp_to_mp4 import record_rtsp_to_mp4
+
         last_error = None
         for i, rtsp_url in enumerate(rtsp_urls):
-            # 直接下载到 videos 目录
             video_path = _get_video_cache_path(start_time, end_time, camera_index)
             video_path.parent.mkdir(parents=True, exist_ok=True)
 
-            max_wait = duration + 30  # 时长 + 30秒缓冲
-            success, error = _try_ffmpeg_mp4(rtsp_url, video_path, duration, max_wait=max_wait)
-            if success:
+            max_wait = duration + 30
+            result = record_rtsp_to_mp4(
+                rtsp_url=rtsp_url,
+                output_path=str(video_path),
+                duration=duration,
+                timeout=max_wait,
+                stall_timeout=8,
+                overwrite=True,
+                pre_probe=True,
+                verbose=True,
+            )
+            if result["success"]:
                 print(f"[FFmpeg] 视频下载完成: {video_path}")
                 return self._build_response(request, video_path.name, camera, False, is_cached=False)
 
-            if error:
-                last_error = error
-                print(f"[FFmpeg] URL {i+1} 失败: {error}")
+            if result["message"]:
+                last_error = result["message"]
+                print(f"[FFmpeg] URL {i+1} 失败: {last_error}")
 
         user_msg = self._translate_error(last_error or '未知错误')
         return Response({
