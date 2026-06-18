@@ -772,6 +772,7 @@ curl -X GET "http://localhost:8000/user_manage/statistics/realtime" \
 ```bash
 cd server
 python3 manage.py runserver
+python3 manage.py cleanup_data
 ```
 
 服务将运行在 `http://localhost:8000`

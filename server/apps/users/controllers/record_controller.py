@@ -106,6 +106,8 @@ class EntryRecordController(APIView):
         police_face = data.get('police_face')
         entry_status = data.get('entry_status', 'normal')
         abnormal_reason = data.get('abnormal_reason', '')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
 
         if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
             return Response({
@@ -128,6 +130,8 @@ class EntryRecordController(APIView):
             operator_name=request.user.first_name or request.user.username,
             entry_status=entry_status,
             abnormal_reason=abnormal_reason,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         if not success:

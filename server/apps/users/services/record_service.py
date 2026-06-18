@@ -126,8 +126,8 @@ class RecordService(BaseService):
                 video_url='',
             )
 
-            # 更新统计（所有出监原因都计入）
-            stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
+            # 更新统计（所有出监原因都计入，统一用 prison_area_name 作为 key）
+            stat = StatisticsRepository.get_or_create_daily_stats(prison_area_name, prison_area_name)
             stat.exit_count += 1
             stat.in_prison_count -= 1
 
@@ -147,9 +147,17 @@ class RecordService(BaseService):
     @staticmethod
     def create_entry_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
-        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None
+        entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None,
+        start_time=None, end_time=None
     ):
+        from datetime import date as date_cls
+
         with transaction.atomic():
+            # 查找该罪犯的最后一条出监记录
+            exit_record = RecordRepository.get_last_exit_by_prisoner_no(prisoner_no)
+            exit_reason = exit_record.reason if exit_record else None
+            print(f'[入监DEBUG] prisoner_no={prisoner_no}, prison_area={prison_area}, exit_record={exit_record}, exit_reason={exit_reason}')
+
             record = RecordRepository.create(
                 prisoner_no=prisoner_no,
                 prisoner_name=prisoner_name,
@@ -164,12 +172,50 @@ class RecordService(BaseService):
                 operator_name=operator_name,
                 status=entry_status or 'normal',
                 abnormal_reason=abnormal_reason or '',
+                start_time=start_time,
+                end_time=end_time,
+                video_url='',
             )
 
-            stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
+            # 统一用 prison_area_name 作为统计 key，避免 ID/名称不一致
+            stat = StatisticsRepository.get_or_create_daily_stats(prison_area_name, prison_area_name)
             stat.entry_count += 1
+            print(f'[入监DEBUG] 今日stat: id={stat.id}, prison_area={stat.prison_area}, exit_count={stat.exit_count}')
+
+            # 如果有对应的出监记录，回退出监统计
+            if exit_record:
+                today = date_cls.today()
+                exit_date = exit_record.exit_date
+                print(f'[入监DEBUG] exit_date={exit_date}, today={today}')
+
+                if exit_date and exit_date != today:
+                    exit_day_stat = StatisticsRepository.get_or_create_daily_stats(
+                        prison_area_name, prison_area_name, target_date=exit_date
+                    )
+                    print(f'[入监DEBUG] 跨天: exit_count {exit_day_stat.exit_count}->{max(0, exit_day_stat.exit_count - 1)}')
+                    exit_day_stat.exit_count = max(0, exit_day_stat.exit_count - 1)
+                    if exit_reason:
+                        rs = exit_day_stat.reason_stats or {}
+                        rs[exit_reason] = max(0, rs.get(exit_reason, 0) - 1)
+                        exit_day_stat.reason_stats = rs
+                    exit_day_stat.save()
+                else:
+                    print(f'[入监DEBUG] 同天: exit_count {stat.exit_count}->{max(0, stat.exit_count - 1)}')
+                    stat.exit_count = max(0, stat.exit_count - 1)
+                    if exit_reason:
+                        reason_stats = stat.reason_stats or {}
+                        reason_stats[exit_reason] = max(0, reason_stats.get(exit_reason, 0) - 1)
+                        stat.reason_stats = reason_stats
+            else:
+                print(f'[入监DEBUG] 警告: 未找到罪犯 {prisoner_no} 的出监记录')
+
             stat.save()
+            print(f'[入监DEBUG] 保存后: exit_count={stat.exit_count}, entry_count={stat.entry_count}')
             logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
+
+            # 启动后台线程生成视频
+            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
+            t.start()
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -180,10 +226,14 @@ class RecordService(BaseService):
         start_time=None, end_time=None
     ):
         """回监记录：与入监类似，但需要处理同一编号回监时的统计回退逻辑"""
+        from datetime import date as date_cls
+
         with transaction.atomic():
             # 查找该罪犯的最后一条出监记录，获取出监原因
             exit_record = RecordRepository.get_last_exit_by_prisoner_no(prisoner_no)
             exit_reason = exit_record.reason if exit_record else None
+
+            print(f'[回监DEBUG] prisoner_no={prisoner_no}, prison_area={prison_area}, exit_record={exit_record}, exit_reason={exit_reason}')
 
             record = RecordRepository.create(
                 prisoner_no=prisoner_no,
@@ -203,23 +253,48 @@ class RecordService(BaseService):
                 end_time=end_time,
             )
 
-            stat = StatisticsRepository.get_or_create_daily_stats(prison_area, prison_area_name)
+            # 今日入监数 +1，统一用 prison_area_name 作为统计 key
+            stat = StatisticsRepository.get_or_create_daily_stats(prison_area_name, prison_area_name)
             stat.entry_count += 1
+            print(f'[回监DEBUG] 今日stat: id={stat.id}, prison_area={stat.prison_area}, exit_count={stat.exit_count}, entry_count={stat.entry_count}')
 
-            # 如果有对应的出监记录（同一编号回监），需要回退统计数据
+            # 如果有对应的出监记录，需要回退出监统计数据
             if exit_record:
-                stat.exit_count = max(0, stat.exit_count - 1)
-                stat.in_prison_count += 1
-                if exit_reason:
-                    reason_stats = stat.reason_stats or {}
-                    current_count = reason_stats.get(exit_reason, 0)
-                    reason_stats[exit_reason] = max(0, current_count - 1)
-                    stat.reason_stats = reason_stats
+                today = date_cls.today()
+                exit_date = exit_record.exit_date
+                print(f'[回监DEBUG] exit_date={exit_date}, today={today}, same_day={exit_date == today}')
+
+                if exit_date and exit_date != today:
+                    # 出监发生在其他天：修改出监那天的统计
+                    exit_day_stat = StatisticsRepository.get_or_create_daily_stats(
+                        prison_area_name, prison_area_name, target_date=exit_date
+                    )
+                    print(f'[回监DEBUG] 跨天修改: stat_id={exit_day_stat.id}, exit_count={exit_day_stat.exit_count}->{max(0, exit_day_stat.exit_count - 1)}')
+                    exit_day_stat.exit_count = max(0, exit_day_stat.exit_count - 1)
+                    if exit_reason:
+                        rs = exit_day_stat.reason_stats or {}
+                        rs[exit_reason] = max(0, rs.get(exit_reason, 0) - 1)
+                        exit_day_stat.reason_stats = rs
+                    exit_day_stat.save()
+                    # 今日在监人数 +1
+                    stat.in_prison_count += 1
+                else:
+                    # 出监发生在今天：修改今日统计（与之前逻辑一致）
+                    print(f'[回监DEBUG] 同天修改: exit_count={stat.exit_count}->{max(0, stat.exit_count - 1)}')
+                    stat.exit_count = max(0, stat.exit_count - 1)
+                    stat.in_prison_count += 1
+                    if exit_reason:
+                        reason_stats = stat.reason_stats or {}
+                        current_count = reason_stats.get(exit_reason, 0)
+                        reason_stats[exit_reason] = max(0, current_count - 1)
+                        stat.reason_stats = reason_stats
             else:
                 # 没有对应出监记录，说明该编号之前不在统计数据中（可能是新收入监）
+                print(f'[回监DEBUG] 警告: 未找到罪犯 {prisoner_no} 的出监记录')
                 stat.in_prison_count += 1
 
             stat.save()
+            print(f'[回监DEBUG] 保存后: exit_count={stat.exit_count}, entry_count={stat.entry_count}')
             logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 
             # 启动后台线程生成视频

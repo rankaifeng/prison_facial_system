@@ -20,6 +20,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
   const [policeImage, setPoliceImage] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
+  const [startTime, setStartTime] = useState(null);
   const policeInputRef = useRef(null);
 
   // 通知父组件当前步骤
@@ -40,6 +41,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
       setCurrent(0);
       setPoliceImage(null);
       setFormValues({});
+      setStartTime(null);
 
       // 根据编号查询罪犯信息并回显
       if (prisonerNo) {
@@ -71,6 +73,15 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
       try {
         const values = await form.validateFields();
         setFormValues(values);
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - 2);
+        const start = now.getFullYear().toString().padStart(4, '0') +
+          (now.getMonth() + 1).toString().padStart(2, '0') +
+          now.getDate().toString().padStart(2, '0') + 'T' +
+          now.getHours().toString().padStart(2, '0') +
+          now.getMinutes().toString().padStart(2, '0') +
+          now.getSeconds().toString().padStart(2, '0');
+        setStartTime(start);
         setCurrent(1);
       } catch {
         return;
@@ -90,6 +101,15 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
 
   const handleSubmit = async () => {
     try {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 2);
+      const end = now.getFullYear().toString().padStart(4, '0') +
+        (now.getMonth() + 1).toString().padStart(2, '0') +
+        now.getDate().toString().padStart(2, '0') + 'T' +
+        now.getHours().toString().padStart(2, '0') +
+        now.getMinutes().toString().padStart(2, '0') +
+        now.getSeconds().toString().padStart(2, '0');
+
       const formData = new FormData();
       formData.append('prisoner_no', formValues.prisonerNo);
       formData.append('prisoner_name', formValues.prisonerName);
@@ -98,6 +118,8 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
       formData.append('police_face', policeImage);
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
+      formData.append('start_time', startTime);
+      formData.append('end_time', end);
 
       const res = await entryRecord.submit(formData);
       if (res.code === 1) {
@@ -116,6 +138,7 @@ const EnterConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, 
     setCurrent(0);
     setPoliceImage(null);
     setFormValues({});
+    setStartTime(null);
     onCancel?.();
   };
 
