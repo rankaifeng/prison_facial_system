@@ -31,7 +31,7 @@ const getGreeting = () => {
 
 const Dashboard = () => {
   const [realtimeData, setRealtimeData] = useState({});
-  const [exitModalOpen, setExitModalOpen] = useState(true);
+  const [exitModalOpen, setExitModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [enterModalOpen, setEnterModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -41,31 +41,89 @@ const Dashboard = () => {
   const [policeFaceImage, setPoliceFaceImage] = useState(null);
   const [swatFaceImage, setSwatFaceImage] = useState(null);
   const [exitModalStep, setExitModalStep] = useState(0);
+  const stepRef = useRef(0);
   const navigate = useNavigate();
 
+  // 同步 step 到 ref
+  useEffect(() => {
+    stepRef.current = exitModalStep;
+  }, [exitModalStep]);
+
+  // 处理弹窗步骤变化
+  const handleExitModalStepChange = useCallback((step) => {
+    console.log('[前端] 弹窗步骤变化:', step);
+    setExitModalStep(step);
+    
+    // 当步骤变化时，清理不再需要的图片
+    if (step === 0) {
+      // 重置到信息填写步骤，清理所有图片
+      setPoliceFaceImage(null);
+      setSwatFaceImage(null);
+    } else if (step === 1) {
+      // 进入民警确认步骤，清理特警图片（如果存在），保留民警图片
+      setSwatFaceImage(null);
+    } else if (step === 2) {
+      // 进入特警确认步骤，清理民警图片（如果存在），保留特警图片
+      setPoliceFaceImage(null);
+    }
+  }, []);
+
   const handleDoorEvent = useCallback((data) => {
-    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'step:', exitModalStep);
+    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'user_id:', data.user_id, 'step:', stepRef.current);
+    
     if (data.type === 'door' && data.UserID) {
+      // 门禁事件：罪犯识别
       console.log('[门禁] 识别到罪犯:', data.UserID);
       setActivePrisonerNo(data.UserID);
       setExitModalOpen(true);
     } else if (data.type === 'face' && data.image_base64) {
+      // 人脸图片事件
       const b64 = data.image_base64;
-      console.log('[智能事件] 收到图片 base64长度:', b64.length, '前50字符:', b64.substring(0, 50));
-      const img = 'data:image/jpeg;base64,' + b64;
-      if (exitModalStep === 1) {
-        console.log('[智能事件] → 存为民警图片');
-        setPoliceFaceImage(img);
-      } else if (exitModalStep === 2) {
-        console.log('[智能事件] → 存为特警图片');
-        setSwatFaceImage(img);
-      } else {
-        console.log('[智能事件] 当前步骤:', exitModalStep, '跳过');
+      console.log('[智能事件] 收到图片 base64长度:', b64.length, 'user_id:', data.user_id, 'temp_id:', data.temp_id);
+      
+      // 检查是否是延迟的图片（超过3秒）
+      const currentTime = Date.now();
+      const eventTime = data.timestamp || currentTime;
+      const delay = currentTime - eventTime;
+      
+      if (delay > 3000) {
+        console.log('[智能事件] 跳过延迟图片，延迟:', delay, 'ms');
+        return;
       }
+      
+      const img = 'data:image/jpeg;base64,' + b64;
+      const currentStep = stepRef.current;
+      
+      // 检查图片是否应该分配给当前步骤
+      // 只有当弹窗打开且处于目标步骤时，才分配图片
+      if (!exitModalOpen) {
+        console.log('[前端] 弹窗未打开，跳过图片分配');
+        return;
+      }
+      
+      // 民警确认步骤（步骤1）
+      if (currentStep === 1) {
+        console.log('[智能事件] → 民警图片(最新)');
+        setPoliceFaceImage(img);
+        // 清除特警图片，确保只显示当前步骤的图片
+        setSwatFaceImage(null);
+      }
+      // 特警确认步骤（步骤2）
+      else if (currentStep === 2) {
+        console.log('[智能事件] → 特警图片(最新)');
+        setSwatFaceImage(img);
+        // 清除民警图片，确保只显示当前步骤的图片
+        setPoliceFaceImage(null);
+      } else {
+        console.log('[智能事件] 当前步骤:', currentStep, '跳过图片分配');
+      }
+    } else if (data.type === 'metadata' && data.user_id) {
+      // 元数据事件（用于调试）
+      console.log('[智能事件] 收到元数据 user_id:', data.user_id, 'code:', data.code);
     } else {
       console.log('[前端] 未知消息类型或缺少数据:', data);
     }
-  }, [exitModalStep]);
+  }, [exitModalOpen]);
 
   useDoorEvents({ onEvent: handleDoorEvent });
 
@@ -240,7 +298,7 @@ const Dashboard = () => {
         prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
         swatFaceImage={swatFaceImage}
-        onStepChange={setExitModalStep}
+        onStepChange={handleExitModalStepChange}
       />
       <EnterConfirmModal
         open={enterModalOpen}

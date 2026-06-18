@@ -63,6 +63,9 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
       setPoliceImage(null);
       setSwatImage(null);
       setArmedPoliceSignature(null);
+      
+      // 通知父组件重置图片状态
+      onStepChange?.(0);
 
       // 获取出监原因列表
       const fetchExitTypes = async () => {
@@ -98,7 +101,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
         });
       }
     }
-  }, [open, prisonerNo, form]);
+  }, [open, prisonerNo, form, onStepChange]);
 
   // 通知父组件当前步骤
   useEffect(() => {

@@ -220,7 +220,7 @@ class DahuaEventService:
             logger.error('大华 base_url 未配置')
             return
 
-        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=5'
+        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[CitizenPictureCompare]&heartbeat=5'
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
 
         while cls._running:
@@ -255,6 +255,28 @@ class DahuaEventService:
                 time.sleep(5)
 
     @classmethod
+    def _read_line(cls, raw, buf):
+        """从流中读取一行，返回 (行内容, 剩余buffer)"""
+        while b'\n' not in buf:
+            chunk = raw.read(512)
+            if not chunk:
+                return None, buf
+            buf += chunk
+        line, buf = buf.split(b'\n', 1)
+        return line.rstrip(b'\r'), buf
+
+    @classmethod
+    def _read_bytes(cls, raw, length, buf):
+        """从流中精确读取指定字节数"""
+        while len(buf) < length:
+            need = length - len(buf)
+            chunk = raw.read(min(need, 65536))
+            if not chunk:
+                break
+            buf += chunk
+        return buf[:length], buf[length:]
+
+    @classmethod
     def _run_smart_event(cls):
         """民警/特警人脸抓拍智能事件订阅（192.168.100.155）"""
         config = cls._load_config()
@@ -270,98 +292,103 @@ class DahuaEventService:
             print('[智能事件] 错误: base_url 未配置')
             return
 
-        url = f'{base_url}/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=[All]&heartbeat=5'
+        url = f'{base_url}/cgi-bin/snapManager.cgi'
+        params = {
+            'action': 'attachFileProc',
+            'Flags[0]': 'Event',
+            'Events': '[AccessControl]',
+            'heartbeat': 5,
+        }
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
         print(f'[智能事件] 连接: {url}')
-
-        pending_event = None
-        # 大华 multipart 实际分隔符是 \r\n--myboundary
-        full_boundary = '\r\n--myboundary'
-        short_boundary = '--myboundary'
 
         while cls._running:
             try:
                 print('[智能事件] 正在连接...')
-                resp = requests.get(url, auth=auth, stream=True, timeout=(10, None))
+                resp = requests.get(url, params=params, auth=auth, stream=True, timeout=(10, 120))
                 print(f'[智能事件] 连接成功, status={resp.status_code}')
 
-                buffer = ''
-                for chunk in resp.iter_content(chunk_size=4096):
-                    if not cls._running:
+                if resp.status_code != 200:
+                    print(f'[智能事件] 请求失败: {resp.status_code}')
+                    time.sleep(5)
+                    continue
+
+                # 从 Content-Type 提取 boundary
+                content_type = resp.headers.get('Content-Type', '')
+                boundary_match = re.search(r'boundary=(.+)', content_type)
+                if not boundary_match:
+                    print(f'[智能事件] 未找到 boundary, Content-Type: {content_type}')
+                    time.sleep(5)
+                    continue
+                boundary = boundary_match.group(1).strip()
+                print(f'[智能事件] Boundary: [{boundary}]')
+
+                raw = resp.raw
+                buf = b''
+                event_user_id = ''
+
+                while cls._running:
+                    # 读一行
+                    line, buf = cls._read_line(raw, buf)
+                    if line is None:
                         break
-                    if not chunk:
+
+                    line_str = line.decode('utf-8', errors='replace').strip()
+
+                    # 跳过 boundary 行和空行
+                    if not line_str or boundary in line_str or line_str == '--':
                         continue
 
-                    buffer += chunk.decode('latin-1')
+                    # 这是 header 行，继续读完整个 header
+                    header_lines = [line_str]
+                    while True:
+                        hline, buf = cls._read_line(raw, buf)
+                        if hline is None:
+                            break
+                        hline_str = hline.decode('utf-8', errors='replace').strip()
+                        if not hline_str:  # 空行 = header 结束
+                            break
+                        header_lines.append(hline_str)
 
-                    # 按 boundary 分割处理（优先用 \r\n--myboundary）
-                    while full_boundary in buffer or short_boundary in buffer:
-                        # 选择匹配的分隔符
-                        if full_boundary in buffer:
-                            delim = full_boundary
+                    header = '\n'.join(header_lines)
+
+                    ct_match = re.search(r'Content-Type:\s*(.+)', header, re.IGNORECASE)
+                    ct = ct_match.group(1).strip() if ct_match else 'unknown'
+
+                    cl_match = re.search(r'Content-Length:\s*(\d+)', header, re.IGNORECASE)
+                    cl = int(cl_match.group(1)) if cl_match else 0
+
+                    if cl == 0:
+                        continue
+
+                    if 'image' in ct.lower():
+                        # 精确读取图片数据
+                        body, buf = cls._read_bytes(raw, cl, buf)
+                        image_b64 = base64.b64encode(body).decode('ascii')
+                        print(f'[智能事件] 图片: {len(body)} bytes, base64: {len(image_b64)} chars')
+                        cls._broadcast({'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64})
+
+                    elif 'text' in ct.lower() or 'plain' in ct.lower():
+                        # 精确读取文本数据
+                        body, buf = cls._read_bytes(raw, cl, buf)
+                        body_text = body.decode('utf-8', errors='replace').strip()
+
+                        if body_text == 'Heartbeat':
+                            print(f'[智能事件] 心跳')
                         else:
-                            delim = short_boundary
-
-                        idx = buffer.index(delim)
-                        section = buffer[:idx]
-                        buffer = buffer[idx + len(delim):]
-
-                        # 跳过 boundary 后的换行
-                        if buffer.startswith('\r\n'):
-                            buffer = buffer[2:]
-                        elif buffer.startswith('\n'):
-                            buffer = buffer[1:]
-
-                        section = section.strip()
-                        if not section:
-                            continue
-
-                        # 按空行分隔 header 和 body
-                        header_part = ''
-                        body = ''
-                        for sep in ['\r\n\r\n', '\n\n']:
-                            pos = section.find(sep)
-                            if pos != -1:
-                                header_part = section[:pos]
-                                body = section[pos + len(sep):]
-                                break
-
-                        if not header_part:
-                            # 没有 header，整个 section 当作 body（兼容）
-                            print(f'[智能事件] 无header, section前100字符: {section[:100]}')
-                            continue
-
-                        result = cls._parse_section(header_part, body)
-                        if result is None:
-                            continue
-
-                        if '_image_data' in result:
-                            img_bytes = result['_image_data']
-                            img_hash = hashlib.md5(img_bytes).hexdigest()[:8]
-                            img_head = img_bytes[:4].hex()
-                            image_b64 = base64.b64encode(img_bytes).decode('ascii')
-                            print(f'[智能事件] === 图片 #{img_hash} ===')
-                            print(f'  大小: {len(img_bytes)} bytes, 文件头: {img_head}, base64: {len(image_b64)} chars')
-                            if pending_event:
-                                pending_event['image_base64'] = image_b64
-                                print(f'  配对广播: code={pending_event.get("code")} UserID={pending_event.get("UserID")}')
-                                cls._broadcast(pending_event)
-                                pending_event = None
-                            else:
-                                print(f'  单独广播（无配对元数据）{image_b64}')
-                                cls._broadcast({'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64})
-                        else:
-                            if pending_event:
-                                cls._broadcast(pending_event)
-                            pending_event = result
-                            pending_event['type'] = 'face'
-                            print(f'[智能事件] 元数据: code={result.get("code")} UserID={result.get("UserID")}')
+                            for eline in body_text.split('\n'):
+                                eline = eline.strip()
+                                if '.UserID=' in eline:
+                                    event_user_id = eline.split('=', 1)[1].strip()
+                            print(f'[智能事件] 事件数据: UserID={event_user_id}')
+                            for eline in body_text.split('\n'):
+                                eline = eline.strip()
+                                if eline:
+                                    print(f'  {eline}')
 
             except requests.RequestException as e:
                 print(f'[智能事件] 连接异常: {e}')
-                pending_event = None
                 time.sleep(5)
             except Exception as e:
                 print(f'[智能事件] 未知异常: {type(e).__name__}: {e}')
-                pending_event = None
                 time.sleep(5)
