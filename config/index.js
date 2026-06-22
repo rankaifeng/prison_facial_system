@@ -5,10 +5,10 @@ const returnBaseUrl = () => {
     if (MODE === 'development') {
         return apiBaseUrl;
     }
+    // 生产环境：通过 Nginx 代理，使用同源地址
     const parsedUrl = window.location.href.match(/(http[s]?:\/\/[^\/]+)/);
     if (parsedUrl && parsedUrl[0]) {
-        const base = `${parsedUrl[0].replace(/:\d+$/, '')}:8793/api/`;
-        return base;
+        return `${parsedUrl[0]}/api/`;
     }
 }
 export const BASE_URL = returnBaseUrl();

@@ -131,4 +131,4 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'config.exception_handler.custom_exception_handler',
 }
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = True  # 内网环境，允许所有来源

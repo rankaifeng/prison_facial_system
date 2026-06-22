@@ -2,33 +2,70 @@ version: '3.8'
 
 services:
   backend:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
     image: prison-backend:latest
     container_name: prison-backend
-    command: ["/app/entrypoint.sh"]
-    ports:
-      - "8000:8000"
+    command: ["/app/deployment-entrypoint.sh"]
+    restart: always
     environment:
       - DEBUG=False
-      - SECRET_KEY=your-secret-key-change-in-production
-      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - SECRET_KEY=change-this-to-a-random-string-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,*
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=prison_system
       - DB_USER=root
-      - DB_PASSWORD=123456
+      - DB_PASSWORD=Prison@2026
       - REDIS_URL=redis://redis:6379/0
       - RTI_API_BASE=http://10.2.50.16:4092
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - ./media:/app/media
+      - media-data:/app/media
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - prison-network
+
+  celery-beat:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    image: prison-backend:latest
+    container_name: prison-celery-beat
+    command: ["/app/celery-entrypoint.sh"]
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=change-this-to-a-random-string-in-production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=prison_system
+      - DB_USER=root
+      - DB_PASSWORD=Prison@2026
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - prison-network
 
   frontend:
+    build:
+      context: ..
+      dockerfile: deployment/frontend/Dockerfile
     image: prison-frontend:latest
     container_name: prison-frontend
+    restart: always
     ports:
       - "80:80"
     depends_on:
@@ -37,23 +74,33 @@ services:
       - prison-network
 
   mysql:
-    image: docker.1ms.run/library/mysql:8.0
+    image: mysql:8.0
     container_name: prison-mysql
+    restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD=Prison@2026
       - MYSQL_DATABASE=prison_system
-    ports:
-      - "3306:3306"
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pPrison@2026"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - prison-network
 
   redis:
-    image: docker.1ms.run/library/redis:7-alpine
+    image: redis:7-alpine
     container_name: prison-redis
-    ports:
-      - "6379:6379"
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
     networks:
       - prison-network
 
@@ -63,3 +110,5 @@ networks:
 
 volumes:
   mysql-data:
+  redis-data:
+  media-data:

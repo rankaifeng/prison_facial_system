@@ -11,11 +11,5 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
-echo "=== 运行数据库迁移 ==="
-python manage.py migrate --noinput
-
-echo "=== 同步罪犯档案数据 ==="
-python manage.py sync_prisoner_data --real-api || echo "同步罪犯数据失败，跳过继续启动"
-
-echo "=== 启动 Daphne 服务（ASGI） ==="
-exec daphne -b 0.0.0.0 -p 8000 config.asgi:application
+echo "=== 启动 Celery Beat 定时任务 ==="
+exec celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler

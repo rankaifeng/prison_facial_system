@@ -9,7 +9,9 @@ const useDoorEvents = ({ onEvent }) => {
 
   const getWsUrl = () => {
     const base = window.location.hostname || '127.0.0.1';
-    return `ws://${base}:8000/ws/door-events/`;
+    const port = window.location.port;
+    const portStr = port ? `:${port}` : '';
+    return `ws://${base}${portStr}/ws/door-events/`;
   };
 
   const connect = useCallback(() => {
