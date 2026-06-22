@@ -24,6 +24,7 @@ class PrisonerArchive(models.Model):
     room_no = models.CharField('监室号', max_length=32, blank=True, default='')
     bed_no = models.CharField('床号', max_length=32, blank=True, default='')
     status = models.CharField('在押状态', max_length=32, blank=True, default='')
+    is_released = models.BooleanField('是否已释放', default=False, db_index=True)
     entry_date = models.CharField('入监日期', max_length=20, blank=True, default='')
     arrest_org = models.CharField('逮捕机关', max_length=128, blank=True, default='')
     judgment_org = models.CharField('判决机关', max_length=128, blank=True, default='')

@@ -55,7 +55,8 @@ def generate_exit_video(record_id):
     config = load_cameras_config()
     cameras = config.get('cameras', [])
 
-    camera_index = 0
+    # 入监/回监用回监摄像头(1)，出监用出监摄像头(0)
+    camera_index = 1 if record.type == 'entry' else 0
     if camera_index >= len(cameras):
         logger.error(f"摄像头索引 {camera_index} 不存在")
         return f"摄像头不存在"
@@ -166,3 +167,17 @@ def reset_daily_stats():
     message = f'完成: {yesterday}数据已同步({synced_count}条)，{today}统计已重置({reset_count}条)'
     logger.info(message)
     return message
+
+
+@shared_task
+def sync_prisoner_data_task():
+    """每天凌晨自动同步罪犯档案数据"""
+    from django.core.management import call_command
+    try:
+        logger.info('开始自动同步罪犯数据...')
+        call_command('sync_prisoner_data', '--real-api')
+        logger.info('罪犯数据同步完成')
+        return '罪犯数据同步完成'
+    except Exception as e:
+        logger.error(f'罪犯数据同步失败: {e}')
+        return f'同步失败: {e}'

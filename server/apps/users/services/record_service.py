@@ -129,11 +129,18 @@ class RecordService(BaseService):
             # 更新统计（所有出监原因都计入，统一用 prison_area_name 作为 key）
             stat = StatisticsRepository.get_or_create_daily_stats(prison_area_name, prison_area_name)
             stat.exit_count += 1
-            stat.in_prison_count -= 1
 
             reason_stats = stat.reason_stats or {}
             reason_stats[reason] = reason_stats.get(reason, 0) + 1
             stat.reason_stats = reason_stats
+
+            # 只有刑满释放才扣减在监人数，标记档案为已释放
+            if reason == '刑满释放':
+                stat.in_prison_count -= 1
+                from apps.users.models import PrisonerArchive
+                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=True)
+                logger.info(f"刑满释放: 标记已释放 prisoner_no={prisoner_no}")
+
             stat.save()
 
             logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}, total={stat.exit_count}")
@@ -198,6 +205,9 @@ class RecordService(BaseService):
                         rs = exit_day_stat.reason_stats or {}
                         rs[exit_reason] = max(0, rs.get(exit_reason, 0) - 1)
                         exit_day_stat.reason_stats = rs
+                    # 只有刑满释放才恢复在监人数
+                    if exit_reason == '刑满释放':
+                        exit_day_stat.in_prison_count += 1
                     exit_day_stat.save()
                 else:
                     print(f'[入监DEBUG] 同天: exit_count {stat.exit_count}->{max(0, stat.exit_count - 1)}')
@@ -206,6 +216,15 @@ class RecordService(BaseService):
                         reason_stats = stat.reason_stats or {}
                         reason_stats[exit_reason] = max(0, reason_stats.get(exit_reason, 0) - 1)
                         stat.reason_stats = reason_stats
+                    # 只有刑满释放才恢复在监人数
+                    if exit_reason == '刑满释放':
+                        stat.in_prison_count += 1
+
+                # 刑满释放后回监，恢复档案为在押状态
+                if exit_reason == '刑满释放':
+                    from apps.users.models import PrisonerArchive
+                    PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False)
+                    logger.info(f"入监恢复档案: prisoner_no={prisoner_no}")
             else:
                 print(f'[入监DEBUG] 警告: 未找到罪犯 {prisoner_no} 的出监记录')
 
@@ -275,19 +294,31 @@ class RecordService(BaseService):
                         rs = exit_day_stat.reason_stats or {}
                         rs[exit_reason] = max(0, rs.get(exit_reason, 0) - 1)
                         exit_day_stat.reason_stats = rs
+                    # 只有刑满释放才恢复在监人数
+                    if exit_reason == '刑满释放':
+                        exit_day_stat.in_prison_count += 1
                     exit_day_stat.save()
-                    # 今日在监人数 +1
-                    stat.in_prison_count += 1
+                    # 只有刑满释放才恢复今日在监人数
+                    if exit_reason == '刑满释放':
+                        stat.in_prison_count += 1
                 else:
                     # 出监发生在今天：修改今日统计（与之前逻辑一致）
                     print(f'[回监DEBUG] 同天修改: exit_count={stat.exit_count}->{max(0, stat.exit_count - 1)}')
                     stat.exit_count = max(0, stat.exit_count - 1)
-                    stat.in_prison_count += 1
                     if exit_reason:
                         reason_stats = stat.reason_stats or {}
                         current_count = reason_stats.get(exit_reason, 0)
                         reason_stats[exit_reason] = max(0, current_count - 1)
                         stat.reason_stats = reason_stats
+                    # 只有刑满释放才恢复在监人数
+                    if exit_reason == '刑满释放':
+                        stat.in_prison_count += 1
+
+                # 刑满释放后回监，恢复档案为在押状态
+                if exit_reason == '刑满释放':
+                    from apps.users.models import PrisonerArchive
+                    PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False)
+                    logger.info(f"回监恢复档案: prisoner_no={prisoner_no}")
             else:
                 # 没有对应出监记录，说明该编号之前不在统计数据中（可能是新收入监）
                 print(f'[回监DEBUG] 警告: 未找到罪犯 {prisoner_no} 的出监记录')

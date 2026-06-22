@@ -17,4 +17,8 @@ app.conf.beat_schedule = {
         'task': 'apps.users.tasks.reset_daily_stats',
         'schedule': crontab(hour=0, minute=0),  # 每天凌晨 00:00 执行
     },
+    'sync-prisoner-data-every-day': {
+        'task': 'apps.users.tasks.sync_prisoner_data_task',
+        'schedule': crontab(hour=0, minute=5),  # 每天凌晨 00:05 执行
+    },
 }
