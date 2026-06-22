@@ -1,23 +1,26 @@
 #!/bin/bash
 #
-# 监狱管控平台 - 一键部署脚本
-# 用法: sudo bash install.sh
+# 监狱管控平台 - 联网部署脚本
+# 用法: sudo bash install-online.sh
+# 前提: 服务器可以连接外网，项目源码已拷贝到服务器
 #
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 项目根目录（deployment 的上级目录）
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 INSTALL_DIR="/opt/prison_system"
 
 echo ""
 echo "============================================"
-echo "   监狱关押罪犯出入管控平台 - 一键部署"
+echo "   监狱关押罪犯出入管控平台 - 联网部署"
 echo "============================================"
 echo ""
 
 # ── 读取配置 ──
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     echo "错误: 未找到 .env 配置文件"
-    echo "请先编辑 deploy-package/.env 填写服务器 IP"
+    echo "请先编辑 deployment/.env 填写服务器 IP"
     exit 1
 fi
 
@@ -43,31 +46,25 @@ echo ""
 #  步骤 1: 安装 Docker
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 1/5: 安装 Docker"
+echo "  步骤 1/6: 安装 Docker"
 echo "══════════════════════════════════════════"
 
 if command -v docker &>/dev/null; then
     echo "  Docker 已安装，跳过"
 else
     echo "  Docker 未安装，正在安装..."
-    if command -v curl &>/dev/null; then
-        curl -fsSL https://get.docker.com | sh
-    else
-        apt-get update && apt-get install -y docker.io
-    fi
+    curl -fsSL https://get.docker.com | sh
     systemctl start docker
     systemctl enable docker
     usermod -aG docker $USER 2>/dev/null || true
     echo "  Docker 安装完成: $(docker --version)"
 fi
 
-# 确认 Docker 可用
 if ! docker info &>/dev/null; then
-    echo "  Docker 未正常运行，尝试启动..."
     systemctl start docker
     sleep 3
     if ! docker info &>/dev/null; then
-        echo "  错误: Docker 启动失败，请手动检查: systemctl status docker"
+        echo "  错误: Docker 启动失败"
         exit 1
     fi
 fi
@@ -75,27 +72,64 @@ echo "  Docker 运行正常"
 echo ""
 
 # ════════════════════════════════════════════
-#  步骤 2: 导入镜像
+#  步骤 2: 安装 Node.js（构建前端需要）
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 2/5: 导入 Docker 镜像"
+echo "  步骤 2/6: 检查 Node.js"
 echo "══════════════════════════════════════════"
 
-echo "  导入基础镜像（MySQL + Redis）..."
-docker load -i "$SCRIPT_DIR/base-images.tar" 2>&1 | sed 's/^/    /'
-
-echo "  导入应用镜像（后端 + 前端）..."
-docker load -i "$SCRIPT_DIR/app-images.tar" 2>&1 | sed 's/^/    /'
-
-echo "  镜像导入完成"
+if command -v node &>/dev/null; then
+    echo "  Node.js 已安装: $(node --version)"
+else
+    echo "  Node.js 未安装，正在安装..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+    echo "  Node.js 安装完成: $(node --version)"
+fi
 echo ""
 
 # ════════════════════════════════════════════
-#  步骤 3: 生成项目配置
+#  步骤 3: 拉取基础镜像
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 3/5: 生成项目配置"
+echo "  步骤 3/6: 拉取基础镜像"
 echo "══════════════════════════════════════════"
+
+docker pull mysql:8.0
+docker pull redis:7-alpine
+echo "  基础镜像拉取完成"
+echo ""
+
+# ════════════════════════════════════════════
+#  步骤 4: 构建前端
+# ════════════════════════════════════════════
+echo "══════════════════════════════════════════"
+echo "  步骤 4/6: 构建前端"
+echo "══════════════════════════════════════════"
+
+cd "$PROJECT_DIR"
+npm install --silent
+npm run build
+
+if [ ! -d "$PROJECT_DIR/dist" ]; then
+    echo "错误: 前端构建失败，未生成 dist 目录"
+    exit 1
+fi
+echo "  前端构建完成"
+echo ""
+
+# ════════════════════════════════════════════
+#  步骤 5: 构建 Docker 镜像并启动服务
+# ════════════════════════════════════════════
+echo "══════════════════════════════════════════"
+echo "  步骤 5/6: 构建镜像并启动服务"
+echo "══════════════════════════════════════════"
+
+echo "  构建后端镜像..."
+docker build -f "$PROJECT_DIR/server/Dockerfile" -t prison-backend:latest "$PROJECT_DIR"
+
+echo "  构建前端镜像..."
+docker build -f "$PROJECT_DIR/deployment/frontend/Dockerfile" -t prison-frontend:latest "$PROJECT_DIR"
 
 mkdir -p "$INSTALL_DIR"
 
@@ -104,8 +138,6 @@ SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | base6
 
 # 生成 docker-compose.yml
 cat > "$INSTALL_DIR/docker-compose.yml" << COMPOSEEOF
-version: '3.8'
-
 services:
   backend:
     image: prison-backend:latest
@@ -212,24 +244,13 @@ volumes:
 COMPOSEEOF
 
 # 复制摄像头配置
-if [ -f "$SCRIPT_DIR/cameras.yml" ]; then
-    cp "$SCRIPT_DIR/cameras.yml" "$INSTALL_DIR/"
+if [ -f "$PROJECT_DIR/server/config/cameras.yml" ]; then
+    cp "$PROJECT_DIR/server/config/cameras.yml" "$INSTALL_DIR/"
     echo "  摄像头配置已复制"
 fi
 
-echo "  项目配置已生成: $INSTALL_DIR/"
-echo ""
-
-# ════════════════════════════════════════════
-#  步骤 4: 启动服务
-# ════════════════════════════════════════════
-echo "══════════════════════════════════════════"
-echo "  步骤 4/5: 启动服务"
-echo "══════════════════════════════════════════"
-
+echo "  启动服务..."
 cd "$INSTALL_DIR"
-
-echo "  正在启动所有容器..."
 docker compose up -d 2>&1 | sed 's/^/    /'
 
 echo ""
@@ -244,7 +265,6 @@ for i in $(seq 1 30); do
 done
 echo ""
 
-# 再等几秒让后端完成迁移
 echo "  等待后端完成数据库迁移..."
 sleep 10
 
@@ -253,10 +273,10 @@ docker compose ps 2>/dev/null | sed 's/^/    /'
 echo ""
 
 # ════════════════════════════════════════════
-#  步骤 5: 创建管理员
+#  步骤 6: 创建管理员
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 5/5: 创建管理员账号"
+echo "  步骤 6/6: 创建管理员账号"
 echo "══════════════════════════════════════════"
 
 echo ""

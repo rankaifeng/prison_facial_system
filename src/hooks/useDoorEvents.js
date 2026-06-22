@@ -9,6 +9,10 @@ const useDoorEvents = ({ onEvent }) => {
 
   const getWsUrl = () => {
     const base = window.location.hostname || '127.0.0.1';
+    // 开发环境连后端 8000 端口，生产环境通过 Nginx 代理（同端口）
+    if (import.meta.env.DEV) {
+      return `ws://${base}:8000/ws/door-events/`;
+    }
     const port = window.location.port;
     const portStr = port ? `:${port}` : '';
     return `ws://${base}${portStr}/ws/door-events/`;

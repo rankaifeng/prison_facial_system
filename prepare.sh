@@ -57,14 +57,14 @@ echo "  前端构建完成"
 echo ""
 echo "[3/6] 构建 Docker 镜像（可能需要几分钟）..."
 
-echo "  构建后端镜像..."
-if ! docker build -f server/Dockerfile -t prison-backend:latest .; then
+echo "  构建后端镜像 (linux/amd64)..."
+if ! docker build --platform linux/amd64 -f server/Dockerfile -t prison-backend:latest .; then
     echo "错误: 后端镜像构建失败"
     exit 1
 fi
 
-echo "  构建前端镜像..."
-if ! docker build -f deployment/frontend/Dockerfile -t prison-frontend:latest .; then
+echo "  构建前端镜像 (linux/amd64)..."
+if ! docker build --platform linux/amd64 -f deployment/frontend/Dockerfile -t prison-frontend:latest .; then
     echo "错误: 前端镜像构建失败"
     exit 1
 fi
@@ -77,10 +77,12 @@ echo "[4/6] 导出 Docker 镜像..."
 
 docker save prison-backend:latest prison-frontend:latest -o "$DEPLOY_DIR/app-images.tar"
 
-echo "  拉取基础镜像..."
+echo "  拉取基础镜像并导出 (linux/amd64)..."
 docker pull mysql:8.0
 docker pull redis:7-alpine
-docker save mysql:8.0 redis:7-alpine -o "$DEPLOY_DIR/base-images.tar"
+
+# 使用 --platform 只导出 amd64 架构的镜像
+docker save --platform linux/amd64 mysql:8.0 redis:7-alpine -o "$DEPLOY_DIR/base-images.tar"
 
 echo "  镜像导出完成"
 
