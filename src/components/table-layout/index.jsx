@@ -51,11 +51,11 @@ const TableLayout = (props) => {
 
         const processedColumns = [...(columns || [])];
 
-        processedColumns.forEach(col => {
-            if (col.key === 'action' || col.title === '操作') {
-                col.fixed = 'right';
-            }
-        });
+        // processedColumns.forEach(col => {
+        //     if (col.key === 'action' || col.title === '操作') {
+        //         col.fixed = 'right';
+        //     }
+        // });
 
         return [indexColumn, ...processedColumns];
     }, [columns, pagination, isTreeData, hideIndex]);

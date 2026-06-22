@@ -40,7 +40,6 @@ const PrisonerList = () => {
       title: '操作',
       key: 'action',
       width: 80,
-      fixed: 'right',
       render: (_, record) => (
         <Button
           type="link"

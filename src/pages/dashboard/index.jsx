@@ -43,7 +43,7 @@ const Dashboard = () => {
   const [swatFaceImage, setSwatFaceImage] = useState(null);
   const [exitModalStep, setExitModalStep] = useState(0);
   const [enterModalStep, setEnterModalStep] = useState(0);
-  const [selectModalOpen, setSelectModalOpen] = useState(false);
+  const [selectModalOpen, setSelectModalOpen] = useState(true);
   const [activeOperation, setActiveOperation] = useState(null);
   const exitStepRef = useRef(0);
   const enterStepRef = useRef(0);
@@ -318,7 +318,7 @@ const Dashboard = () => {
         open={exitModalOpen}
         onCancel={resetExitModal}
         onOk={() => { resetExitModal(); handleDataUpdate(); }}
-        prisonerNo={activePrisonerNo}
+        prisonerNo='5155016428'
         policeFaceImage={policeFaceImage}
         swatFaceImage={swatFaceImage}
         onStepChange={handleExitModalStepChange}

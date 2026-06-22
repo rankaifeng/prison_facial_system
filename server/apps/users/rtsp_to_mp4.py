@@ -167,7 +167,7 @@ def verify_mp4(path: str) -> tuple:
         return False, f"验证异常: {e}"
 
 
-def _drain_and_wait(proc: subprocess.Popen, timeout: float = 15,
+def _drain_and_wait(proc: subprocess.Popen, timeout: float = 60,
                     log_lines: list = None) -> int:
     """
     排空 stderr 管道并等待进程退出。
@@ -368,7 +368,8 @@ def record_rtsp_to_mp4(
                     proc.send_signal(signal.SIGINT)
                     # 关键：排空 stderr 管道，防止 ffmpeg 阻塞在 write() 上无法退出
                     # 否则 MP4 尾部（moov atom）不会被写入，文件打不开
-                    _drain_and_wait(proc, timeout=15, log_lines=log_lines)
+                    # 大文件需要更多时间写 moov atom，默认等 60 秒
+                    _drain_and_wait(proc, timeout=60, log_lines=log_lines)
                     break
 
                 # 进度打印
@@ -390,7 +391,7 @@ def record_rtsp_to_mp4(
                 # 最大超时保护
                 if (now - start) > timeout:
                     proc.terminate()
-                    _drain_and_wait(proc, timeout=5, log_lines=log_lines)
+                    _drain_and_wait(proc, timeout=30, log_lines=log_lines)
                     result["message"] = f"达到最大超时 {timeout}s，已终止"
                     if verbose:
                         print(f"[录制] ! {result['message']}")

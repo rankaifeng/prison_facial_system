@@ -31,7 +31,6 @@ const AccountManagement = () => {
     { title: '所属监区', dataIndex: 'prison_name', key: 'prison_name' },
     {
       title: '操作',
-      fixed: 'right',
       width: 120,
       render: (_, record) => {
         const isAdmin = record.role === 'admin' || record.role_name === '管理员';
