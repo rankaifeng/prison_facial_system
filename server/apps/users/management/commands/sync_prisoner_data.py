@@ -334,14 +334,35 @@ class Command(BaseCommand):
             except (ValueError, TypeError):
                 return None
 
-        # 直接保存原始 XML 字段名，不做转换
+        # 转换媒体信息中的相片路径
+        def convert_photo_path(raw_path):
+            """将 Windows 绝对路径转为 nginx 代理 URL"""
+            if not raw_path:
+                return ''
+            # C:\JGXTDB\zhao_pian\202602\xxx.jpg → http://10.2.50.16/202602/xxx.jpg
+            path = raw_path.replace('\\', '/')
+            # 提取 zhao_pian 之后的部分
+            marker = 'zhao_pian/'
+            idx = path.find(marker)
+            if idx >= 0:
+                relative = path[idx + len(marker):]
+            else:
+                # 兜底：取最后两级目录
+                parts = path.split('/')
+                relative = '/'.join(parts[-2:]) if len(parts) >= 2 else parts[-1]
+            # 去掉端口号，nginx 代理在 80 端口
+            from urllib.parse import urlparse
+            parsed = urlparse(API_BASE)
+            base_url = f'{parsed.scheme}://{parsed.hostname}'
+            return f'{base_url}/{relative}'
+
         media_list = [
             {
                 'bh': r.get('bh', ''),
                 'xm': r.get('xm', ''),
                 'mtbmm': r.get('mtbmm', ''),
                 'mtlb': r.get('mtlb', ''),
-                'xp': r.get('xp', ''),
+                'xp': convert_photo_path(r.get('xp', '')),
                 'bmmc': r.get('bmmc', ''),
                 'bz': r.get('bz', ''),
             }
