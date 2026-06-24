@@ -134,7 +134,6 @@ const PrisonerDetail = () => {
                   <img
                     src={detail?.mtxx?.[0]?.xp || '/imgs/face.png'}
                     alt={detail?.xm || '照片'}
-                    onError={(e) => { e.target.src = '/imgs/face.png'; }}
                   />
                 </div>
                 <h2 className="profile-title">{detail?.xm || '未知姓名'}</h2>
@@ -188,7 +187,7 @@ const PrisonerDetail = () => {
                   </div>
                   <div className="info-cell">
                     <span className="cell-label">刑期止日</span>
-                    <span className="cell-value highlight">{detail?.syxq || '-'}</span>
+                    <span className="cell-value highlight">{detail?.zr || '-'}</span>
                   </div>
                 </div>
               </div>

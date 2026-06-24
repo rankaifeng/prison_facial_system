@@ -43,7 +43,7 @@ echo ""
 #  步骤 1: 安装 Docker
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 1/5: 安装 Docker"
+echo "  步骤 1/6: 安装 Docker"
 echo "══════════════════════════════════════════"
 
 if command -v docker &>/dev/null; then
@@ -78,7 +78,7 @@ echo ""
 #  步骤 2: 导入镜像
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 2/5: 导入 Docker 镜像"
+echo "  步骤 2/6: 导入 Docker 镜像"
 echo "══════════════════════════════════════════"
 
 echo "  导入基础镜像（MySQL + Redis）..."
@@ -94,7 +94,7 @@ echo ""
 #  步骤 3: 生成项目配置
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 3/5: 生成项目配置"
+echo "  步骤 3/6: 生成项目配置"
 echo "══════════════════════════════════════════"
 
 mkdir -p "$INSTALL_DIR"
@@ -224,7 +224,7 @@ echo ""
 #  步骤 4: 启动服务
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 4/5: 启动服务"
+echo "  步骤 4/6: 启动服务"
 echo "══════════════════════════════════════════"
 
 cd "$INSTALL_DIR"
@@ -256,7 +256,7 @@ echo ""
 #  步骤 5: 创建管理员
 # ════════════════════════════════════════════
 echo "══════════════════════════════════════════"
-echo "  步骤 5/5: 创建管理员账号"
+echo "  步骤 5/6: 创建管理员账号"
 echo "══════════════════════════════════════════"
 
 echo ""
@@ -279,6 +279,35 @@ else:
     print('EXISTS')
 " 2>/dev/null && echo "  管理员创建成功" || echo "  管理员创建失败，请稍后手动创建"
 fi
+
+# ════════════════════════════════════════════
+#  步骤 6/6: 首次数据同步 + 创建定时任务
+# ════════════════════════════════════════════
+echo "══════════════════════════════════════════"
+echo "  步骤 6/6: 首次数据同步 + 创建定时任务"
+echo "══════════════════════════════════════════"
+
+echo "  正在同步罪犯档案数据（首次部署）..."
+docker exec prison-backend python manage.py sync_prisoner_data --real-api 2>&1 | sed 's/^/    /' && echo "  数据同步完成" || echo "  数据同步失败，可稍后手动执行: docker exec prison-backend python manage.py sync_prisoner_data --real-api"
+
+echo "  正在创建每日同步定时任务..."
+docker exec prison-backend python manage.py shell -c "
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
+import json
+schedule, _ = CrontabSchedule.objects.get_or_create(
+    minute='5', hour='0', day_of_week='*', day_of_month='*', month_of_year='*'
+)
+PeriodicTask.objects.get_or_create(
+    name='每日同步罪犯数据',
+    defaults={
+        'crontab': schedule,
+        'task': 'apps.users.tasks.sync_prisoner_data_task',
+        'args': json.dumps([]),
+    }
+)
+print('OK')
+" 2>/dev/null && echo "  定时任务创建成功（每天 00:05 同步）" || echo "  定时任务创建失败，可稍后在管理后台手动添加"
+echo ""
 
 # ════════════════════════════════════════════
 #  完成

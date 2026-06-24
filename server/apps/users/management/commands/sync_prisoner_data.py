@@ -354,20 +354,25 @@ class Command(BaseCommand):
             from urllib.parse import urlparse
             parsed = urlparse(API_BASE)
             base_url = f'{parsed.scheme}://{parsed.hostname}'
+            relative = relative.lstrip('/')
             return f'{base_url}/{relative}'
 
-        media_list = [
-            {
+        media_list = []
+        seen_xp = set()
+        for r in media_records:
+            xp = convert_photo_path(r.get('xp', ''))
+            if xp in seen_xp:
+                continue
+            seen_xp.add(xp)
+            media_list.append({
                 'bh': r.get('bh', ''),
                 'xm': r.get('xm', ''),
                 'mtbmm': r.get('mtbmm', ''),
                 'mtlb': r.get('mtlb', ''),
-                'xp': convert_photo_path(r.get('xp', '')),
+                'xp': xp,
                 'bmmc': r.get('bmmc', ''),
                 'bz': r.get('bz', ''),
-            }
-            for r in media_records
-        ]
+            })
 
         PrisonerArchive.objects.update_or_create(
             prisoner_no=prisoner_no,
