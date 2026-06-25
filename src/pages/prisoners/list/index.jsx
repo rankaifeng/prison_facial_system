@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Button, message } from 'antd';
 import { EyeOutlined, ExportOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -7,13 +7,46 @@ import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
 
+const STORAGE_KEY = 'prisoner_list_page';
+
 const PrisonerList = () => {
   const navigate = useNavigate();
+
+  const savedState = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }, []);
 
   const { tableProps, loading, form, search } = useQueryTable({
     url: '/user_manage/archive/list',
     rowKey: 'bh',
   });
+
+  // 恢复页码和搜索条件
+  useEffect(() => {
+    if (savedState) {
+      if (savedState.page > 1 || savedState.pageSize !== 10) {
+        tableProps.pagination?.onChange?.(savedState.page, savedState.pageSize || 10);
+      }
+      if (savedState.searchParams) {
+        form.setFieldsValue(savedState.searchParams);
+        search.submit();
+      }
+    }
+  }, []);
+
+  // 保存当前页码和搜索条件
+  const savePageState = () => {
+    const values = form.getFieldsValue();
+    const hasSearch = Object.values(values).some(v => v !== undefined && v !== '');
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      page: tableProps.pagination?.current || 1,
+      pageSize: tableProps.pagination?.pageSize || 10,
+      searchParams: hasSearch ? values : null,
+    }));
+  };
 
   const handleExport = () => {
     const data = tableProps.dataSource || [];
@@ -44,7 +77,7 @@ const PrisonerList = () => {
         <Button
           type="link"
           icon={<EyeOutlined />}
-          onClick={() => navigate(`/prisoners/${record.bh}`)}
+          onClick={() => { savePageState(); navigate(`/prisoners/${record.bh}`); }}
         >
           详情
         </Button>
@@ -85,7 +118,7 @@ const PrisonerList = () => {
         form={form}
         items={searchItems}
         onSearch={search.submit}
-        onReset={search.reset}
+        onReset={() => { sessionStorage.removeItem(STORAGE_KEY); search.reset(); }}
       />
       <TableLayout
         headerLayout={
