@@ -396,29 +396,30 @@ class RecordService(BaseService):
 
     @staticmethod
     def get_prison_messages(page=1, page_size=20, prison_area=None):
-        """获取监狱消息列表"""
-        exit_records = RecordRepository.get_active_exit_messages(prison_area)
+        """获取监狱消息列表 - 当天刑满释放人员"""
+        from datetime import date
+        from apps.users.models import PrisonerArchive
 
-        messages = []
-        for record in exit_records:
-            has_entry = RecordRepository.has_entry_record(record.prisoner_no)
-            if not has_entry:
-                messages.append({
-                    'id': record.id,
-                    'prisoner_name': record.prisoner_name,
-                    'prison_area_name': record.prison_area_name,
-                    'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
-                    'reason': record.reason,
-                    'hospital_type': record.hospital_type,
-                    'hospital_name': record.hospital_name,
-                    'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                })
+        today = date.today().strftime('%Y.%m.%d')
+        qs = PrisonerArchive.objects.filter(sentence_end=today, is_released=False)
+        if prison_area:
+            qs = qs.filter(prison_area=prison_area)
 
-        total = len(messages)
+        total = qs.count()
         offset = (page - 1) * page_size
-        paginated = messages[offset:offset + page_size]
+        records = qs[offset:offset + page_size]
 
-        return True, '获取成功', {'data': paginated, 'num': total}
+        data = [{
+            'id': r.id,
+            'prisoner_name': r.prisoner_name,
+            'prison_area_name': r.prison_area,
+            'exit_date': r.sentence_end,
+            'reason': '刑满释放',
+            'hospital_type': '',
+            'hospital_name': '',
+        } for r in records]
+
+        return True, '获取成功', {'data': data, 'num': total}
 
     @staticmethod
     def get_record(record_id):
