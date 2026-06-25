@@ -132,7 +132,7 @@ const PrisonerDetail = () => {
               <div className="profile-content">
                 <div className="profile-photo-large">
                   <img
-                    src={detail?.mtxx?.[0]?.xp || '/imgs/face.png'}
+                    src={detail?.mtxx?.[0]?.xp}
                     alt={detail?.xm || '照片'}
                   />
                 </div>

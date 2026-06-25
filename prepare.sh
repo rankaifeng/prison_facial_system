@@ -91,6 +91,7 @@ echo ""
 echo "[5/6] 复制配置文件和脚本..."
 
 cp "$SCRIPT_DIR/server/config/cameras.yml" "$DEPLOY_DIR/"
+cp "$SCRIPT_DIR/proxy.py" "$DEPLOY_DIR/"
 
 # 复制 install.sh 和 .env（模板文件在 deployment/ 目录下）
 if [ -f "$SCRIPT_DIR/deployment/install.sh" ]; then

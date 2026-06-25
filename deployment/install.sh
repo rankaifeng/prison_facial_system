@@ -123,6 +123,7 @@ services:
       - DB_PASSWORD=$MYSQL_PASSWORD
       - REDIS_URL=redis://redis:6379/0
       - RTI_API_BASE=$RTI_API_BASE
+      - PHOTO_BASE_URL=http://$SERVER_IP
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
@@ -307,6 +308,31 @@ PeriodicTask.objects.get_or_create(
 )
 print('OK')
 " 2>/dev/null && echo "  定时任务创建成功（每天 00:05 同步）" || echo "  定时任务创建失败，可稍后在管理后台手动添加"
+
+# ── 配置图片代理服务 ──
+echo ""
+echo "  配置图片代理服务..."
+cp "$SCRIPT_DIR/proxy.py" "$INSTALL_DIR/proxy.py"
+
+cat > /etc/systemd/system/prison-proxy.service << SERVICEEOF
+[Unit]
+Description=Prison Photo Proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 $INSTALL_DIR/proxy.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+SERVICEEOF
+
+systemctl daemon-reload
+systemctl enable prison-proxy
+systemctl start prison-proxy
+echo "  图片代理服务已启动（端口 80）"
 echo ""
 
 # ════════════════════════════════════════════

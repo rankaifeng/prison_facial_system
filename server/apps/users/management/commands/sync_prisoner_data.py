@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # ========== 公安内网接口地址（从 .env 读取） ==========
 API_BASE = os.getenv('RTI_API_BASE', 'http://10.2.50.16:4092')
+PHOTO_BASE_URL = os.getenv('PHOTO_BASE_URL', '').rstrip('/')
 GET_PRISONER_IDS_URL = f"{API_BASE}/rti/service/invoke/arg0/unitop/arg1/unitop/arg2/zf_zyljbh/arg3/@zy='zy'"
 POST_SERVICE_URL = f'{API_BASE}/rti/service'
 
@@ -351,9 +352,12 @@ class Command(BaseCommand):
                 parts = path.split('/')
                 relative = '/'.join(parts[-2:]) if len(parts) >= 2 else parts[-1]
             # 去掉端口号，nginx 代理在 80 端口
-            from urllib.parse import urlparse
-            parsed = urlparse(API_BASE)
-            base_url = f'{parsed.scheme}://{parsed.hostname}'
+            if PHOTO_BASE_URL:
+                base_url = PHOTO_BASE_URL
+            else:
+                from urllib.parse import urlparse
+                parsed = urlparse(API_BASE)
+                base_url = f'{parsed.scheme}://{parsed.hostname}'
             relative = relative.lstrip('/')
             return f'{base_url}/{relative}'
 
