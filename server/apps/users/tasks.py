@@ -175,7 +175,7 @@ def sync_prisoner_data_task():
     from django.core.management import call_command
     try:
         logger.info('开始自动同步罪犯数据...')
-        call_command('sync_prisoner_data', '--real-api')
+        call_command('sync_prisoner_data', '--real-api', '--dahua')
         logger.info('罪犯数据同步完成')
         return '罪犯数据同步完成'
     except Exception as e:

@@ -478,15 +478,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'    用户插入请求失败: {e}'))
             return False
 
-    def _dahua_insert_faces(self, base_url, auth, prisoners, face_base64):
-        """批量插入人脸照片到大华门禁平台"""
+    def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
+        """批量插入人脸照片到大华门禁平台（使用真实照片，无照片跳过）"""
         url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
         faces = []
+        skipped = 0
         for p in prisoners:
+            photo_base64 = photo_map.get(p['prisoner_no'])
+            if not photo_base64:
+                skipped += 1
+                continue
             faces.append({
                 'UserID': p['prisoner_no'],
                 'FaceData': [],
-                'PhotoData': [face_base64],
+                'PhotoData': [photo_base64],
                 'PhotoURL': [],
             })
 
@@ -508,9 +513,21 @@ class Command(BaseCommand):
             except requests.RequestException as e:
                 self.stdout.write(self.style.ERROR(f'    人脸批次 {i // batch_size + 1} 请求失败: {e}'))
 
+        if skipped > 0:
+            self.stdout.write(f'    跳过无照片人员: {skipped} 个')
         if total_success > 0:
             self.stdout.write(self.style.SUCCESS(f'    人脸插入完成: {total_success}/{len(faces)}'))
         return total_success == len(faces)
+
+    def _download_photo_base64(self, photo_url):
+        """下载照片并转为 base64"""
+        try:
+            resp = requests.get(photo_url, timeout=10)
+            resp.raise_for_status()
+            return base64.b64encode(resp.content).decode('utf-8')
+        except Exception as e:
+            logger.warning(f'下载照片失败 {photo_url}: {e}')
+            return None
 
     def _sync_to_dahua(self):
         """将档案库数据同步到大华门禁平台"""
@@ -530,23 +547,32 @@ class Command(BaseCommand):
         if not self._dahua_auth(base_url, auth):
             return
 
-        # 2. 加载占位人脸
-        face_base64 = self._load_placeholder_face(dahua_config)
-        if not face_base64:
-            return
-
-        # 3. 获取所有档案数据
+        # 2. 获取所有档案数据
         archives = PrisonerArchive.objects.all()
-        prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card'))
+        prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info'))
         if not prisoners:
             self.stdout.write(self.style.WARNING('    档案库无数据，跳过大华同步'))
             return
         self.stdout.write(f'    待同步: {len(prisoners)} 人')
 
-        # 4. 插入用户
-        self._dahua_insert_users(base_url, auth, prisoners)
+        # 3. 构建照片映射（下载真实照片）
+        self.stdout.write('    正在下载罪犯照片...')
+        photo_map = {}
+        for p in prisoners:
+            media = p.get('media_info') or []
+            for m in media:
+                xp = m.get('xp', '')
+                if xp:
+                    b64 = self._download_photo_base64(xp)
+                    if b64:
+                        photo_map[p['prisoner_no']] = b64
+                    break
+        self.stdout.write(f'    已下载照片: {len(photo_map)}/{len(prisoners)}')
 
-        # 5. 插入人脸
-        self._dahua_insert_faces(base_url, auth, prisoners, face_base64)
+        # 4. 插入用户
+        self._dahua_insert_users(base_url, auth, [{'prisoner_no': p['prisoner_no'], 'prisoner_name': p['prisoner_name'], 'id_card': p['id_card']} for p in prisoners])
+
+        # 5. 插入人脸（无照片的跳过）
+        self._dahua_insert_faces(base_url, auth, [{'prisoner_no': p['prisoner_no']} for p in prisoners], photo_map)
 
         self.stdout.write(self.style.SUCCESS('    大华门禁平台同步完成'))
