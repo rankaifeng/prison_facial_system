@@ -24,3 +24,5 @@ export const EXIT_TYPE_UPDATE = '/user_manage/exit_type/update';
 export const EXIT_TYPE_DELETE = '/user_manage/exit_type/delete';
 export const VIDEO_STREAM_URL = '/user_manage/video/stream_url';
 export const CAMERA_LIST = '/user_manage/video/camera_list';
+export const SYNC_START = '/user_manage/sync/start';
+export const SYNC_STATUS = '/user_manage/sync/status';

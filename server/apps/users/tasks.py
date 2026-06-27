@@ -181,3 +181,199 @@ def sync_prisoner_data_task():
     except Exception as e:
         logger.error(f'罪犯数据同步失败: {e}')
         return f'同步失败: {e}'
+
+
+@shared_task(bind=True)
+def sync_prisoner_data_with_progress(self):
+    """手动同步罪犯数据（带进度报告）"""
+    import os, requests, re, time, base64
+    from xml.etree import ElementTree as ET
+    from django.conf import settings
+    from apps.users.models import PrisonerArchive
+
+    API_BASE = os.getenv('RTI_API_BASE', 'http://10.2.50.16:4092')
+    PHOTO_BASE_URL = os.getenv('PHOTO_BASE_URL', '').rstrip('/')
+    GET_IDS_URL = f"{API_BASE}/rti/service/invoke/arg0/unitop/arg1/unitop/arg2/zf_zyljbh/arg3/@zy='zy'"
+    POST_URL = f'{API_BASE}/rti/service'
+
+    def report(step, current, total, message):
+        percent = int(current / total * 100) if total > 0 else 0
+        self.update_state(state='PROGRESS', meta={
+            'step': step, 'current': current, 'total': total,
+            'message': message, 'percent': percent,
+        })
+
+    def extract_inner_xml(resp_text):
+        match = re.search(r'<return>(.*?)</return>', resp_text, re.DOTALL)
+        if not match:
+            return None
+        text = match.group(1)
+        return text.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
+
+    def cdata_text(elem):
+        return (elem.text or '').strip() if elem is not None else ''
+
+    def build_soap(pid, svc):
+        return (
+            "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' "
+            "xmlns:ser='http://service.rti/'>"
+            "<soapenv:Header/><soapenv:Body><ser:invoke>"
+            f"<arg0>unitop</arg0><arg1>unitop</arg1><arg2>{svc}</arg2><arg3>@bh='{pid}'</arg3>"
+            "</ser:invoke></soapenv:Body></soapenv:Envelope>"
+        )
+
+    def convert_photo_path(raw_path):
+        if not raw_path:
+            return ''
+        path = raw_path.replace('\\', '/')
+        marker = 'zhao_pian/'
+        idx = path.find(marker)
+        relative = path[idx + len(marker):] if idx >= 0 else '/'.join(path.split('/')[-2:])
+        relative = relative.lstrip('/')
+        if PHOTO_BASE_URL:
+            return f'{PHOTO_BASE_URL}/{relative}'
+        from urllib.parse import urlparse
+        parsed = urlparse(API_BASE)
+        return f'{parsed.scheme}://{parsed.hostname}/{relative}'
+
+    try:
+        # Step 1: 获取罪犯编号
+        report('fetch_ids', 0, 100, '正在获取罪犯编号...')
+        resp = requests.get(GET_IDS_URL, timeout=30)
+        resp.raise_for_status()
+        inner_xml = extract_inner_xml(resp.text)
+        if not inner_xml:
+            report('fetch_ids', 100, 100, '获取罪犯编号失败')
+            return {'state': 'FAILURE', 'message': '获取罪犯编号失败'}
+
+        root = ET.fromstring(inner_xml)
+        ids = []
+        for elem in root.findall('.//zyljbh'):
+            x1 = elem.find('x1')
+            if x1 is not None and x1.text:
+                ids.append(x1.text.strip())
+
+        if not ids:
+            report('fetch_ids', 100, 100, '未获取到罪犯编号')
+            return {'state': 'FAILURE', 'message': '未获取到罪犯编号'}
+
+        total = len(ids)
+        report('fetch_ids', 10, 100, f'获取到 {total} 个罪犯编号')
+
+        # Step 2: 逐个同步基础信息+媒体信息
+        success = 0
+        fail = 0
+        for i, pid in enumerate(ids):
+            try:
+                # 获取基础信息
+                soap = build_soap(pid, 'zf_jbxx_dg')
+                r = requests.post(POST_URL, data=soap.encode('utf-8'),
+                                  headers={'Content-Type': 'text/xml; charset=utf-8'}, timeout=30)
+                r.raise_for_status()
+                inner = extract_inner_xml(r.text)
+                basic = {}
+                if inner:
+                    node = ET.fromstring(inner).find('.//zf_jbxx_dg')
+                    if node is not None:
+                        for child in node:
+                            basic[child.tag] = cdata_text(child)
+
+                # 获取媒体信息
+                soap = build_soap(pid, 'zf_mt_dg')
+                r = requests.post(POST_URL, data=soap.encode('utf-8'),
+                                  headers={'Content-Type': 'text/xml; charset=utf-8'}, timeout=30)
+                r.raise_for_status()
+                inner = extract_inner_xml(r.text)
+                media_records = []
+                if inner:
+                    for elem in ET.fromstring(inner).findall('.//zf_mttz_dg'):
+                        media_records.append({
+                            'bh': cdata_text(elem.find('bh')),
+                            'xm': cdata_text(elem.find('xm')),
+                            'mtbmm': cdata_text(elem.find('mtbmm')),
+                            'mtlb': cdata_text(elem.find('mtlb')),
+                            'xp': cdata_text(elem.find('xp')),
+                            'bmmc': cdata_text(elem.find('bmmc')),
+                            'bz': cdata_text(elem.find('bz')),
+                        })
+
+                # 去重媒体信息
+                media_list = []
+                seen_xp = set()
+                for m in media_records:
+                    xp = convert_photo_path(m.get('xp', ''))
+                    if xp in seen_xp:
+                        continue
+                    seen_xp.add(xp)
+                    media_list.append({
+                        'bh': m.get('bh', ''), 'xm': m.get('xm', ''),
+                        'mtbmm': m.get('mtbmm', ''), 'mtlb': m.get('mtlb', ''),
+                        'xp': xp, 'bmmc': m.get('bmmc', ''), 'bz': m.get('bz', ''),
+                    })
+
+                def safe_int(val):
+                    try:
+                        return int(val) if val else None
+                    except (ValueError, TypeError):
+                        return None
+
+                PrisonerArchive.objects.update_or_create(
+                    prisoner_no=pid,
+                    defaults={
+                        'prisoner_name': basic.get('xm', ''),
+                        'gender': basic.get('xb', ''),
+                        'birth_date': basic.get('csrq', ''),
+                        'age': safe_int(basic.get('age')),
+                        'id_card': basic.get('sfzh', ''),
+                        'nation': basic.get('mz', ''),
+                        'education': basic.get('bqwhcd', ''),
+                        'marital_status': basic.get('hy', ''),
+                        'native_place': basic.get('jg', ''),
+                        'address': basic.get('jtmx', ''),
+                        'crime': basic.get('zm', ''),
+                        'sentence': basic.get('ypxq', ''),
+                        'sentence_start': basic.get('rjrq', ''),
+                        'sentence_end': basic.get('zr', ''),
+                        'prison_area': basic.get('db', ''),
+                        'room_no': basic.get('jsh', ''),
+                        'bed_no': basic.get('cwh', ''),
+                        'status': basic.get('zyxz', ''),
+                        'entry_date': basic.get('rjrq', ''),
+                        'arrest_org': basic.get('dbjg', ''),
+                        'judgment_org': basic.get('pjjg', ''),
+                        'judgment_no': basic.get('pjzh', ''),
+                        'basic_info': basic,
+                        'media_info': media_list,
+                    },
+                )
+                success += 1
+            except Exception as e:
+                fail += 1
+                logger.error(f'同步罪犯 {pid} 失败: {e}')
+
+            progress = 10 + int((i + 1) / total * 70)
+            report('sync_basic', progress, 100, f'正在同步 {i + 1}/{total}...')
+
+            if (i + 1) % 50 == 0:
+                time.sleep(2)
+
+        report('sync_basic', 80, 100, f'同步完成: 成功 {success}, 失败 {fail}')
+
+        # Step 3: 同步到大华门禁
+        report('sync_dahua', 80, 100, '正在同步到大华门禁...')
+        try:
+            from django.core.management import call_command
+            call_command('sync_prisoner_data', '--dahua')
+            report('sync_dahua', 95, 100, '大华门禁同步完成')
+        except Exception as e:
+            logger.error(f'大华门禁同步失败: {e}')
+            report('sync_dahua', 95, 100, f'大华门禁同步失败: {e}')
+
+        # Step 4: 完成
+        report('done', 100, 100, f'同步完成! 成功 {success}, 失败 {fail}')
+        return {'state': 'SUCCESS', 'message': f'同步完成! 成功 {success}, 失败 {fail}'}
+
+    except Exception as e:
+        logger.error(f'同步任务异常: {e}')
+        self.update_state(state='FAILURE', meta={'message': str(e), 'percent': 0})
+        raise

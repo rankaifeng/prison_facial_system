@@ -26,6 +26,8 @@ import {
   RETURN_RECORD,
   VIDEO_STREAM_URL,
   CAMERA_LIST,
+  SYNC_START,
+  SYNC_STATUS,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -98,4 +100,9 @@ export const prisonMessages = {
 export const video = {
   getStreamUrl: (data, timeout) => http.get(VIDEO_STREAM_URL, data, timeout).then((res) => res?.data),
   getCameraList: (data) => http.get(CAMERA_LIST, data).then((res) => res?.data),
+};
+
+export const sync = {
+  start: () => http.post(SYNC_START),
+  status: (task_id) => http.get(SYNC_STATUS, { task_id }),
 };

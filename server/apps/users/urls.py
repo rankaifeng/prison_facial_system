@@ -21,6 +21,8 @@ from .controllers import (
     CameraListController,
     ArchiveListController,
     ArchiveDetailController,
+    SyncStartController,
+    SyncStatusController,
 )
 
 urlpatterns = [
@@ -46,4 +48,6 @@ urlpatterns = [
     re_path(r'^video/camera_list/?$', CameraListController.as_view(), name='camera_list'),
     re_path(r'^archive/list/?$', ArchiveListController.as_view(), name='archive_list'),
     re_path(r'^archive/detail/?$', ArchiveDetailController.as_view(), name='archive_detail'),
+    re_path(r'^sync/start/?$', SyncStartController.as_view(), name='sync_start'),
+    re_path(r'^sync/status/?$', SyncStatusController.as_view(), name='sync_status'),
 ]

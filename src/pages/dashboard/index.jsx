@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -12,7 +12,7 @@ import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
 import OperationSelectModal from './components/OperationSelectModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
-import { realtimeStatistics } from '@/api/globApi';
+import { realtimeStatistics, sync, prisonMessages } from '@/api/globApi';
 import useDoorEvents from '@/hooks/useDoorEvents';
 import cache from '@/utils/cache';
 import './index.less';
@@ -49,6 +49,20 @@ const Dashboard = () => {
   const enterStepRef = useRef(0);
   const activeOpRef = useRef(null);
   const navigate = useNavigate();
+
+  // 同步相关状态
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const syncPollRef = useRef(null);
+  const messagesRef = useRef(null);
+
+  const SYNC_STEPS = [
+    { key: 'fetch_ids', label: '获取罪犯编号' },
+    { key: 'sync_basic', label: '同步罪犯信息' },
+    { key: 'sync_dahua', label: '同步到大华门禁' },
+    { key: 'done', label: '完成' },
+  ];
 
   // 同步 step 到 ref
   useEffect(() => {
@@ -180,6 +194,12 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (syncPollRef.current) clearInterval(syncPollRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -194,10 +214,83 @@ const Dashboard = () => {
 
   const handleDataUpdate = useCallback((refreshMessages) => {
     fetchData();
-    if (refreshMessages) {
+    if (typeof refreshMessages === 'function') {
+      messagesRef.current = refreshMessages;
       refreshMessages();
     }
   }, []);
+
+  // 同步相关函数
+  const handleSyncStart = async () => {
+    setSyncOpen(true);
+    setSyncLoading(true);
+    setSyncProgress({ state: 'PENDING', step: 'fetch_ids', percent: 0, message: '正在启动...', current: 0, total: 0 });
+    try {
+      const res = await sync.start();
+      const taskId = res?.data?.task_id;
+      if (taskId) {
+        startPolling(taskId);
+      }
+    } catch (e) {
+      setSyncProgress({ state: 'FAILURE', step: 'error', percent: 0, message: '启动失败: ' + (e.message || '未知错误'), current: 0, total: 0 });
+    }
+    setSyncLoading(false);
+  };
+
+  const startPolling = (taskId) => {
+    if (syncPollRef.current) clearInterval(syncPollRef.current);
+    syncPollRef.current = setInterval(async () => {
+      try {
+        const res = await sync.status(taskId);
+        const data = res?.data;
+        if (!data) return;
+        setSyncProgress(data);
+        if (data.state === 'SUCCESS' || data.state === 'FAILURE') {
+          clearInterval(syncPollRef.current);
+          syncPollRef.current = null;
+          if (data.state === 'SUCCESS') {
+            setTimeout(() => {
+              setSyncOpen(false);
+              fetchData();
+              if (messagesRef.current) messagesRef.current();
+            }, 1500);
+          }
+        }
+      } catch (e) {
+        console.error('查询同步状态失败:', e);
+      }
+    }, 1500);
+  };
+
+  const handleSyncClose = () => {
+    if (syncPollRef.current) {
+      clearInterval(syncPollRef.current);
+      syncPollRef.current = null;
+    }
+    setSyncOpen(false);
+    setSyncProgress(null);
+  };
+
+  const getStepStatus = (stepKey) => {
+    if (!syncProgress) return 'wait';
+    const stepOrder = ['fetch_ids', 'sync_basic', 'sync_dahua', 'done'];
+    const currentIdx = stepOrder.indexOf(syncProgress.step);
+    const targetIdx = stepOrder.indexOf(stepKey);
+    if (syncProgress.state === 'FAILURE') {
+      return targetIdx <= currentIdx ? (targetIdx === currentIdx ? 'error' : 'finish') : 'wait';
+    }
+    if (targetIdx < currentIdx) return 'finish';
+    if (targetIdx === currentIdx) return syncProgress.state === 'SUCCESS' ? 'finish' : 'process';
+    return 'wait';
+  };
+
+  const getStepIcon = (stepKey) => {
+    const status = getStepStatus(stepKey);
+    if (status === 'finish') return <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 16 }} />;
+    if (status === 'process') return <LoadingOutlined style={{ color: '#00f0ff', fontSize: 16 }} />;
+    if (status === 'error') return <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />;
+    return <ClockCircleOutlined style={{ color: 'rgba(255,255,255,0.25)', fontSize: 16 }} />;
+  };
 
   const navMenu = {
     items: isAdmin ? [
@@ -246,6 +339,13 @@ const Dashboard = () => {
             onClick={toggleFullscreen}
           >
             {isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+          </span>
+          <span
+            className="fullscreen-btn"
+            onClick={handleSyncStart}
+            title="同步数据"
+          >
+            <SyncOutlined />
           </span>
           <ConfigProvider
             theme={{
@@ -336,6 +436,131 @@ const Dashboard = () => {
         onCancel={() => setReturnModalOpen(false)}
         onOk={() => { setReturnModalOpen(false); handleDataUpdate(); }}
       />
+
+      {/* 同步进度弹窗 */}
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorPrimary: '#00f0ff',
+            colorBgElevated: 'rgba(10, 15, 35, 0.98)',
+            colorBgContainer: 'rgba(10, 15, 35, 0.98)',
+          },
+        }}
+      >
+        <Modal
+          open={syncOpen}
+          title={null}
+          footer={null}
+          onCancel={handleSyncClose}
+          centered
+          width={480}
+          closable={syncProgress?.state !== 'PROGRESS'}
+          maskClosable={syncProgress?.state !== 'PROGRESS'}
+          styles={{ body: { padding: '24px 28px' } }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
+              数据同步
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>
+              从公安内网同步罪犯档案数据
+            </div>
+          </div>
+
+          {/* 进度条 */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{
+              height: 6,
+              borderRadius: 3,
+              background: 'rgba(255,255,255,0.08)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                borderRadius: 3,
+                width: `${syncProgress?.percent || 0}%`,
+                background: syncProgress?.state === 'FAILURE'
+                  ? 'linear-gradient(90deg, #ff4d4f, #ff7875)'
+                  : 'linear-gradient(90deg, #00f0ff, #00b4d8)',
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: 8,
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.45)',
+            }}>
+              <span>{syncProgress?.message || '等待中...'}</span>
+              <span>{syncProgress?.percent || 0}%</span>
+            </div>
+          </div>
+
+          {/* 步骤列表 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {SYNC_STEPS.map((step, idx) => {
+              const status = getStepStatus(step.key);
+              return (
+                <div key={step.key} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 16px',
+                  borderRadius: 8,
+                  background: status === 'process' ? 'rgba(0, 240, 255, 0.06)' : 'transparent',
+                  border: status === 'process' ? '1px solid rgba(0, 240, 255, 0.15)' : '1px solid transparent',
+                }}>
+                  <div style={{ flexShrink: 0 }}>{getStepIcon(step.key)}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: 14,
+                      color: status === 'process' ? '#00f0ff' : status === 'finish' ? '#52c41a' : status === 'error' ? '#ff4d4f' : 'rgba(255,255,255,0.35)',
+                      fontWeight: status === 'process' ? 600 : 400,
+                    }}>
+                      {step.label}
+                    </div>
+                  </div>
+                  {step.key === 'sync_basic' && status === 'process' && syncProgress?.total > 0 && (
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+                      {syncProgress.current}/{syncProgress.total}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 完成/失败状态 */}
+          {syncProgress?.state === 'SUCCESS' && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: 20,
+              padding: '12px',
+              borderRadius: 8,
+              background: 'rgba(82, 196, 26, 0.1)',
+              border: '1px solid rgba(82, 196, 26, 0.2)',
+            }}>
+              <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20, marginRight: 8 }} />
+              <span style={{ color: '#52c41a', fontSize: 14 }}>{syncProgress.message}</span>
+            </div>
+          )}
+          {syncProgress?.state === 'FAILURE' && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: 20,
+              padding: '12px',
+              borderRadius: 8,
+              background: 'rgba(255, 77, 79, 0.1)',
+              border: '1px solid rgba(255, 77, 79, 0.2)',
+            }}>
+              <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 20, marginRight: 8 }} />
+              <span style={{ color: '#ff4d4f', fontSize: 14 }}>{syncProgress.message}</span>
+            </div>
+          )}
+        </Modal>
+      </ConfigProvider>
     </div>
   );
 };

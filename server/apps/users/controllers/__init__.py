@@ -16,6 +16,7 @@ from .exit_type_controller import (
 from .message_controller import PrisonMessagesController
 from .video_controller import VideoStreamUrlController, CameraListController
 from .archive_controller import ArchiveListController, ArchiveDetailController
+from .sync_controller import SyncStartController, SyncStatusController
 
 __all__ = [
     'LoginController',
@@ -39,4 +40,6 @@ __all__ = [
     'CameraListController',
     'ArchiveListController',
     'ArchiveDetailController',
+    'SyncStartController',
+    'SyncStatusController',
 ]
