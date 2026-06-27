@@ -1,7 +1,8 @@
 import {
   DashboardOutlined,
   TeamOutlined,
-  FileTextOutlined,
+  SnippetsOutlined,
+  CopyOutlined,
   SafetyCertificateOutlined,
   AppstoreOutlined,
 } from "@ant-design/icons";
@@ -19,12 +20,12 @@ export const allMenus = [
   },
   {
     key: "/statistics",
-    icon: <FileTextOutlined />,
+    icon: <CopyOutlined />,
     label: "出监记录",
   },
   {
     key: "/return-records",
-    icon: <FileTextOutlined />,
+    icon: <SnippetsOutlined />,
     label: "回监记录",
   },
   {

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { getFirstMenuPath } from '@/router/menus';
 import { userLogin } from '@/api/globApi';
+import logoImg from '@/imgs/logo.png';
 import cache from '@/utils/cache';
 import './index.less';
 
@@ -47,7 +48,7 @@ const Login = () => {
         <div className="login-card">
           <div className="login-header">
             <div className="logo-icon">
-              <SafetyOutlined />
+              <img src={logoImg} alt="logo" />
             </div>
             <h1 className="login-title">监狱人脸识别系统</h1>
             <p className="login-subtitle">Prison Facial Recognition System</p>
