@@ -45,6 +45,7 @@ const ExitReasonBarChart = ({ data }) => {
       },
       yAxis: {
         type: 'value',
+        minInterval: 1,
         axisLabel: {
           color: 'rgba(255, 255, 255, 0.5)',
           fontSize: 10
