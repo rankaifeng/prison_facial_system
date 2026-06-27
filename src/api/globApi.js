@@ -103,6 +103,6 @@ export const video = {
 };
 
 export const sync = {
-  start: () => http.post(SYNC_START),
+  start: () => http.post(SYNC_START, {}),
   status: (task_id) => http.get(SYNC_STATUS, { task_id }),
 };
