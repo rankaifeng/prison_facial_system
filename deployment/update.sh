@@ -47,41 +47,25 @@ if [ -n "$SERVER_IP" ]; then
         echo "  已添加 $SERVER_IP 到 ALLOWED_HOSTS"
     fi
 
-    # 添加 PHOTO_BASE_URL（如果不存在）
-    if ! grep -q "PHOTO_BASE_URL" "$INSTALL_DIR/docker-compose.yml"; then
-        sed -i "/RTI_API_BASE/a\\      - PHOTO_BASE_URL=http://$SERVER_IP" "$INSTALL_DIR/docker-compose.yml"
-        echo "  已添加 PHOTO_BASE_URL=http://$SERVER_IP"
+    # 移除 PHOTO_BASE_URL（照片已改为相对路径，由 nginx 代理）
+    if grep -q "PHOTO_BASE_URL" "$INSTALL_DIR/docker-compose.yml"; then
+        sed -i '/PHOTO_BASE_URL/d' "$INSTALL_DIR/docker-compose.yml"
+        echo "  已移除 PHOTO_BASE_URL（照片改用相对路径）"
     fi
 fi
 
-# ── 3. 更新图片代理服务 ──
+# ── 3. 停止旧的图片代理服务（已由 nginx 处理）──
 echo ""
-echo "[3/5] 更新图片代理..."
+echo "[3/5] 清理旧的图片代理..."
 
-if [ -f "$SCRIPT_DIR/proxy.py" ]; then
-    cp "$SCRIPT_DIR/proxy.py" "$INSTALL_DIR/proxy.py"
-
-    cat > /etc/systemd/system/prison-proxy.service << SERVICEEOF
-[Unit]
-Description=Prison Photo Proxy
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 $INSTALL_DIR/proxy.py
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-SERVICEEOF
-
+if systemctl is-active --quiet prison-proxy 2>/dev/null; then
+    systemctl stop prison-proxy
+    systemctl disable prison-proxy
+    rm -f /etc/systemd/system/prison-proxy.service
     systemctl daemon-reload
-    systemctl enable prison-proxy 2>/dev/null
-    systemctl restart prison-proxy
-    echo "  图片代理服务已启动（端口 80）"
+    echo "  已停止旧的图片代理服务"
 else
-    echo "  未找到 proxy.py，跳过"
+    echo "  图片代理服务未运行，跳过"
 fi
 
 # ── 4. 重启服务 ──

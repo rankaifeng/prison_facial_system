@@ -326,7 +326,7 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <SafetyOutlined className="header-icon" />
-          <Title level={3} className="header-title">监狱关押罪犯出入管控平台</Title>
+          <Title level={3} className="header-title">人员出入AB门人脸识别管理系统</Title>
         </div>
         <div className="header-center">
           <span className="welcome-greeting">{getGreeting()}，</span>
@@ -340,13 +340,13 @@ const Dashboard = () => {
           >
             {isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
           </span>
-          <span
+          {/* <span
             className="fullscreen-btn"
             onClick={handleSyncStart}
             title="同步数据"
           >
             <SyncOutlined />
-          </span>
+          </span> */}
           <ConfigProvider
             theme={{
               algorithm: theme.darkAlgorithm,

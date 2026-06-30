@@ -1,8 +1,30 @@
+from urllib.parse import urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
 from apps.users.models import PrisonerArchive
+
+
+def _normalize_photo_url(url):
+    """将完整照片URL转为相对路径，让nginx代理"""
+    if not url or not url.startswith('http'):
+        return url
+    try:
+        parsed = urlparse(url)
+        return parsed.path
+    except Exception:
+        return url
+
+
+def _normalize_media_info(media_info):
+    """处理媒体信息中的照片URL"""
+    if not media_info:
+        return media_info
+    for item in media_info:
+        if 'xp' in item:
+            item['xp'] = _normalize_photo_url(item['xp'])
+    return media_info
 
 
 class ArchiveListController(APIView):
@@ -36,7 +58,7 @@ class ArchiveListController(APIView):
         data = []
         for r in records:
             item = r.basic_info.copy() if r.basic_info else {}
-            item['mtxx'] = r.media_info or []
+            item['mtxx'] = _normalize_media_info(r.media_info) or []
             item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
             data.append(item)
 
@@ -64,7 +86,7 @@ class ArchiveDetailController(APIView):
             return Response({'code': 0, 'msg': '未找到该罪犯档案', 'data': None})
 
         item = r.basic_info.copy() if r.basic_info else {}
-        item['mtxx'] = r.media_info or []
+        item['mtxx'] = _normalize_media_info(r.media_info) or []
         item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
 
         return Response({

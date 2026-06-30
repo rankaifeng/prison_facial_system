@@ -183,10 +183,180 @@ def sync_prisoner_data_task():
         return f'同步失败: {e}'
 
 
+def _sync_to_dahua_direct(report_fn=None):
+    """
+    直接同步到大华门禁系统（从数据库读取，不重新同步数据）
+    返回: (success_count, fail_count, skip_count, message)
+    """
+    import os
+    import requests
+    import base64
+    import yaml
+    from django.conf import settings
+    from apps.users.models import PrisonerArchive
+
+    def log(msg):
+        logger.info(f'[大华同步] {msg}')
+        if report_fn:
+            report_fn(msg)
+
+    # 1. 加载大华配置
+    config_path = os.path.join(settings.BASE_DIR, 'config', 'cameras.yml')
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+    except Exception as e:
+        msg = f'加载 cameras.yml 失败: {e}'
+        logger.error(f'[大华同步] {msg}')
+        return 0, 0, 0, msg
+
+    dahua_config = config.get('dahua', {})
+    base_url = dahua_config.get('base_url', '')
+    if not base_url:
+        msg = '大华平台 base_url 未配置'
+        logger.error(f'[大华同步] {msg}')
+        return 0, 0, 0, msg
+
+    username = dahua_config.get('userName', '')
+    password = dahua_config.get('password', '')
+    auth = requests.auth.HTTPDigestAuth(username, password) if username else None
+
+    log(f'大华平台地址: {base_url}')
+
+    # 2. 验证连通性
+    try:
+        url = f"{base_url}/cgi-bin/magicBox.cgi?action=getDeviceType"
+        resp = requests.get(url, auth=auth, timeout=10)
+        log(f'大华平台连接测试: status={resp.status_code}, response={resp.text[:100]}')
+        if resp.status_code != 200:
+            msg = f'大华平台连接失败, status={resp.status_code}'
+            logger.error(f'[大华同步] {msg}')
+            return 0, 0, 0, msg
+    except requests.RequestException as e:
+        msg = f'大华平台连接异常: {e}'
+        logger.error(f'[大华同步] {msg}')
+        return 0, 0, 0, msg
+
+    # 3. 获取档案数据
+    archives = PrisonerArchive.objects.all()
+    prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info'))
+    if not prisoners:
+        msg = '档案库无数据，跳过大华同步'
+        log(msg)
+        return 0, 0, 0, msg
+
+    log(f'待同步人数: {len(prisoners)}')
+
+    # 4. 下载照片
+    photo_map = {}
+    photo_fail = 0
+    for p in prisoners:
+        media = p.get('media_info') or []
+        for m in media:
+            xp = m.get('xp', '')
+            if xp:
+                try:
+                    resp = requests.get(xp, timeout=10)
+                    resp.raise_for_status()
+                    photo_map[p['prisoner_no']] = base64.b64encode(resp.content).decode('utf-8')
+                    log(f'  照片下载成功: {p["prisoner_no"]} <- {xp}')
+                except Exception as e:
+                    photo_fail += 1
+                    log(f'  照片下载失败: {p["prisoner_no"]} <- {xp} ({e})')
+                break
+
+    log(f'照片下载完成: 成功 {len(photo_map)}, 失败 {photo_fail}')
+
+    # 5. 插入用户到大华
+    user_url = f"{base_url}/cgi-bin/AccessUser.cgi?action=insertMulti"
+    users = []
+    for p in prisoners:
+        users.append({
+            'UserID': p['prisoner_no'],
+            'UserName': p['prisoner_name'],
+            'UserType': 0,
+            'UseTime': 1,
+            'IsFirstEnter': True,
+            'FirstEnterDoors': [0],
+            'UserStatus': 0,
+            'Authority': 2,
+            'CitizenIDNo': p.get('id_card', ''),
+            'Password': '123456',
+            'Doors': [0],
+            'ValidFrom': '2026-01-01 00:00:00',
+            'ValidTo': '2099-12-31 23:59:59',
+        })
+
+    user_success = 0
+    user_fail = 0
+    try:
+        payload = {'UserList': users}
+        resp = requests.post(user_url, json=payload, auth=auth, timeout=30)
+        text = resp.text.strip()
+        log(f'用户插入响应: status={resp.status_code}, response={text[:200]}')
+        if 'ok' in text.lower():
+            user_success = len(users)
+            log(f'用户插入成功: {user_success} 个')
+        else:
+            user_fail = len(users)
+            log(f'用户插入失败: {text[:200]}')
+    except requests.RequestException as e:
+        user_fail = len(users)
+        log(f'用户插入请求异常: {e}')
+
+    # 6. 插入人脸照片到大华
+    face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
+    faces = []
+    skipped = 0
+    for p in prisoners:
+        photo_base64 = photo_map.get(p['prisoner_no'])
+        if not photo_base64:
+            skipped += 1
+            continue
+        faces.append({
+            'UserID': p['prisoner_no'],
+            'FaceData': [],
+            'PhotoData': [photo_base64],
+            'PhotoURL': [],
+        })
+
+    face_success = 0
+    face_fail = 0
+    batch_size = 50
+    for i in range(0, len(faces), batch_size):
+        batch = faces[i:i + batch_size]
+        batch_num = i // batch_size + 1
+        try:
+            payload = {'FaceList': batch}
+            resp = requests.post(face_url, json=payload, auth=auth, timeout=60)
+            text = resp.text.strip()
+            log(f'人脸批次 {batch_num} 响应: status={resp.status_code}, response={text[:200]}')
+            if 'ok' in text.lower():
+                face_success += len(batch)
+                log(f'人脸批次 {batch_num}: 成功插入 {len(batch)} 个')
+            else:
+                face_fail += len(batch)
+                log(f'人脸批次 {batch_num}: 失败 - {text[:200]}')
+        except requests.RequestException as e:
+            face_fail += len(batch)
+            log(f'人脸批次 {batch_num}: 请求异常 - {e}')
+
+    if skipped > 0:
+        log(f'跳过无照片人员: {skipped} 个')
+
+    # 7. 汇总
+    msg = (f'大华同步完成: 用户成功 {user_success}/{len(prisoners)}, '
+           f'人脸成功 {face_success}/{len(faces)} (跳过 {skipped}), '
+           f'照片下载失败 {photo_fail}')
+    log(msg)
+
+    return face_success, face_fail, skipped, msg
+
+
 @shared_task(bind=True)
 def sync_prisoner_data_with_progress(self):
     """手动同步罪犯数据（带进度报告）"""
-    import os, requests, re, time, base64
+    import os, requests, re, time
     from xml.etree import ElementTree as ET
     from django.conf import settings
     from apps.users.models import PrisonerArchive
@@ -198,6 +368,7 @@ def sync_prisoner_data_with_progress(self):
 
     def report(step, current, total, message):
         percent = int(current / total * 100) if total > 0 else 0
+        logger.info(f'[同步进度] {step}: {message} ({percent}%)')
         self.update_state(state='PROGRESS', meta={
             'step': step, 'current': current, 'total': total,
             'message': message, 'percent': percent,
@@ -357,21 +528,21 @@ def sync_prisoner_data_with_progress(self):
             if (i + 1) % 50 == 0:
                 time.sleep(2)
 
-        report('sync_basic', 80, 100, f'同步完成: 成功 {success}, 失败 {fail}')
+        report('sync_basic', 80, 100, f'本地同步完成: 成功 {success}, 失败 {fail}')
 
-        # Step 3: 同步到大华门禁
+        # Step 3: 同步到大华门禁（直接调用，不走 management command）
         report('sync_dahua', 80, 100, '正在同步到大华门禁...')
-        try:
-            from django.core.management import call_command
-            call_command('sync_prisoner_data', '--dahua')
-            report('sync_dahua', 95, 100, '大华门禁同步完成')
-        except Exception as e:
-            logger.error(f'大华门禁同步失败: {e}')
-            report('sync_dahua', 95, 100, f'大华门禁同步失败: {e}')
+
+        def dahua_progress(msg):
+            report('sync_dahua', 85, 100, msg)
+
+        face_success, face_fail, skipped, dahua_msg = _sync_to_dahua_direct(dahua_progress)
+        report('sync_dahua', 95, 100, dahua_msg)
 
         # Step 4: 完成
-        report('done', 100, 100, f'同步完成! 成功 {success}, 失败 {fail}')
-        return {'state': 'SUCCESS', 'message': f'同步完成! 成功 {success}, 失败 {fail}'}
+        final_msg = f'同步完成! 本地: 成功 {success}, 失败 {fail} | 大华: 人脸 {face_success}, 跳过 {skipped}'
+        report('done', 100, 100, final_msg)
+        return {'state': 'SUCCESS', 'message': final_msg}
 
     except Exception as e:
         logger.error(f'同步任务异常: {e}')

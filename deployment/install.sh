@@ -112,20 +112,20 @@ services:
     container_name: prison-backend
     command: ["/app/deployment-entrypoint.sh"]
     restart: always
+    network_mode: host
     environment:
       - DEBUG=False
       - SECRET_KEY=$SECRET_KEY
       - ALLOWED_HOSTS=localhost,127.0.0.1,$SERVER_IP
-      - DB_HOST=mysql
+      - DB_HOST=127.0.0.1
       - DB_PORT=3306
       - DB_NAME=prison_system
       - DB_USER=root
       - DB_PASSWORD=$MYSQL_PASSWORD
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=redis://127.0.0.1:6379/0
       - RTI_API_BASE=$RTI_API_BASE
-      - PHOTO_BASE_URL=http://$SERVER_IP
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
     volumes:
       - media-data:/app/media
       - ./cameras.yml:/app/config/cameras.yml
@@ -134,47 +134,43 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    networks:
-      - prison-network
 
   celery-beat:
     image: prison-backend:latest
     container_name: prison-celery-beat
     command: ["/app/celery-entrypoint.sh"]
     restart: always
+    network_mode: host
     environment:
       - DEBUG=False
-      - DB_HOST=mysql
+      - DB_HOST=127.0.0.1
       - DB_PORT=3306
       - DB_NAME=prison_system
       - DB_USER=root
       - DB_PASSWORD=$MYSQL_PASSWORD
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://127.0.0.1:6379/0
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_started
-    networks:
-      - prison-network
 
   frontend:
     image: prison-frontend:latest
     container_name: prison-frontend
     restart: always
-    ports:
-      - "${FRONTEND_PORT:-80}:80"
+    network_mode: host
     depends_on:
       - backend
-    networks:
-      - prison-network
 
   mysql:
     image: mysql:8.0
     container_name: prison-mysql
     restart: always
+    ports:
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
       - MYSQL_DATABASE=prison_system
@@ -189,22 +185,16 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-    networks:
-      - prison-network
 
   redis:
     image: redis:7-alpine
     container_name: prison-redis
     restart: always
+    ports:
+      - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
-    networks:
-      - prison-network
-
-networks:
-  prison-network:
-    driver: bridge
 
 volumes:
   mysql-data:
@@ -309,30 +299,15 @@ PeriodicTask.objects.get_or_create(
 print('OK')
 " 2>/dev/null && echo "  定时任务创建成功（每天 00:05 同步）" || echo "  定时任务创建失败，可稍后在管理后台手动添加"
 
-# ── 配置图片代理服务 ──
-echo ""
-echo "  配置图片代理服务..."
-cp "$SCRIPT_DIR/proxy.py" "$INSTALL_DIR/proxy.py"
-
-cat > /etc/systemd/system/prison-proxy.service << SERVICEEOF
-[Unit]
-Description=Prison Photo Proxy
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 $INSTALL_DIR/proxy.py
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-SERVICEEOF
-
-systemctl daemon-reload
-systemctl enable prison-proxy
-systemctl start prison-proxy
-echo "  图片代理服务已启动（端口 80）"
+# ── 图片代理已由 nginx 处理，无需额外服务 ──
+# 停止旧的 proxy 服务（如果存在）
+if systemctl is-active --quiet prison-proxy 2>/dev/null; then
+    systemctl stop prison-proxy
+    systemctl disable prison-proxy
+    rm -f /etc/systemd/system/prison-proxy.service
+    systemctl daemon-reload
+    echo "  已停止旧的图片代理服务"
+fi
 echo ""
 
 # ════════════════════════════════════════════
