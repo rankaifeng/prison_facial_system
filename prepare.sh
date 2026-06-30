@@ -166,6 +166,15 @@ if [ -f "$FRONTEND_DIST_HASH_FILE" ]; then
     CACHED_DIST_HASH=$(cat "$FRONTEND_DIST_HASH_FILE")
 fi
 
+# 检查 nginx.conf 是否变化
+NGINX_CONF_HASH_FILE="$CACHE_DIR/nginx-conf.hash"
+CURRENT_NGINX_HASH=$(file_md5 "$SCRIPT_DIR/deployment/frontend/nginx.conf" 2>/dev/null)
+CACHED_NGINX_HASH=""
+
+if [ -f "$NGINX_CONF_HASH_FILE" ]; then
+    CACHED_NGINX_HASH=$(cat "$NGINX_CONF_HASH_FILE")
+fi
+
 NEED_FRONTEND_REBUILD=false
 if ! docker image inspect prison-frontend:latest &>/dev/null; then
     NEED_FRONTEND_REBUILD=true
@@ -174,6 +183,9 @@ elif [ "$CURRENT_FRONTEND_DOCKER_HASH" != "$CACHED_FRONTEND_DOCKER_HASH" ]; then
     NEED_FRONTEND_REBUILD=true
 elif [ "$CURRENT_DIST_HASH" != "$CACHED_DIST_HASH" ]; then
     echo "  前端构建产物变化，需要重建"
+    NEED_FRONTEND_REBUILD=true
+elif [ "$CURRENT_NGINX_HASH" != "$CACHED_NGINX_HASH" ]; then
+    echo "  nginx.conf 变化，需要重建"
     NEED_FRONTEND_REBUILD=true
 fi
 
@@ -186,6 +198,7 @@ if [ "$NEED_FRONTEND_REBUILD" = true ]; then
     mkdir -p "$CACHE_DIR"
     echo "$CURRENT_FRONTEND_DOCKER_HASH" > "$FRONTEND_DOCKER_HASH_FILE"
     echo "$CURRENT_DIST_HASH" > "$FRONTEND_DIST_HASH_FILE"
+    echo "$CURRENT_NGINX_HASH" > "$NGINX_CONF_HASH_FILE"
     echo "  前端镜像构建完成"
 else
     echo "  前端镜像无需重建，使用缓存"
