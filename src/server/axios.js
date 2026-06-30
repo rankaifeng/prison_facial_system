@@ -205,6 +205,12 @@ const http = {
         if (data instanceof FormData) {
             return service.post(url, data);
         }
+        // 空对象直接以 JSON 发送
+        if (!data || Object.keys(data).length === 0) {
+            return service.post(url, {}, {
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            });
+        }
         const formData = new FormData();
         for (const key in data) {
             const value = data[key];
