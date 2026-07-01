@@ -243,13 +243,22 @@ class Command(BaseCommand):
             self.stdout.write('    [模拟] 返回预设罪犯编号')
             return MOCK_PRISONER_IDS
 
-        resp = requests.get(GET_PRISONER_IDS_URL, timeout=30)
-        resp.raise_for_status()
-        inner_xml = extract_inner_xml(resp.text)
-        if not inner_xml:
-            logger.error(f'解析罪犯编号XML失败: {resp.text[:500]}')
+        self.stdout.write(f'    请求地址: {GET_PRISONER_IDS_URL}')
+        try:
+            resp = requests.get(GET_PRISONER_IDS_URL, timeout=30)
+            self.stdout.write(f'    响应状态码: {resp.status_code}')
+            self.stdout.write(f'    响应内容(前500字符): {resp.text[:500]}')
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f'    请求失败: {e}'))
             return []
 
+        inner_xml = extract_inner_xml(resp.text)
+        if not inner_xml:
+            self.stdout.write(self.style.ERROR(f'    解析XML失败，原始响应: {resp.text[:1000]}'))
+            return []
+
+        self.stdout.write(f'    解析到的内层XML(前500字符): {inner_xml[:500]}')
         root = ET.fromstring(inner_xml)
         ids = []
         for elem in root.findall('.//zyljbh'):
