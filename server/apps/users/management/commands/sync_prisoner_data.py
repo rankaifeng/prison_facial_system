@@ -455,7 +455,7 @@ class Command(BaseCommand):
             return False
 
     def _dahua_insert_users(self, base_url, auth, prisoners):
-        """批量插入用户到大华门禁平台"""
+        """批量插入用户到大华门禁平台（分批，每批10个）"""
         url = f"{base_url}/cgi-bin/AccessUser.cgi?action=insertMulti"
         users = []
         for p in prisoners:
@@ -475,19 +475,30 @@ class Command(BaseCommand):
                 'ValidTo': '2099-12-31 23:59:59',
             })
 
-        payload = {'UserList': users}
-        try:
-            resp = requests.post(url, json=payload, auth=auth, timeout=30)
-            text = resp.text.strip().lower()
-            if 'ok' in text:
-                self.stdout.write(self.style.SUCCESS(f'    用户插入成功: {len(users)} 个'))
-                return True
-            else:
-                self.stdout.write(self.style.ERROR(f'    用户插入失败: {resp.text[:200]}'))
-                return False
-        except requests.RequestException as e:
-            self.stdout.write(self.style.ERROR(f'    用户插入请求失败: {e}'))
-            return False
+        batch_size = 10
+        total_success = 0
+        total_fail = 0
+        for i in range(0, len(users), batch_size):
+            batch = users[i:i + batch_size]
+            batch_num = i // batch_size + 1
+            payload = {'UserList': batch}
+            try:
+                resp = requests.post(url, json=payload, auth=auth, timeout=30)
+                text = resp.text.strip()
+                if 'ok' in text.lower():
+                    total_success += len(batch)
+                    self.stdout.write(f'    用户批次 {batch_num}: 插入 {len(batch)} 个')
+                else:
+                    total_fail += len(batch)
+                    self.stdout.write(self.style.ERROR(
+                        f'    用户批次 {batch_num} 失败(status={resp.status_code}): {text[:300]}'))
+            except requests.RequestException as e:
+                total_fail += len(batch)
+                self.stdout.write(self.style.ERROR(f'    用户批次 {batch_num} 请求失败: {e}'))
+
+        if total_success > 0:
+            self.stdout.write(self.style.SUCCESS(f'    用户插入完成: {total_success}/{len(users)}'))
+        return total_fail == 0
 
     def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
         """批量插入人脸照片到大华门禁平台（使用照片URL，大华设备自行下载）"""
@@ -507,7 +518,7 @@ class Command(BaseCommand):
             })
 
         # 大华 API 可能有单次请求限制，分批处理
-        batch_size = 50
+        batch_size = 10
         total_success = 0
         for i in range(0, len(faces), batch_size):
             batch = faces[i:i + batch_size]

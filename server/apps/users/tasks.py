@@ -269,20 +269,23 @@ def _sync_to_dahua_direct(report_fn=None):
 
     user_success = 0
     user_fail = 0
-    try:
-        payload = {'UserList': users}
-        resp = requests.post(user_url, json=payload, auth=auth, timeout=30)
-        text = resp.text.strip()
-        log(f'用户插入响应: status={resp.status_code}, response={text[:200]}')
-        if 'ok' in text.lower():
-            user_success = len(users)
-            log(f'用户插入成功: {user_success} 个')
-        else:
-            user_fail = len(users)
-            log(f'用户插入失败: {text[:200]}')
-    except requests.RequestException as e:
-        user_fail = len(users)
-        log(f'用户插入请求异常: {e}')
+    batch_size = 10
+    for i in range(0, len(users), batch_size):
+        batch = users[i:i + batch_size]
+        batch_num = i // batch_size + 1
+        try:
+            payload = {'UserList': batch}
+            resp = requests.post(user_url, json=payload, auth=auth, timeout=30)
+            text = resp.text.strip()
+            if 'ok' in text.lower():
+                user_success += len(batch)
+                log(f'用户批次 {batch_num}: 插入 {len(batch)} 个')
+            else:
+                user_fail += len(batch)
+                log(f'用户批次 {batch_num} 失败: {text[:200]}')
+        except requests.RequestException as e:
+            user_fail += len(batch)
+            log(f'用户批次 {batch_num} 请求异常: {e}')
 
     # 5. 构建照片URL映射（直接用URL，不下载）
     def fix_photo_url(url):
@@ -326,7 +329,7 @@ def _sync_to_dahua_direct(report_fn=None):
 
     face_success = 0
     face_fail = 0
-    batch_size = 50
+    batch_size = 10
     for i in range(0, len(faces), batch_size):
         batch = faces[i:i + batch_size]
         batch_num = i // batch_size + 1
@@ -350,8 +353,7 @@ def _sync_to_dahua_direct(report_fn=None):
 
     # 7. 汇总
     msg = (f'大华同步完成: 用户成功 {user_success}/{len(prisoners)}, '
-           f'人脸成功 {face_success}/{len(faces)} (跳过 {skipped}), '
-           f'照片下载失败 {photo_fail}')
+           f'人脸成功 {face_success}/{len(faces)} (跳过 {skipped})')
     log(msg)
 
     return face_success, face_fail, skipped, msg
