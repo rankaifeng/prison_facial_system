@@ -7,14 +7,14 @@ from apps.users.models import PrisonerArchive
 
 
 def _normalize_photo_url(url):
-    """将完整照片URL转为相对路径，让nginx代理"""
-    if not url or not url.startswith('http'):
+    """返回完整照片URL，兼容旧数据中的错误地址"""
+    if not url:
         return url
-    try:
-        parsed = urlparse(url)
-        return parsed.path
-    except Exception:
-        return url
+    url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+    return url
 
 
 def _normalize_media_info(media_info):

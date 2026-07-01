@@ -247,27 +247,7 @@ def _sync_to_dahua_direct(report_fn=None):
 
     log(f'待同步人数: {len(prisoners)}')
 
-    # 4. 下载照片
-    photo_map = {}
-    photo_fail = 0
-    for p in prisoners:
-        media = p.get('media_info') or []
-        for m in media:
-            xp = m.get('xp', '')
-            if xp:
-                try:
-                    resp = requests.get(xp, timeout=10)
-                    resp.raise_for_status()
-                    photo_map[p['prisoner_no']] = base64.b64encode(resp.content).decode('utf-8')
-                    log(f'  照片下载成功: {p["prisoner_no"]} <- {xp}')
-                except Exception as e:
-                    photo_fail += 1
-                    log(f'  照片下载失败: {p["prisoner_no"]} <- {xp} ({e})')
-                break
-
-    log(f'照片下载完成: 成功 {len(photo_map)}, 失败 {photo_fail}')
-
-    # 5. 插入用户到大华
+    # 4. 先插入用户到大华（不管照片能不能下载）
     user_url = f"{base_url}/cgi-bin/AccessUser.cgi?action=insertMulti"
     users = []
     for p in prisoners:
@@ -304,20 +284,44 @@ def _sync_to_dahua_direct(report_fn=None):
         user_fail = len(users)
         log(f'用户插入请求异常: {e}')
 
-    # 6. 插入人脸照片到大华
+    # 5. 构建照片URL映射（直接用URL，不下载）
+    def fix_photo_url(url):
+        if not url:
+            return url
+        url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+        return url
+
+    photo_map = {}
+    no_photo = 0
+    for p in prisoners:
+        media = p.get('media_info') or []
+        for m in media:
+            xp = fix_photo_url(m.get('xp', ''))
+            if xp:
+                photo_map[p['prisoner_no']] = xp
+                break
+        if p['prisoner_no'] not in photo_map:
+            no_photo += 1
+
+    log(f'有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
+
+    # 6. 插入人脸照片到大华（传URL，大华设备自行下载）
     face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
     faces = []
     skipped = 0
     for p in prisoners:
-        photo_base64 = photo_map.get(p['prisoner_no'])
-        if not photo_base64:
+        photo_url = photo_map.get(p['prisoner_no'])
+        if not photo_url:
             skipped += 1
             continue
         faces.append({
             'UserID': p['prisoner_no'],
             'FaceData': [],
-            'PhotoData': [photo_base64],
-            'PhotoURL': [],
+            'PhotoData': [],
+            'PhotoURL': [photo_url],
         })
 
     face_success = 0
@@ -394,18 +398,21 @@ def sync_prisoner_data_with_progress(self):
         )
 
     def convert_photo_path(raw_path):
+        """将 Windows 绝对路径转为可访问的图片 URL"""
         if not raw_path:
             return ''
+        # C:\JGXTDB\zhao_pian\202105\xxx.jpg → 202105/xxx.jpg
         path = raw_path.replace('\\', '/')
         marker = 'zhao_pian/'
         idx = path.find(marker)
-        relative = path[idx + len(marker):] if idx >= 0 else '/'.join(path.split('/')[-2:])
+        if idx >= 0:
+            relative = path[idx + len(marker):]
+        else:
+            parts = path.split('/')
+            relative = '/'.join(parts[-2:]) if len(parts) >= 2 else parts[-1]
         relative = relative.lstrip('/')
-        if PHOTO_BASE_URL:
-            return f'{PHOTO_BASE_URL}/{relative}'
-        from urllib.parse import urlparse
-        parsed = urlparse(API_BASE)
-        return f'{parsed.scheme}://{parsed.hostname}/{relative}'
+        # 直接访问图片服务器
+        return f'http://10.2.50.16/{relative}'
 
     try:
         # Step 1: 获取罪犯编号

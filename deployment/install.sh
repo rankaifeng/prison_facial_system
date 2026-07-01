@@ -124,6 +124,8 @@ services:
       - DB_PASSWORD=$MYSQL_PASSWORD
       - REDIS_URL=redis://127.0.0.1:6379/0
       - RTI_API_BASE=$RTI_API_BASE
+      - SERVER_IP=$SERVER_IP
+      - FRONTEND_PORT=${FRONTEND_PORT:-8080}
       - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
       - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
     volumes:
@@ -280,6 +282,9 @@ echo "════════════════════════�
 
 echo "  正在同步罪犯档案数据（首次部署）..."
 docker exec prison-backend python manage.py sync_prisoner_data --real-api 2>&1 | sed 's/^/    /' && echo "  数据同步完成" || echo "  数据同步失败，可稍后手动执行: docker exec prison-backend python manage.py sync_prisoner_data --real-api"
+
+echo "  正在同步到大华门禁平台..."
+docker exec prison-backend python manage.py sync_prisoner_data --dahua-only 2>&1 | sed 's/^/    /' && echo "  大华同步完成" || echo "  大华同步失败，可稍后手动执行: docker exec prison-backend python manage.py sync_prisoner_data --dahua-only"
 
 echo "  正在创建每日同步定时任务..."
 docker exec prison-backend python manage.py shell -c "

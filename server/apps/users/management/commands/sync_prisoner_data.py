@@ -181,8 +181,18 @@ class Command(BaseCommand):
             '--dahua', action='store_true', default=False,
             help='同步完成后推送到大华门禁平台',
         )
+        parser.add_argument(
+            '--dahua-only', action='store_true', default=False,
+            help='仅从数据库同步到大华门禁平台（跳过API同步）',
+        )
 
     def handle(self, *args, **options):
+        # --dahua-only: 直接从数据库同步到大华，跳过 API 同步
+        if options['dahua_only']:
+            self.stdout.write(self.style.WARNING('=== 从数据库同步到大华门禁平台 ==='))
+            self._sync_to_dahua()
+            return
+
         use_real_api = options['real_api']
         batch_size = options['batch_size']
         mode = '真实接口' if use_real_api else '模拟数据'
@@ -346,29 +356,21 @@ class Command(BaseCommand):
 
         # 转换媒体信息中的相片路径
         def convert_photo_path(raw_path):
-            """将 Windows 绝对路径转为 nginx 代理 URL"""
+            """将 Windows 绝对路径转为可访问的图片 URL"""
             if not raw_path:
                 return ''
-            # C:\JGXTDB\zhao_pian\202602\xxx.jpg → http://10.2.50.16/202602/xxx.jpg
+            # C:\JGXTDB\zhao_pian\202105\xxx.jpg → 202105/xxx.jpg
             path = raw_path.replace('\\', '/')
-            # 提取 zhao_pian 之后的部分
             marker = 'zhao_pian/'
             idx = path.find(marker)
             if idx >= 0:
                 relative = path[idx + len(marker):]
             else:
-                # 兜底：取最后两级目录
                 parts = path.split('/')
                 relative = '/'.join(parts[-2:]) if len(parts) >= 2 else parts[-1]
-            # 去掉端口号，nginx 代理在 80 端口
-            if PHOTO_BASE_URL:
-                base_url = PHOTO_BASE_URL
-            else:
-                from urllib.parse import urlparse
-                parsed = urlparse(API_BASE)
-                base_url = f'{parsed.scheme}://{parsed.hostname}'
             relative = relative.lstrip('/')
-            return f'{base_url}/{relative}'
+            # 直接访问图片服务器
+            return f'http://10.2.50.16/{relative}'
 
         media_list = []
         seen_xp = set()
@@ -488,20 +490,20 @@ class Command(BaseCommand):
             return False
 
     def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
-        """批量插入人脸照片到大华门禁平台（使用真实照片，无照片跳过）"""
+        """批量插入人脸照片到大华门禁平台（使用照片URL，大华设备自行下载）"""
         url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
         faces = []
         skipped = 0
         for p in prisoners:
-            photo_base64 = photo_map.get(p['prisoner_no'])
-            if not photo_base64:
+            photo_url = photo_map.get(p['prisoner_no'])
+            if not photo_url:
                 skipped += 1
                 continue
             faces.append({
                 'UserID': p['prisoner_no'],
                 'FaceData': [],
-                'PhotoData': [photo_base64],
-                'PhotoURL': [],
+                'PhotoData': [],
+                'PhotoURL': [photo_url],
             })
 
         # 大华 API 可能有单次请求限制，分批处理
@@ -528,8 +530,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'    人脸插入完成: {total_success}/{len(faces)}'))
         return total_success == len(faces)
 
+    def _fix_photo_url(self, url):
+        """修正照片URL，兼容旧数据中的错误地址"""
+        if not url:
+            return url
+        # 旧数据可能存的是 10.2.48.86，统一改为 10.2.50.16
+        url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+        return url
+
     def _download_photo_base64(self, photo_url):
         """下载照片并转为 base64"""
+        photo_url = self._fix_photo_url(photo_url)
         try:
             resp = requests.get(photo_url, timeout=10)
             resp.raise_for_status()
@@ -564,24 +578,27 @@ class Command(BaseCommand):
             return
         self.stdout.write(f'    待同步: {len(prisoners)} 人')
 
-        # 3. 构建照片映射（下载真实照片）
-        self.stdout.write('    正在下载罪犯照片...')
+        # 3. 插入用户（不管照片能不能下载，先同步用户数据）
+        self._dahua_insert_users(base_url, auth, [{'prisoner_no': p['prisoner_no'], 'prisoner_name': p['prisoner_name'], 'id_card': p['id_card']} for p in prisoners])
+
+        # 4. 构建照片URL映射（直接用URL，不下载）
         photo_map = {}
+        no_photo = 0
         for p in prisoners:
             media = p.get('media_info') or []
             for m in media:
-                xp = m.get('xp', '')
+                xp = self._fix_photo_url(m.get('xp', ''))
                 if xp:
-                    b64 = self._download_photo_base64(xp)
-                    if b64:
-                        photo_map[p['prisoner_no']] = b64
+                    photo_map[p['prisoner_no']] = xp
                     break
-        self.stdout.write(f'    已下载照片: {len(photo_map)}/{len(prisoners)}')
+            if p['prisoner_no'] not in photo_map:
+                no_photo += 1
+        self.stdout.write(f'    有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
 
-        # 4. 插入用户
-        self._dahua_insert_users(base_url, auth, [{'prisoner_no': p['prisoner_no'], 'prisoner_name': p['prisoner_name'], 'id_card': p['id_card']} for p in prisoners])
-
-        # 5. 插入人脸（无照片的跳过）
-        self._dahua_insert_faces(base_url, auth, [{'prisoner_no': p['prisoner_no']} for p in prisoners], photo_map)
+        # 5. 插入人脸（传URL给大华，大华设备自行下载）
+        if photo_map:
+            self._dahua_insert_faces(base_url, auth, [{'prisoner_no': p['prisoner_no']} for p in prisoners], photo_map)
+        else:
+            self.stdout.write(self.style.WARNING('    无照片数据，跳过人脸插入'))
 
         self.stdout.write(self.style.SUCCESS('    大华门禁平台同步完成'))
