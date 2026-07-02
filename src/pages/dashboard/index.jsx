@@ -402,7 +402,7 @@ const Dashboard = () => {
         visible={exitModalOpen}
         onCancel={resetExitModal}
         onOk={() => { resetExitModal(); handleDataUpdate(); }}
-        prisonerNo='5155016428'
+        prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
         swatFaceImage={swatFaceImage}
         onStepChange={handleExitModalStepChange}

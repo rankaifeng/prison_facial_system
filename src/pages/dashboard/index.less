@@ -171,7 +171,8 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 15px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 15px; }
       z-index: 1;
 
       .header-icon {
@@ -202,7 +203,8 @@
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 6px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 6px; }
 
       .welcome-greeting {
         font-size: 18px;
@@ -354,7 +356,8 @@
   flex: 1;
   display: flex;
   padding: 8px;
-  gap: 8px;
+  // Chrome 81: gap not supported, use margin instead
+  > * + * { margin-left: 8px; }
   min-height: 0;
   overflow: hidden;
 
@@ -363,7 +366,8 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-top: 8px; }
     min-height: 0;
     align-content: flex-start;
   }
@@ -372,7 +376,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-top: 10px; }
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -386,7 +391,8 @@
       .section-title {
         display: flex;
         align-items: center;
-        gap: 10px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 10px; }
         margin-bottom: 10px;
         padding: 8px 12px;
         border-radius: 6px;
@@ -408,7 +414,8 @@
         .title-content {
           display: flex;
           align-items: center;
-          gap: 8px;
+          // Chrome 81: gap not supported, use margin instead
+          > * + * { margin-left: 8px; }
           color: @primary-glow;
           font-size: 13px;
           font-weight: 600;
@@ -433,7 +440,8 @@
         .title-decor {
           display: flex;
           align-items: center;
-          gap: 4px;
+          // Chrome 81: gap not supported, use margin instead
+          > * + * { margin-left: 4px; }
           position: relative;
           z-index: 1;
 
@@ -464,7 +472,8 @@
       .prisons-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 8px; }
         flex: 1;
         min-height: 0;
         align-content: start;
@@ -561,7 +570,8 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-top: 8px; }
     min-height: 0;
   }
 }
@@ -578,7 +588,8 @@
   .chart-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 10px; }
     margin-bottom: 10px;
     padding: 8px 12px;
     position: relative;
@@ -598,7 +609,8 @@
     .title-content {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       color: @primary-glow;
       font-size: 13px;
       font-weight: 600;
@@ -623,7 +635,8 @@
     .title-decor {
       display: flex;
       align-items: center;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 
@@ -659,7 +672,8 @@
 .left-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  // Chrome 81: gap not supported, use margin instead
+  > * + * { margin-top: 8px; }
   height: 100%;
   min-height: 0;
 
@@ -681,7 +695,8 @@
     .chart-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 10px; }
       margin-bottom: 8px;
       padding: 8px 12px;
       overflow: hidden;
@@ -700,7 +715,8 @@
       .header-content {
         display: flex;
         align-items: center;
-        gap: 8px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 8px; }
         color: @primary-glow;
         font-size: 13px;
         font-weight: 600;
@@ -725,7 +741,8 @@
       .header-decor {
         display: flex;
         align-items: center;
-        gap: 4px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 4px; }
         position: relative;
         z-index: 1;
 
@@ -805,7 +822,8 @@
       .total-decoration {
         display: flex;
         align-items: center;
-        gap: 10px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 10px; }
         margin-top: 20px;
 
         .decoration-line {
@@ -857,7 +875,8 @@
     .section-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 10px; }
       margin-bottom: 10px;
       padding: 8px 12px;
       position: relative;
@@ -877,7 +896,8 @@
       .header-content {
         display: flex;
         align-items: center;
-        gap: 8px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 8px; }
         color: @primary-glow;
         font-size: 13px;
         font-weight: 600;
@@ -902,7 +922,8 @@
       .header-decor {
         display: flex;
         align-items: center;
-        gap: 4px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 4px; }
         position: relative;
         z-index: 1;
 
@@ -927,7 +948,8 @@
       .header-stat {
         display: flex;
         align-items: center;
-        gap: 6px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 6px; }
         padding: 4px 12px;
         background: linear-gradient(135deg, rgba(255, 77, 79, 0.15) 0%, rgba(255, 77, 79, 0.1) 100%);
         border: 1px solid rgba(255, 77, 79, 0.4);
@@ -949,14 +971,16 @@
     .stats-grid {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-top: 6px; }
       overflow-y: auto;
     }
 
     .stat-box {
       display: flex;
       align-items: center;
-      gap: 12px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 12px; }
       padding: 10px 12px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 6px;
@@ -1055,7 +1079,8 @@
         .stat-info {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          // Chrome 81: gap not supported, use margin instead
+          > * + * { margin-top: 2px; }
         }
 
         .stat-label {
@@ -1087,14 +1112,16 @@
   .panel-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 10px; }
     margin-bottom: 8px;
     padding: 4px 0;
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       color: @primary-glow;
       font-size: 13px;
       font-weight: 600;
@@ -1132,7 +1159,8 @@
   .door-event-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 8px; }
     padding: 5px 8px;
     margin-bottom: 4px;
     background: rgba(0, 0, 0, 0.3);
@@ -1182,7 +1210,8 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 10px; }
     margin-bottom: 10px;
     padding: 8px 12px;
     position: relative;
@@ -1202,7 +1231,8 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       color: @primary-glow;
       font-size: 13px;
       font-weight: 600;
@@ -1227,7 +1257,8 @@
     .header-decor {
       display: flex;
       align-items: center;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 
@@ -1275,7 +1306,8 @@
       margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 10px; }
       border-radius: 4px;
       background: rgba(255, 255, 255, 0.03);
       border-left: 3px solid transparent;
@@ -1302,7 +1334,8 @@
         display: flex;
         align-items: center;
         flex-wrap: nowrap;
-        gap: 4px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 4px; }
         overflow: hidden;
 
         .person-name {
@@ -1348,7 +1381,8 @@
       width: 100%;
       height: 100%;
       min-height: 100px;
-      gap: 10px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-top: 10px; }
 
       .empty-icon {
         font-size: 32px;
@@ -1374,7 +1408,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 10px; }
     margin-bottom: 10px;
     padding: 8px 12px;
     position: relative;
@@ -1394,7 +1429,8 @@
     .header-content {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       color: @primary-glow;
       font-size: 13px;
       font-weight: 600;
@@ -1419,7 +1455,8 @@
     .header-decor {
       display: flex;
       align-items: center;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 
@@ -1443,7 +1480,8 @@
 
     .chart-tabs {
       display: flex;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 
@@ -1503,7 +1541,8 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 10px; }
     margin-bottom: 10px;
     padding: 8px 12px;
     position: relative;
@@ -1523,7 +1562,8 @@
     .header-content {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       color: @primary-glow;
       font-size: 13px;
       font-weight: 600;
@@ -1548,7 +1588,8 @@
     .header-decor {
       display: flex;
       align-items: center;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 
@@ -1576,7 +1617,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 8px; }
     min-height: 0;
     overflow: hidden;
   }
@@ -1586,7 +1628,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-left: 6px; }
     padding: 6px;
     border-radius: 6px;
     min-width: 0;
@@ -1631,7 +1674,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-top: 2px; }
     flex-shrink: 0;
 
     .gender-icon {
@@ -1648,7 +1692,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1px;
+    // Chrome 81: gap not supported, use margin instead
+    > * + * { margin-top: 1px; }
     min-width: 0;
     overflow: hidden;
 
@@ -1742,14 +1787,16 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 8px; }
       position: relative;
       z-index: 1;
 
       .header-content {
         display: flex;
         align-items: center;
-        gap: 8px;
+        // Chrome 81: gap not supported, use margin instead
+        > * + * { margin-left: 8px; }
         color: @primary-glow;
         font-size: 12px;
         font-weight: 600;
@@ -1773,7 +1820,8 @@
     .header-total {
       display: flex;
       align-items: center;
-      gap: 6px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 6px; }
       padding: 4px 14px;
       background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(24, 119, 255, 0.1) 100%);
       border: 1px solid rgba(0, 240, 255, 0.4);
@@ -1802,7 +1850,8 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 4px;
+      // Chrome 81: gap not supported, use margin instead
+      > * + * { margin-left: 4px; }
       position: relative;
       z-index: 1;
 

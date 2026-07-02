@@ -210,8 +210,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
   height: 100%;
+
+  > * + * {
+    margin-top: 24px;
+  }
 }
 
 .confirm-icon {
@@ -235,7 +238,10 @@
   &::before {
     content: '';
     position: absolute;
-    inset: -4px;
+    top: -4px;
+    right: -4px;
+    bottom: -4px;
+    left: -4px;
     border-radius: 50%;
     border: 2px solid rgba(0, 240, 255, 0.5);
     animation: ring-rotate 3s linear infinite;
@@ -244,7 +250,10 @@
   &::after {
     content: '';
     position: absolute;
-    inset: -12px;
+    top: -12px;
+    right: -12px;
+    bottom: -12px;
+    left: -12px;
     border-radius: 50%;
     border: 1px solid rgba(0, 240, 255, 0.2);
     animation: ring-rotate 4s linear infinite reverse;
@@ -336,7 +345,10 @@
   &::before {
     content: '';
     position: absolute;
-    inset: -1px;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+    left: -1px;
     border-radius: 16px;
     padding: 1px;
     background: linear-gradient(135deg, #00f0ff, transparent, #1877ff);
@@ -357,10 +369,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
   letter-spacing: 1px;
+
+  > * + * {
+    margin-top: 12px;
+  }
 
   .anticon {
     font-size: 48px;
@@ -411,7 +426,6 @@
     border-bottom: 1px solid rgba(0, 240, 255, 0.15);
     display: flex;
     align-items: center;
-    gap: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
     text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
@@ -423,6 +437,7 @@
       background: linear-gradient(180deg, #00f0ff, #1877ff);
       border-radius: 2px;
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+      margin-right: 10px;
     }
   }
 }
