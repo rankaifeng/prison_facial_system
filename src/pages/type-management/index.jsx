@@ -81,7 +81,7 @@ const TypeManagement = () => {
             编辑
           </Button>
           <Popconfirm
-            description="确定要删除吗？"
+            title="确定要删除吗？"
             onConfirm={() => handleDelete(record)}
             okText="确认"
             cancelText="取消"
@@ -125,7 +125,7 @@ const TypeManagement = () => {
       />
       <Modal
         title={editingRecord ? '编辑出监原因' : '新增出监原因'}
-        open={modalVisible}
+        visible={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
         destroyOnClose

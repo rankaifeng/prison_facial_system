@@ -1,29 +1,27 @@
 import { Breadcrumb } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
 
 const BreadcrumbMenu = () => {
   const location = useLocation();
   const pathSnippets = location.pathname.split('/').filter(i => i);
 
-  const extraBreadcrumbItems = pathSnippets.map((snippet, index) => {
-    const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
-    const name = getNameFromPath(snippet);
-    return {
-      key: url,
-      title: name,
-    };
-  });
-
-  const breadcrumbItems = [
-    {
-      title: <HomeOutlined />,
-      key: 'home',
-    },
-    ...extraBreadcrumbItems,
-  ];
-
-  return <Breadcrumb items={breadcrumbItems} />;
+  return (
+    <Breadcrumb>
+      <Breadcrumb.Item>
+        <Link to="/dashboard"><HomeOutlined /></Link>
+      </Breadcrumb.Item>
+      {pathSnippets.map((snippet, index) => {
+        const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
+        const name = getNameFromPath(snippet);
+        return (
+          <Breadcrumb.Item key={url}>
+            <Link to={url}>{name}</Link>
+          </Breadcrumb.Item>
+        );
+      })}
+    </Breadcrumb>
+  );
 };
 
 const getNameFromPath = (path) => {

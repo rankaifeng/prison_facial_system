@@ -4,13 +4,14 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    target: 'es2015',
+    cssTarget: 'chrome61',
+  },
   css: {
     preprocessorOptions: {
       less: {
         javascriptEnabled: true,
-        modifyVars: {
-          '@primary-color': '#1890ff',
-        },
       },
     },
   },

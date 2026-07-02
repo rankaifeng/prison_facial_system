@@ -475,9 +475,11 @@ class Command(BaseCommand):
                 'ValidTo': '2099-12-31 23:59:59',
             })
 
+        import time
         batch_size = 10
         total_success = 0
         total_fail = 0
+        total_batches = (len(users) + batch_size - 1) // batch_size
         for i in range(0, len(users), batch_size):
             batch = users[i:i + batch_size]
             batch_num = i // batch_size + 1
@@ -487,21 +489,22 @@ class Command(BaseCommand):
                 text = resp.text.strip()
                 if 'ok' in text.lower():
                     total_success += len(batch)
-                    self.stdout.write(f'    用户批次 {batch_num}: 插入 {len(batch)} 个')
+                    self.stdout.write(f'    用户批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(users)})')
                 else:
                     total_fail += len(batch)
                     self.stdout.write(self.style.ERROR(
-                        f'    用户批次 {batch_num} 失败(status={resp.status_code}): {text[:300]}'))
+                        f'    用户批次 {batch_num}/{total_batches} 失败: {text[:200]}'))
             except requests.RequestException as e:
                 total_fail += len(batch)
-                self.stdout.write(self.style.ERROR(f'    用户批次 {batch_num} 请求失败: {e}'))
+                self.stdout.write(self.style.ERROR(f'    用户批次 {batch_num}/{total_batches} 请求失败: {e}'))
+            time.sleep(2)
 
         if total_success > 0:
             self.stdout.write(self.style.SUCCESS(f'    用户插入完成: {total_success}/{len(users)}'))
         return total_fail == 0
 
     def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
-        """批量插入人脸照片到大华门禁平台（使用照片URL，大华设备自行下载）"""
+        """批量插入人脸照片到大华门禁平台（传URL，大华设备自行下载）"""
         url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
         faces = []
         skipped = 0
@@ -518,22 +521,26 @@ class Command(BaseCommand):
             })
 
         # 大华 API 可能有单次请求限制，分批处理
+        import time
         batch_size = 10
         total_success = 0
+        total_batches = (len(faces) + batch_size - 1) // batch_size
         for i in range(0, len(faces), batch_size):
             batch = faces[i:i + batch_size]
+            batch_num = i // batch_size + 1
             payload = {'FaceList': batch}
             try:
                 resp = requests.post(url, json=payload, auth=auth, timeout=60)
                 text = resp.text.strip().lower()
                 if 'ok' in text:
                     total_success += len(batch)
-                    self.stdout.write(f'    人脸批次 {i // batch_size + 1}: 插入 {len(batch)} 个')
+                    self.stdout.write(f'    人脸批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(faces)})')
                 else:
                     self.stdout.write(self.style.ERROR(
-                        f'    人脸批次 {i // batch_size + 1} 失败: {resp.text[:200]}'))
+                        f'    人脸批次 {batch_num}/{total_batches} 失败: {resp.text[:200]}'))
             except requests.RequestException as e:
-                self.stdout.write(self.style.ERROR(f'    人脸批次 {i // batch_size + 1} 请求失败: {e}'))
+                self.stdout.write(self.style.ERROR(f'    人脸批次 {batch_num}/{total_batches} 请求失败: {e}'))
+            time.sleep(2)
 
         if skipped > 0:
             self.stdout.write(f'    跳过无照片人员: {skipped} 个')

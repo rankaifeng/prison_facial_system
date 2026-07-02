@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Typography, Dropdown, ConfigProvider, theme, Modal, Button } from 'antd';
+import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu } from 'antd';
 import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
@@ -347,32 +347,16 @@ const Dashboard = () => {
           >
             <SyncOutlined />
           </span> */}
-          <ConfigProvider
-            theme={{
-              algorithm: theme.darkAlgorithm,
-              token: {
-                colorPrimary: '#00f0ff',
-                colorBgElevated: 'rgba(20, 25, 45, 0.95)',
-                colorBgContainer: 'rgba(20, 25, 45, 0.95)',
-              },
-              components: {
-                Dropdown: {
-                  colorBgElevated: 'rgba(20, 25, 45, 0.95)',
-                  colorPrimary: '#00f0ff',
-                  controlItemBgHover: 'rgba(0, 240, 255, 0.1)',
-                  controlItemBgActive: 'rgba(0, 240, 255, 0.2)',
-                  colorBorder: 'rgba(0, 240, 255, 0.3)',
-                  borderRadius: 8,
-                  paddingInline: 16,
-                },
-              },
-            }}
-          >
-            <Dropdown menu={navMenu} trigger={['click']}>
-              <MenuOutlined className="nav-icon" />
-            </Dropdown>
-            <LogoutOutlined className="user-icon" onClick={handleLogout} />
-          </ConfigProvider>
+          <Dropdown overlay={
+            <Menu onClick={navMenu.onClick}>
+              {navMenu.items.map(item => (
+                <Menu.Item key={item.key}>{item.label}</Menu.Item>
+              ))}
+            </Menu>
+          } trigger={['click']}>
+            <MenuOutlined className="nav-icon" />
+          </Dropdown>
+          <LogoutOutlined className="user-icon" onClick={handleLogout} />
         </div>
       </div>
 
@@ -410,12 +394,12 @@ const Dashboard = () => {
       </div>
 
       <OperationSelectModal
-        open={selectModalOpen}
+        visible={selectModalOpen}
         onSelect={handleOperationSelect}
         prisonerNo={activePrisonerNo}
       />
       <ExitConfirmModal
-        open={exitModalOpen}
+        visible={exitModalOpen}
         onCancel={resetExitModal}
         onOk={() => { resetExitModal(); handleDataUpdate(); }}
         prisonerNo='5155016428'
@@ -424,7 +408,7 @@ const Dashboard = () => {
         onStepChange={handleExitModalStepChange}
       />
       <EnterConfirmModal
-        open={enterModalOpen}
+        visible={enterModalOpen}
         onCancel={resetEnterModal}
         onOk={() => { resetEnterModal(); handleDataUpdate(); }}
         prisonerNo={activePrisonerNo}
@@ -432,33 +416,23 @@ const Dashboard = () => {
         onStepChange={handleEnterModalStepChange}
       />
       <ReturnConfirmModal
-        open={returnModalOpen}
+        visible={returnModalOpen}
         onCancel={() => setReturnModalOpen(false)}
         onOk={() => { setReturnModalOpen(false); handleDataUpdate(); }}
       />
 
       {/* 同步进度弹窗 */}
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorPrimary: '#00f0ff',
-            colorBgElevated: 'rgba(10, 15, 35, 0.98)',
-            colorBgContainer: 'rgba(10, 15, 35, 0.98)',
-          },
-        }}
+      <Modal
+        visible={syncOpen}
+        title={null}
+        footer={null}
+        onCancel={handleSyncClose}
+        centered
+        width={480}
+        closable={syncProgress?.state !== 'PROGRESS'}
+        maskClosable={syncProgress?.state !== 'PROGRESS'}
+        bodyStyle={{ padding: '24px 28px' }}
       >
-        <Modal
-          open={syncOpen}
-          title={null}
-          footer={null}
-          onCancel={handleSyncClose}
-          centered
-          width={480}
-          closable={syncProgress?.state !== 'PROGRESS'}
-          maskClosable={syncProgress?.state !== 'PROGRESS'}
-          styles={{ body: { padding: '24px 28px' } }}
-        >
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
               数据同步
@@ -559,8 +533,7 @@ const Dashboard = () => {
               <span style={{ color: '#ff4d4f', fontSize: 14 }}>{syncProgress.message}</span>
             </div>
           )}
-        </Modal>
-      </ConfigProvider>
+      </Modal>
     </div>
   );
 };

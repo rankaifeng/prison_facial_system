@@ -36,8 +36,7 @@ const AccountManagement = () => {
         const isAdmin = record.role === 'admin' || record.role_name === '管理员';
         return (
           <Popconfirm
-            title="确认删除"
-            description={`确定要删除账号"${record.username}"吗？`}
+            title={`确定要删除账号"${record.username}"吗？`}
             onConfirm={async () => {
               try {
                 await http.post('/user_manage/account/account_delete', { id: record.id });
@@ -112,7 +111,7 @@ const AccountManagement = () => {
       />
       <Modal
         title={editingRecord ? '编辑账号' : '新增账号'}
-        open={modalVisible}
+        visible={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
         destroyOnClose

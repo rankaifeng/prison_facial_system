@@ -267,6 +267,7 @@ def _sync_to_dahua_direct(report_fn=None):
             'ValidTo': '2099-12-31 23:59:59',
         })
 
+    import time
     user_success = 0
     user_fail = 0
     batch_size = 10
@@ -279,13 +280,14 @@ def _sync_to_dahua_direct(report_fn=None):
             text = resp.text.strip()
             if 'ok' in text.lower():
                 user_success += len(batch)
-                log(f'用户批次 {batch_num}: 插入 {len(batch)} 个')
+                log(f'用户批次 {batch_num}: 插入 {len(batch)} 个 (累计 {user_success}/{len(users)})')
             else:
                 user_fail += len(batch)
                 log(f'用户批次 {batch_num} 失败: {text[:200]}')
         except requests.RequestException as e:
             user_fail += len(batch)
             log(f'用户批次 {batch_num} 请求异常: {e}')
+        time.sleep(2)
 
     # 5. 构建照片URL映射（直接用URL，不下载）
     def fix_photo_url(url):
@@ -337,16 +339,16 @@ def _sync_to_dahua_direct(report_fn=None):
             payload = {'FaceList': batch}
             resp = requests.post(face_url, json=payload, auth=auth, timeout=60)
             text = resp.text.strip()
-            log(f'人脸批次 {batch_num} 响应: status={resp.status_code}, response={text[:200]}')
             if 'ok' in text.lower():
                 face_success += len(batch)
-                log(f'人脸批次 {batch_num}: 成功插入 {len(batch)} 个')
+                log(f'人脸批次 {batch_num}: 插入 {len(batch)} 个 (累计 {face_success}/{len(faces)})')
             else:
                 face_fail += len(batch)
-                log(f'人脸批次 {batch_num}: 失败 - {text[:200]}')
+                log(f'人脸批次 {batch_num} 失败: {text[:200]}')
         except requests.RequestException as e:
             face_fail += len(batch)
-            log(f'人脸批次 {batch_num}: 请求异常 - {e}')
+            log(f'人脸批次 {batch_num} 请求异常: {e}')
+        time.sleep(2)
 
     if skipped > 0:
         log(f'跳过无照片人员: {skipped} 个')

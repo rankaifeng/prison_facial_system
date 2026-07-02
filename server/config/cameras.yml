@@ -5,14 +5,14 @@ cameras:
   - channel: "1601"
     name: "出监摄像头"
     enabled: true
-    rtsp_url: "rtsp://admin:root123a@192.168.100.150:554/Streaming/tracks/1601"
+    rtsp_url: "rtsp://admin:root123a@10.2.48.225:554/Streaming/tracks/101"
     # 是否启用认证
     auth_enabled: true
 
   - channel: "1602"
     name: "回监摄像头"
     enabled: true
-    rtsp_url: "rtsp://admin:root123a@192.168.100.151:554/Streaming/tracks/1602"
+    rtsp_url: "rtsp://admin:root123a@10.2.48.226:554/Streaming/tracks/401"
     # 是否启用认证
     auth_enabled: true
 

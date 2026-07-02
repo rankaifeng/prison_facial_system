@@ -2,8 +2,8 @@ import React, { useState, createContext, useContext } from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import routes from './router';
 import AuthGuard from './router/AuthGuard';
-import { ConfigProvider, theme } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/lib/locale/zh_CN';
 
 export const ThemeContext = createContext({
   themeColor: '#1890ff',
@@ -24,12 +24,7 @@ const AppContent = () => {
       <div style={{ '--ant-color-primary': themeColor }}>
         <ConfigProvider
           locale={zhCN}
-          theme={{
-            algorithm: theme.defaultAlgorithm,
-            token: {
-              colorPrimary: themeColor,
-            },
-          }}
+          prefixCls="ant"
         >
           <AuthGuard>
             {element}

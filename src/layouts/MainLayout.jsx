@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Space, theme, Modal } from 'antd';
+import { Layout, Menu, Space, Modal } from 'antd';
 import { SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
@@ -17,7 +17,6 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { layout } = useTheme();
-  const { token } = theme.useToken();
 
   const selectedKey = location.pathname;
   const isDashboard = location.pathname === '/dashboard';
@@ -35,20 +34,9 @@ const MainLayout = () => {
     });
   };
 
-  const navMenu = {
-    items: allMenus.map(menu => ({
-      key: menu.key,
-      label: menu.label,
-    })),
-    onClick: ({ key }) => navigate(key),
-  };
-
-
   useEffect(() => {
-
     const mRole = cache.getVal('prisonName');
     if (mRole) {
-      //删掉allMenus里的最后两项
       const filteredMenus = allMenus.filter(menu => menu.key !== '/permission' && menu.key !== '/type-management');
       setShowMenus(filteredMenus);
     } else {
@@ -79,9 +67,14 @@ const MainLayout = () => {
             theme="dark"
             mode="inline"
             selectedKeys={[selectedKey]}
-            items={showMenus}
             onClick={({ key }) => navigate(key)}
-          />
+          >
+            {showMenus.map(menu => (
+              <Menu.Item key={menu.key}>
+                {menu.label}
+              </Menu.Item>
+            ))}
+          </Menu>
         </Sider>
       )}
       <Layout

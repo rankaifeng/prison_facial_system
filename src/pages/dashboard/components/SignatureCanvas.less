@@ -1,8 +1,11 @@
 .signature-canvas {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   width: 100%;
+
+  > * + * {
+    margin-top: 16px;
+  }
 }
 
 .canvas-area {
@@ -19,9 +22,13 @@
 .canvas-actions {
   display: flex;
   justify-content: center;
-  gap: 16px;
 
   .ant-btn {
+    margin-left: 16px;
+
+    &:first-child {
+      margin-left: 0;
+    }
     min-width: 100px;
   }
 

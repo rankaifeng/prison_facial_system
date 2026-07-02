@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { returnRecord } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
-const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
+const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -14,13 +14,13 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
 
   // 当弹窗打开时重置状态
   useEffect(() => {
-    if (open) {
+    if (visible) {
       form.resetFields();
       setCurrent(0);
       setPoliceImage(null);
       setFormValues({});
     }
-  }, [open, form]);
+  }, [visible, form]);
 
   const entryStatus = Form.useWatch('entryStatus', form);
 
@@ -203,45 +203,32 @@ const ReturnConfirmModal = ({ open, onCancel, onOk }) => {
   ];
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorPrimary: '#00f0ff',
-          colorBgElevated: 'rgba(20, 25, 45, 0.98)',
-          colorBgContainer: 'rgba(10, 15, 30, 0.98)',
-          colorBorder: 'rgba(0, 240, 255, 0.3)',
-          colorText: '#fff',
-          colorTextPlaceholder: 'rgba(255, 255, 255, 0.5)',
-          borderRadius: 8,
-        },
-      }}
+    <Modal
+      title="回监确认"
+      visible={visible}
+      onCancel={handleReset}
+      width={680}
+      className="exit-confirm-modal"
+      footer={[
+        <Button key="cancel" onClick={handleReset}>
+          取消
+        </Button>,
+        current > 0 && (
+          <Button key="back" onClick={handleBack}>
+            上一步
+          </Button>
+        ),
+        <Button key="next" type="primary" onClick={handleNext}>
+          {current === 1 ? '确认提交' : '下一步'}
+        </Button>,
+      ].filter(Boolean)}
     >
-      <Modal
-        title="回监确认"
-        open={open}
-        onCancel={handleReset}
-        width={680}
-        className="exit-confirm-modal"
-        footer={[
-          <Button key="cancel" onClick={handleReset}>
-            取消
-          </Button>,
-          current > 0 && (
-            <Button key="back" onClick={handleBack}>
-              上一步
-            </Button>
-          ),
-          <Button key="next" type="primary" onClick={handleNext}>
-            {current === 1 ? '确认提交' : '下一步'}
-          </Button>,
-        ].filter(Boolean)}
-      >
-        <Steps current={current} items={steps} className="exit-steps" />
-        {current === 0 && renderStep1()}
-        {current === 1 && renderStep2()}
-      </Modal>
-    </ConfigProvider>
+      <Steps current={current} className="exit-steps">
+        {steps.map(step => <Steps.Step key={step.title} title={step.title} icon={step.icon} />)}
+      </Steps>
+      {current === 0 && renderStep1()}
+      {current === 1 && renderStep2()}
+    </Modal>
   );
 };
 

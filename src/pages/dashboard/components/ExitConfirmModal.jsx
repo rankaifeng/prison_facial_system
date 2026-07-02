@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, ConfigProvider, theme, Spin } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
 import { exitRecord, exitType, archive } from '@/api/globApi';
@@ -37,7 +37,7 @@ const PRISON_AREA_NAME_TO_ID = {
   '五监区': '5', '六监区': '6', '七监区': '7',
 };
 
-const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, onStepChange }) => {
+const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -56,7 +56,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
   const centerPrison = Form.useWatch('transferPrison', form);
 
   useEffect(() => {
-    if (open) {
+    if (visible) {
       setFormValues({});
       form.resetFields();
       setCurrent(0);
@@ -101,7 +101,7 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
         });
       }
     }
-  }, [open, prisonerNo, form, onStepChange]);
+  }, [visible, prisonerNo, form, onStepChange]);
 
   // 通知父组件当前步骤
   useEffect(() => {
@@ -345,42 +345,29 @@ const ExitConfirmModal = ({ open, onCancel, onOk, prisonerNo, policeFaceImage, s
   ];
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorPrimary: '#00f0ff',
-          colorBgElevated: 'rgba(20, 25, 45, 0.98)',
-          colorBgContainer: 'rgba(10, 15, 30, 0.98)',
-          colorBorder: 'rgba(0, 240, 255, 0.3)',
-          colorText: '#fff',
-          colorTextPlaceholder: 'rgba(255, 255, 255, 0.5)',
-          borderRadius: 8,
-        },
-      }}
+    <Modal
+      title="出监确认"
+      visible={visible}
+      onCancel={handleReset}
+      width={680}
+      destroyOnClose
+      className="exit-confirm-modal"
+      footer={[
+        <Button key="cancel" onClick={handleReset}>取消</Button>,
+        current > 0 && <Button key="back" onClick={handleBack}>上一步</Button>,
+        <Button key="next" type="primary" onClick={handleNext}>
+          {current === 3 ? '确认提交' : '下一步'}
+        </Button>,
+      ].filter(Boolean)}
     >
-      <Modal
-        title="出监确认"
-        open={open}
-        onCancel={handleReset}
-        width={680}
-        destroyOnClose
-        className="exit-confirm-modal"
-        footer={[
-          <Button key="cancel" onClick={handleReset}>取消</Button>,
-          current > 0 && <Button key="back" onClick={handleBack}>上一步</Button>,
-          <Button key="next" type="primary" onClick={handleNext}>
-            {current === 3 ? '确认提交' : '下一步'}
-          </Button>,
-        ].filter(Boolean)}
-      >
-        <Steps current={current} items={steps} className="exit-steps" />
-        {current === 0 && renderStep1()}
-        {current === 1 && renderStep2()}
-        {current === 2 && renderStep3()}
-        {current === 3 && renderStep4()}
-      </Modal>
-    </ConfigProvider>
+      <Steps current={current} className="exit-steps">
+        {steps.map(step => <Steps.Step key={step.title} title={step.title} icon={step.icon} />)}
+      </Steps>
+      {current === 0 && renderStep1()}
+      {current === 1 && renderStep2()}
+      {current === 2 && renderStep3()}
+      {current === 3 && renderStep4()}
+    </Modal>
   );
 };
 

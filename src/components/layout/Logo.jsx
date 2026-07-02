@@ -26,7 +26,7 @@ const Logo = ({ collapsed }) => {
             whiteSpace: 'nowrap',
           }}
         >
-          监狱管理系统
+          AB门人脸识别管理系统
         </Text>
       )}
     </div>
