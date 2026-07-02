@@ -224,6 +224,7 @@ def _sync_to_dahua_direct(report_fn=None):
     log(f'大华平台地址: {base_url}')
 
     # 2. 验证连通性
+    log('正在测试大华平台连接...')
     try:
         url = f"{base_url}/cgi-bin/magicBox.cgi?action=getDeviceType"
         resp = requests.get(url, auth=auth, timeout=10)
@@ -238,6 +239,7 @@ def _sync_to_dahua_direct(report_fn=None):
         return 0, 0, 0, msg
 
     # 3. 获取档案数据
+    log('正在读取档案数据...')
     archives = PrisonerArchive.objects.all()
     prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info'))
     if not prisoners:
@@ -271,6 +273,8 @@ def _sync_to_dahua_direct(report_fn=None):
     user_success = 0
     user_fail = 0
     batch_size = 10
+    total_batches = (len(users) + batch_size - 1) // batch_size
+    log(f'开始同步用户信息，共 {total_batches} 批...')
     for i in range(0, len(users), batch_size):
         batch = users[i:i + batch_size]
         batch_num = i // batch_size + 1
@@ -280,13 +284,13 @@ def _sync_to_dahua_direct(report_fn=None):
             text = resp.text.strip()
             if 'ok' in text.lower():
                 user_success += len(batch)
-                log(f'用户批次 {batch_num}: 插入 {len(batch)} 个 (累计 {user_success}/{len(users)})')
+                log(f'用户批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {user_success}/{len(users)})')
             else:
                 user_fail += len(batch)
-                log(f'用户批次 {batch_num} 失败: {text[:200]}')
+                log(f'用户批次 {batch_num}/{total_batches} 失败: {text[:200]}')
         except requests.RequestException as e:
             user_fail += len(batch)
-            log(f'用户批次 {batch_num} 请求异常: {e}')
+            log(f'用户批次 {batch_num}/{total_batches} 请求异常: {e}')
         time.sleep(2)
 
     # 5. 构建照片URL映射（直接用URL，不下载）
@@ -332,6 +336,8 @@ def _sync_to_dahua_direct(report_fn=None):
     face_success = 0
     face_fail = 0
     batch_size = 10
+    face_total_batches = (len(faces) + batch_size - 1) // batch_size
+    log(f'开始同步人脸照片，共 {len(faces)} 人 {face_total_batches} 批...')
     for i in range(0, len(faces), batch_size):
         batch = faces[i:i + batch_size]
         batch_num = i // batch_size + 1
@@ -341,13 +347,13 @@ def _sync_to_dahua_direct(report_fn=None):
             text = resp.text.strip()
             if 'ok' in text.lower():
                 face_success += len(batch)
-                log(f'人脸批次 {batch_num}: 插入 {len(batch)} 个 (累计 {face_success}/{len(faces)})')
+                log(f'人脸批次 {batch_num}/{face_total_batches}: 插入 {len(batch)} 个 (累计 {face_success}/{len(faces)})')
             else:
                 face_fail += len(batch)
-                log(f'人脸批次 {batch_num} 失败: {text[:200]}')
+                log(f'人脸批次 {batch_num}/{face_total_batches} 失败: {text[:200]}')
         except requests.RequestException as e:
             face_fail += len(batch)
-            log(f'人脸批次 {batch_num} 请求异常: {e}')
+            log(f'人脸批次 {batch_num}/{face_total_batches} 请求异常: {e}')
         time.sleep(2)
 
     if skipped > 0:
@@ -544,8 +550,11 @@ def sync_prisoner_data_with_progress(self):
         # Step 3: 同步到大华门禁（直接调用，不走 management command）
         report('sync_dahua', 80, 100, '正在同步到大华门禁...')
 
+        dahua_progress_pct = [80]
         def dahua_progress(msg):
-            report('sync_dahua', 85, 100, msg)
+            # 逐步递增进度，让前端能看到变化
+            dahua_progress_pct[0] = min(dahua_progress_pct[0] + 1, 95)
+            report('sync_dahua', dahua_progress_pct[0], 100, msg)
 
         face_success, face_fail, skipped, dahua_msg = _sync_to_dahua_direct(dahua_progress)
         report('sync_dahua', 95, 100, dahua_msg)

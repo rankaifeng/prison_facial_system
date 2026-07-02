@@ -40,12 +40,15 @@ const RightPanel = ({ onDataUpdate }) => {
       return;
     }
 
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    if (maxScroll <= 0) return;
+
     let scrollTop = 0;
-    const speed = 40; // pixels per second
+    const speed = 40;
 
     const animate = () => {
-      scrollTop += speed / 60; // approximate for 60fps
-      if (scrollTop >= el.scrollHeight / 2) {
+      scrollTop += speed / 60;
+      if (scrollTop >= maxScroll) {
         scrollTop = 0;
       }
       el.scrollTop = scrollTop;
@@ -69,30 +72,17 @@ const RightPanel = ({ onDataUpdate }) => {
   );
 
   const renderMessages = () => (
-    <>
-      {messages.map((msg, index) => (
-        <div key={`a-${msg.id || index}`} className="message-item">
-          <div className="message-dot" />
-          <div className="message-text">
-            <span className="person-name">{msg.prisoner_name}</span>
-            <span className="date">{msg.exit_date}</span>
-            <span className="reason">{msg.reason}</span>
-            {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
-          </div>
+    messages.map((msg, index) => (
+      <div key={msg.id || index} className="message-item">
+        <div className="message-dot" />
+        <div className="message-text">
+          <span className="person-name">{msg.prisoner_name}</span>
+          <span className="date">{msg.exit_date}</span>
+          <span className="reason">{msg.reason}</span>
+          {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
         </div>
-      ))}
-      {messages.map((msg, index) => (
-        <div key={`b-${msg.id || index}`} className="message-item">
-          <div className="message-dot" />
-          <div className="message-text">
-            <span className="person-name">{msg.prisoner_name}</span>
-            <span className="date">{msg.exit_date}</span>
-            <span className="reason">{msg.reason}</span>
-            {msg.hospital_name && <span className="hospital">{msg.hospital_name}</span>}
-          </div>
-        </div>
-      ))}
-    </>
+      </div>
+    ))
   );
 
   return (

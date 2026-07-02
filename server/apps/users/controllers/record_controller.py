@@ -17,7 +17,7 @@ class ExitRecordController(APIView):
 
         prisoner_no = data.get('prisoner_no')
         prisoner_name = data.get('prisoner_name')
-        prisoner_photo = data.get('prisoner_photo')
+        prisoner_photo = data.get('prisoner_photo') or ''
         prison_area = data.get('prison_area')  # 前端传入的是 ID
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         exit_date = data.get('exit_date')
@@ -99,7 +99,7 @@ class EntryRecordController(APIView):
 
         prisoner_no = data.get('prisoner_no')
         prisoner_name = data.get('prisoner_name')
-        prisoner_photo = data.get('prisoner_photo')
+        prisoner_photo = data.get('prisoner_photo') or ''
         prison_area = data.get('prison_area')  # 前端传入的是 ID
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')
@@ -165,7 +165,7 @@ class ReturnRecordController(APIView):
 
         prisoner_no = data.get('prisoner_no')
         prisoner_name = data.get('prisoner_name')
-        prisoner_photo = data.get('prisoner_photo')
+        prisoner_photo = data.get('prisoner_photo') or ''
         prison_area = data.get('prison_area')  # 前端传入的是 ID
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')

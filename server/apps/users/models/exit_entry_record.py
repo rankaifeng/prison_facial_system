@@ -14,7 +14,7 @@ class ExitEntryRecord(models.Model):
 
     prisoner_no = models.CharField('罪犯编号', max_length=32)
     prisoner_name = models.CharField('罪犯姓名', max_length=64)
-    prisoner_photo = models.CharField('罪犯照片', max_length=255, blank=True)
+    prisoner_photo = models.CharField('罪犯照片', max_length=255, blank=True, default='')
     prison_area = models.CharField('监区ID', max_length=32, blank=True)
     prison_area_name = models.CharField('监区名称', max_length=128, blank=True)
     type = models.CharField('类型', max_length=16, choices=TYPE_CHOICES)

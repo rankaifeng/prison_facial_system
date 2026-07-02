@@ -10,6 +10,7 @@ import base64
 import logging
 import os
 import re
+import sys
 import time
 import requests
 import yaml
@@ -21,6 +22,11 @@ from django.db import transaction
 from apps.users.models import PrisonerArchive
 
 logger = logging.getLogger(__name__)
+
+
+def flush_print(msg=''):
+    """强制刷新输出（Docker 环境下 stdout 是全缓冲，不刷新看不到输出）"""
+    print(msg, flush=True)
 
 # ========== 公安内网接口地址（从 .env 读取） ==========
 API_BASE = os.getenv('RTI_API_BASE', 'http://10.2.50.16:4092')
@@ -189,7 +195,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # --dahua-only: 直接从数据库同步到大华，跳过 API 同步
         if options['dahua_only']:
-            self.stdout.write(self.style.WARNING('=== 从数据库同步到大华门禁平台 ==='))
+            flush_print('=== 从数据库同步到大华门禁平台 ===')
             self._sync_to_dahua()
             return
 
@@ -440,18 +446,20 @@ class Command(BaseCommand):
     def _dahua_auth(self, base_url, auth):
         """验证大华平台连通性"""
         url = f"{base_url}/cgi-bin/magicBox.cgi?action=getDeviceType"
+        flush_print(f'    测试连接: {url}')
         try:
-            resp = requests.get(url, auth=auth, timeout=10)
+            resp = requests.get(url, auth=auth, timeout=(5, 10))
             text = resp.text.strip()
-            self.stdout.write(self.style.SUCCESS(f'    大华平台连接成功: {resp}'))
-            if text:
-                self.stdout.write(self.style.SUCCESS(f'    大华平台连接成功: {text}'))
-                return True
-            else:
-                self.stdout.write(self.style.ERROR(f'    大华平台返回为空'))
-                return False
+            flush_print(f'    大华平台连接成功: {text[:100]}')
+            return True
+        except requests.ConnectionError as e:
+            flush_print(f'    大华平台连接失败(网络不通): {e}')
+            return False
+        except requests.Timeout as e:
+            flush_print(f'    大华平台连接超时: {e}')
+            return False
         except requests.RequestException as e:
-            self.stdout.write(self.style.ERROR(f'    大华平台连接失败: {e}'))
+            flush_print(f'    大华平台连接异常: {e}')
             return False
 
     def _dahua_insert_users(self, base_url, auth, prisoners):
@@ -475,32 +483,37 @@ class Command(BaseCommand):
                 'ValidTo': '2099-12-31 23:59:59',
             })
 
-        import time
         batch_size = 10
         total_success = 0
         total_fail = 0
         total_batches = (len(users) + batch_size - 1) // batch_size
+        flush_print(f'    开始同步用户，共 {len(users)} 人 {total_batches} 批...')
         for i in range(0, len(users), batch_size):
             batch = users[i:i + batch_size]
             batch_num = i // batch_size + 1
             payload = {'UserList': batch}
             try:
-                resp = requests.post(url, json=payload, auth=auth, timeout=30)
+                resp = requests.post(url, json=payload, auth=auth, timeout=(5, 30))
                 text = resp.text.strip()
                 if 'ok' in text.lower():
                     total_success += len(batch)
-                    self.stdout.write(f'    用户批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(users)})')
+                    flush_print(f'    用户批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(users)})')
                 else:
                     total_fail += len(batch)
-                    self.stdout.write(self.style.ERROR(
-                        f'    用户批次 {batch_num}/{total_batches} 失败: {text[:200]}'))
+                    flush_print(f'    用户批次 {batch_num}/{total_batches} 失败: {text[:200]}')
+            except requests.ConnectionError as e:
+                total_fail += len(batch)
+                flush_print(f'    用户批次 {batch_num}/{total_batches} 连接失败: {e}')
+            except requests.Timeout as e:
+                total_fail += len(batch)
+                flush_print(f'    用户批次 {batch_num}/{total_batches} 超时: {e}')
             except requests.RequestException as e:
                 total_fail += len(batch)
-                self.stdout.write(self.style.ERROR(f'    用户批次 {batch_num}/{total_batches} 请求失败: {e}'))
+                flush_print(f'    用户批次 {batch_num}/{total_batches} 请求失败: {e}')
             time.sleep(2)
 
         if total_success > 0:
-            self.stdout.write(self.style.SUCCESS(f'    用户插入完成: {total_success}/{len(users)}'))
+            flush_print(f'    用户插入完成: {total_success}/{len(users)}')
         return total_fail == 0
 
     def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
@@ -520,32 +533,34 @@ class Command(BaseCommand):
                 'PhotoURL': [photo_url],
             })
 
-        # 大华 API 可能有单次请求限制，分批处理
-        import time
         batch_size = 10
         total_success = 0
         total_batches = (len(faces) + batch_size - 1) // batch_size
+        flush_print(f'    开始同步人脸，共 {len(faces)} 人 {total_batches} 批...')
         for i in range(0, len(faces), batch_size):
             batch = faces[i:i + batch_size]
             batch_num = i // batch_size + 1
             payload = {'FaceList': batch}
             try:
-                resp = requests.post(url, json=payload, auth=auth, timeout=60)
+                resp = requests.post(url, json=payload, auth=auth, timeout=(5, 60))
                 text = resp.text.strip().lower()
                 if 'ok' in text:
                     total_success += len(batch)
-                    self.stdout.write(f'    人脸批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(faces)})')
+                    flush_print(f'    人脸批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(faces)})')
                 else:
-                    self.stdout.write(self.style.ERROR(
-                        f'    人脸批次 {batch_num}/{total_batches} 失败: {resp.text[:200]}'))
+                    flush_print(f'    人脸批次 {batch_num}/{total_batches} 失败: {resp.text[:200]}')
+            except requests.ConnectionError as e:
+                flush_print(f'    人脸批次 {batch_num}/{total_batches} 连接失败: {e}')
+            except requests.Timeout as e:
+                flush_print(f'    人脸批次 {batch_num}/{total_batches} 超时: {e}')
             except requests.RequestException as e:
-                self.stdout.write(self.style.ERROR(f'    人脸批次 {batch_num}/{total_batches} 请求失败: {e}'))
+                flush_print(f'    人脸批次 {batch_num}/{total_batches} 请求失败: {e}')
             time.sleep(2)
 
         if skipped > 0:
-            self.stdout.write(f'    跳过无照片人员: {skipped} 个')
+            flush_print(f'    跳过无照片人员: {skipped} 个')
         if total_success > 0:
-            self.stdout.write(self.style.SUCCESS(f'    人脸插入完成: {total_success}/{len(faces)}'))
+            flush_print(f'    人脸插入完成: {total_success}/{len(faces)}')
         return total_success == len(faces)
 
     def _fix_photo_url(self, url):
@@ -572,34 +587,45 @@ class Command(BaseCommand):
 
     def _sync_to_dahua(self):
         """将档案库数据同步到大华门禁平台"""
-        self.stdout.write('\n>>> 同步到大华门禁平台...')
+        flush_print('\n>>> 同步到大华门禁平台...')
 
-        dahua_config = self._load_dahua_config()
+        # 1. 加载配置
+        try:
+            dahua_config = self._load_dahua_config()
+        except Exception as e:
+            flush_print(f'    [错误] 加载大华配置失败: {e}')
+            return
         base_url = dahua_config.get('base_url', '')
         if not base_url:
-            self.stdout.write(self.style.ERROR('    大华平台 base_url 未配置，请检查 config/cameras.yml'))
+            flush_print('    [错误] 大华平台 base_url 未配置，请检查 config/cameras.yml')
             return
 
         username = dahua_config.get('userName', '')
         password = dahua_config.get('password', '')
         auth = requests.auth.HTTPDigestAuth(username, password) if username else None
+        flush_print(f'    大华地址: {base_url}')
 
-        # 1. 验证连通性
+        # 2. 验证连通性
+        flush_print('    [1/4] 测试大华平台连接...')
         if not self._dahua_auth(base_url, auth):
+            flush_print('    [错误] 大华平台不可用，跳过同步')
             return
 
-        # 2. 获取所有档案数据
+        # 3. 获取所有档案数据
+        flush_print('    [2/4] 读取档案数据...')
         archives = PrisonerArchive.objects.all()
         prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info'))
         if not prisoners:
-            self.stdout.write(self.style.WARNING('    档案库无数据，跳过大华同步'))
+            flush_print('    [警告] 档案库无数据，跳过大华同步')
             return
-        self.stdout.write(f'    待同步: {len(prisoners)} 人')
+        flush_print(f'    待同步: {len(prisoners)} 人')
 
-        # 3. 插入用户（不管照片能不能下载，先同步用户数据）
+        # 4. 插入用户
+        flush_print('    [3/4] 同步用户信息...')
         self._dahua_insert_users(base_url, auth, [{'prisoner_no': p['prisoner_no'], 'prisoner_name': p['prisoner_name'], 'id_card': p['id_card']} for p in prisoners])
 
-        # 4. 构建照片URL映射（直接用URL，不下载）
+        # 5. 构建照片URL映射
+        flush_print('    [4/4] 同步人脸照片...')
         photo_map = {}
         no_photo = 0
         for p in prisoners:
@@ -611,12 +637,12 @@ class Command(BaseCommand):
                     break
             if p['prisoner_no'] not in photo_map:
                 no_photo += 1
-        self.stdout.write(f'    有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
+        flush_print(f'    有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
 
-        # 5. 插入人脸（传URL给大华，大华设备自行下载）
+        # 6. 插入人脸
         if photo_map:
             self._dahua_insert_faces(base_url, auth, [{'prisoner_no': p['prisoner_no']} for p in prisoners], photo_map)
         else:
-            self.stdout.write(self.style.WARNING('    无照片数据，跳过人脸插入'))
+            flush_print('    [警告] 无照片数据，跳过人脸插入')
 
-        self.stdout.write(self.style.SUCCESS('    大华门禁平台同步完成'))
+        flush_print('    大华门禁平台同步完成')
