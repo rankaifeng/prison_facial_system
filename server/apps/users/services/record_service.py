@@ -57,18 +57,16 @@ class RecordService(BaseService):
 
     @staticmethod
     def parse_datetime(value):
-        """解析日期时间字符串，支持 'YYYY-MM-DD' 和 'YYYY-MM-DD HH:mm' 格式"""
+        """解析日期时间字符串，支持 'YYYY-MM-DD'、'YYYY-MM-DD HH:mm'、'YYYY-MM-DD HH:mm:ss' 格式"""
         if not value:
             return None
         from datetime import datetime
-        try:
-            dt = datetime.strptime(value, '%Y-%m-%d %H:%M')
-            return dt.date()  # 返回日期部分，忽略时间
-        except ValueError:
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d'):
             try:
-                return datetime.strptime(value, '%Y-%m-%d').date()
+                return datetime.strptime(value, fmt)
             except ValueError:
-                return None
+                continue
+        return None
 
     @staticmethod
     def save_file(file):
@@ -373,8 +371,8 @@ class RecordService(BaseService):
                 'type': record.type,
                 'reason': record.reason,  # 入监时填写的理由（可为空）
                 'exit_reason': exit_reason,  # 出监原因（入监记录特有）
-                'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
-                'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
+                'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else None,
+                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
                 'police_face': build_url(record.police_face),
                 'police_name': record.police_name,
                 'swat_face': build_url(record.swat_face),
@@ -446,8 +444,8 @@ class RecordService(BaseService):
             'prison_area_name': record.prison_area_name,
             'type': record.type,
             'reason': record.reason,
-            'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else None,
-            'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else None,
+            'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else None,
+            'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
             'police_face': build_url(record.police_face),
             'police_name': record.police_name,
             'swat_face': build_url(record.swat_face),
@@ -495,8 +493,8 @@ class RecordService(BaseService):
                 'prisoner_name': record.prisoner_name,
                 'prisoner_no': record.prisoner_no,
                 'type': '出监' if record.type == 'exit' else '入监',
-                'exit_date': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else '',
-                'entry_date': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
+                'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else '',
+                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else '',
                 'reason': record.reason or '',
                 'exit_reason': exit_reason or '',
                 'police_face': build_url(record.police_face),

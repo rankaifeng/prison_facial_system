@@ -38,6 +38,14 @@ class ExitRecordController(APIView):
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        exit_datetime = RecordService.parse_datetime(exit_date)
+        if not exit_datetime:
+            return Response({
+                'code': 0,
+                'msg': '日期格式错误，请使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm 格式',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         # 外出就医必须有医院信息
         if reason == '外出就医' and not hospital_name:
             return Response({
@@ -63,7 +71,7 @@ class ExitRecordController(APIView):
             prisoner_photo=prisoner_photo,
             prison_area=prison_area,
             prison_area_name=prison_area_name,
-            exit_date=exit_date,
+            exit_date=exit_datetime,
             reason=reason,
             police_face=police_face_path,
             swat_face=swat_face_path,

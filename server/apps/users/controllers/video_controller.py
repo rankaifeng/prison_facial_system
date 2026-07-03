@@ -144,7 +144,6 @@ def _build_rtsp_urls(rtsp_base, start_time, end_time):
     for url in urls_to_print:
         print(url)
     print("="*80)
-    # ============================================================
 
     # 紧凑格式优先，ISO 格式其次
     return [
@@ -164,6 +163,7 @@ def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
         '-loglevel', 'warning',
         '-rtsp_transport', 'tcp',
         '-i', rtsp_url,
+        '-an',
         '-c', 'copy',
         '-movflags', '+faststart',
         '-t', str(duration),

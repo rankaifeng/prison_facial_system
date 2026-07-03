@@ -72,6 +72,16 @@ const PrisonerDetail = () => {
       ) : (
         <Tag color="default">未录入</Tag>
       ),
+    },{
+      title: '武警确认',
+      dataIndex: 'armed_police_signature',
+      key: 'armed_police_signature',
+      width: 100,
+      render: (val) => val ? (
+        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      ) : (
+        <Tag color="default">未录入</Tag>
+      ),
     },
     { title: '出监时间', dataIndex: 'created_at', key: 'created_at', width: 120 },
     {

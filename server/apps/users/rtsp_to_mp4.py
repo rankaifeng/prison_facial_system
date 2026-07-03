@@ -296,6 +296,7 @@ def record_rtsp_to_mp4(
         has_t = True
 
     cmd += [
+        "-an",
         "-c", "copy",
         "-f", "mp4",
         "-movflags", "+faststart",
