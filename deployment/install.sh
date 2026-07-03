@@ -267,9 +267,19 @@ else
 from apps.users.models import User
 if not User.objects.filter(username='$ADMIN_USER').exists():
     u = User.objects.create_superuser('$ADMIN_USER', password='$ADMIN_PASS')
+    u.role = 'admin'
+    u.role_name = '管理员'
+    u.save()
     print('OK')
 else:
-    print('EXISTS')
+    u = User.objects.get(username='$ADMIN_USER')
+    if u.role != 'admin':
+        u.role = 'admin'
+        u.role_name = '管理员'
+        u.save()
+        print('FIXED')
+    else:
+        print('EXISTS')
 " 2>/dev/null && echo "  管理员创建成功" || echo "  管理员创建失败，请稍后手动创建"
 fi
 

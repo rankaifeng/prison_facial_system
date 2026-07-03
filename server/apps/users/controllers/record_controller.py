@@ -254,7 +254,7 @@ class RecordListController(APIView):
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('limit', request.query_params.get('page_size', 10)))
 
-        if request.user.role != 'admin':
+        if request.user.role != 'admin' and not prison_area:
             prison_area = request.user.prison_id
 
         success, message, result = RecordService.list_records(
@@ -291,7 +291,7 @@ class RecordExportController(APIView):
         prisoner_no = request.query_params.get('prisoner_no')
         reason = request.query_params.get('reason')
 
-        if request.user.role != 'admin':
+        if request.user.role != 'admin' and not prison_area:
             prison_area = request.user.prison_id
 
         success, message, result = RecordService.export_records(

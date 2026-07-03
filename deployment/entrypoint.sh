@@ -26,6 +26,19 @@ except Exception as e:
     print(f'字段修复跳过: {e}')
 " || true
 
+echo "=== 修复管理员角色 ==="
+python -c "
+from apps.users.models import User
+for u in User.objects.filter(is_superuser=True):
+    if u.role != 'admin':
+        u.role = 'admin'
+        u.role_name = '管理员'
+        u.save()
+        print(f'已修复管理员: {u.username}')
+    else:
+        print(f'管理员角色正常: {u.username}')
+" || true
+
 echo "=== 同步罪犯档案数据 ==="
 python manage.py sync_prisoner_data --real-api || echo "同步罪犯数据失败，跳过继续启动"
 
