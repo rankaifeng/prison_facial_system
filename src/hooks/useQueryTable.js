@@ -8,6 +8,7 @@ const useQueryTable = (options) => {
         defaultParams = {},
         transformParams,
         defaultPageSize = 10,
+        defaultCurrentPage = 1,
         rowKey = 'id',
         manual = false,
     } = options || {};
@@ -42,7 +43,7 @@ const useQueryTable = (options) => {
 
     const antdTable = useAntdTable(getTableData, {
         form,
-        defaultParams: [{ current: 1, pageSize: defaultPageSize }, defaultParams],
+        defaultParams: [{ current: defaultCurrentPage, pageSize: defaultPageSize }, defaultParams],
         manual,
     });
 

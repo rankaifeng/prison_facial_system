@@ -151,7 +151,9 @@ const Statistics = () => {
     { title: '出监原因', dataIndex: 'reason', key: 'reason' },
     { title: '医院名称', dataIndex: 'hospital_name', key: 'hospital_name' },
     { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
+    { title: '民警姓名', dataIndex: 'police_name', key: 'police_name' },
     { title: '特警确认', dataIndex: 'swat_face', key: 'swat_face' },
+    { title: '特警姓名', dataIndex: 'swat_name', key: 'swat_name' },
     { title: '武警确认', dataIndex: 'armed_police_signature', key: 'armed_police_signature' },
     { title: '录像', dataIndex: 'video', key: 'video' },
   ];
@@ -180,6 +182,11 @@ const Statistics = () => {
       render: (val) => {
         return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       }
+    },{
+      title: '民警姓名',
+      dataIndex: 'police_name',
+      key: 'police_name',
+      width: 100,
     },
     {
       title: '特警确认',
@@ -189,6 +196,12 @@ const Statistics = () => {
       render: (val) => {
         return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       }
+    },
+    {
+      title: '特警姓名',
+      dataIndex: 'swat_name',
+      key: 'swat_name',
+      width: 100,
     },
     {
       title: '武警确认',

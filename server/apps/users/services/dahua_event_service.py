@@ -317,6 +317,7 @@ class DahuaEventService:
                 raw = resp.raw
                 buf = b''
                 event_user_id = ''
+                event_user_name = ''
 
                 while cls._running:
                     # 读一行
@@ -356,7 +357,15 @@ class DahuaEventService:
                         # 精确读取图片数据
                         body, buf = cls._read_bytes(raw, cl, buf)
                         image_b64 = base64.b64encode(body).decode('ascii')
-                        cls._broadcast({'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64})
+                        broadcast_data = {'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64}
+                        if event_user_name:
+                            broadcast_data['user_name'] = event_user_name
+                        if event_user_id:
+                            broadcast_data['user_id'] = event_user_id
+                        cls._broadcast(broadcast_data)
+                        # 重置，等待下一组事件
+                        event_user_id = ''
+                        event_user_name = ''
 
                     elif 'text' in ct.lower() or 'plain' in ct.lower():
                         # 精确读取文本数据
@@ -366,14 +375,16 @@ class DahuaEventService:
                         if body_text == 'Heartbeat':
                             print(f'[智能事件] 心跳')
                         else:
-                            for eline in body_text.split('\n'):
-                                eline = eline.strip()
-                                if '.UserID=' in eline:
-                                    event_user_id = eline.split('=', 1)[1].strip()
+                            print(f'[智能事件] 收到事件文本:')
                             for eline in body_text.split('\n'):
                                 eline = eline.strip()
                                 if eline:
                                     print(f'  {eline}')
+                                if '.UserID=' in eline:
+                                    event_user_id = eline.split('=', 1)[1].strip()
+                                if '.Name=' in eline:
+                                    event_user_name = eline.split('=', 1)[1].strip()
+                            print(f'[智能事件] 解析结果: UserID={event_user_id}, Name={event_user_name}')
 
             except requests.RequestException as e:
                 time.sleep(5)

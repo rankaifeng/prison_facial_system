@@ -37,11 +37,13 @@ const PRISON_AREA_NAME_TO_ID = {
   '五监区': '5', '六监区': '6', '七监区': '7',
 };
 
-const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, onStepChange }) => {
+const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, policeFaceName, swatFaceName, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
   const [swatImage, setSwatImage] = useState(null);
+  const [policeName, setPoliceName] = useState(null);
+  const [swatName, setSwatName] = useState(null);
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
@@ -62,6 +64,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       setCurrent(0);
       setPoliceImage(null);
       setSwatImage(null);
+      setPoliceName(null);
+      setSwatName(null);
       setArmedPoliceSignature(null);
       
       // 通知父组件重置图片状态
@@ -108,7 +112,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     onStepChange?.(current);
   }, [current, onStepChange]);
 
-  // 自动填充民警/特警人脸图片
+  // 自动填充民警/特警人脸图片和姓名
   useEffect(() => {
     if (policeFaceImage) {
       console.log('[弹窗] 民警图片同步, 长度:', policeFaceImage.length);
@@ -122,6 +126,18 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       setSwatImage(swatFaceImage);
     }
   }, [swatFaceImage]);
+
+  useEffect(() => {
+    if (policeFaceName) {
+      setPoliceName(policeFaceName);
+    }
+  }, [policeFaceName]);
+
+  useEffect(() => {
+    if (swatFaceName) {
+      setSwatName(swatFaceName);
+    }
+  }, [swatFaceName]);
 
   const handleNext = async () => {
     if (current === 0) {
@@ -186,6 +202,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     formData.append('reason', formValues.exitReason);
     formData.append('police_face', policeImage);
     formData.append('swat_face', swatImage);
+    formData.append('police_name', policeName || '');
+    formData.append('swat_name', swatName || '');
     formData.append('armed_police_signature', armedPoliceSignature);
     formData.append('hospital_name', hospitalName || '');
     formData.append('start_time', startTime);
@@ -295,7 +313,10 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       />
       <div className="confirm-image">
         {policeImage ? (
-          <img src={policeImage} alt="民警照片" />
+          <>
+            <img src={policeImage} alt="民警照片" />
+            {policeName && <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#fff' }}>{policeName}</div>}
+          </>
         ) : (
           <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
         )}
@@ -317,9 +338,12 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       />
       <div className="confirm-image">
         {swatImage ? (
-          <img src={swatImage} alt="特警照片" />
+          <>
+            <img src={swatImage} alt="特警照片" />
+            {swatName && <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#fff' }}>{swatName}</div>}
+          </>
         ) : (
-          <div className="image-placeholder"><SafetyOutlined /><span>等待录入</span></div>
+          <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
         )}
       </div>
     </div>

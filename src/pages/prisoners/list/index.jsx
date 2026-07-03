@@ -19,21 +19,22 @@ const PrisonerList = () => {
     } catch { return null; }
   }, []);
 
+  const savedPage = savedState?.page || 1;
+  const savedPageSize = savedState?.pageSize || 10;
+  const savedSearch = savedState?.searchParams || null;
+
   const { tableProps, loading, form, search } = useQueryTable({
     url: '/user_manage/archive/list',
     rowKey: 'bh',
+    defaultPageSize: savedPageSize,
+    defaultCurrentPage: savedPage,
   });
 
-  // 恢复页码和搜索条件
+  // 恢复搜索条件（页码已通过 defaultCurrentPage 恢复）
   useEffect(() => {
-    if (savedState) {
-      if (savedState.page > 1 || savedState.pageSize !== 10) {
-        tableProps.pagination?.onChange?.(savedState.page, savedState.pageSize || 10);
-      }
-      if (savedState.searchParams) {
-        form.setFieldsValue(savedState.searchParams);
-        search.submit();
-      }
+    if (savedSearch) {
+      form.setFieldsValue(savedSearch);
+      search.submit();
     }
   }, []);
 

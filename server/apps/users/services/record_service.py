@@ -95,7 +95,7 @@ class RecordService(BaseService):
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         exit_date, reason, police_face, swat_face, armed_police_signature,
         operator_id, operator_name, hospital_name=None, attachments=None,
-        start_time=None, end_time=None
+        start_time=None, end_time=None, police_name=None, swat_name=None
     ):
         with transaction.atomic():
             # 保存武警签名为图片文件
@@ -111,8 +111,9 @@ class RecordService(BaseService):
                 exit_date=exit_date,
                 reason=reason,
                 police_face=police_face,
-                police_name=operator_name,
+                police_name=police_name or operator_name,
                 swat_face=swat_face,
+                swat_name=swat_name or '',
                 armed_police_signature=signature_path,
                 operator_id=operator_id,
                 operator_name=operator_name,
@@ -153,7 +154,7 @@ class RecordService(BaseService):
     def create_entry_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None,
-        start_time=None, end_time=None
+        start_time=None, end_time=None, police_name=None
     ):
         from datetime import date as date_cls
 
@@ -172,7 +173,7 @@ class RecordService(BaseService):
                 type='entry',
                 entry_date=entry_date,
                 police_face=police_face,
-                police_name=operator_name,
+                police_name=police_name or operator_name,
                 operator_id=operator_id,
                 operator_name=operator_name,
                 status=entry_status or 'normal',
@@ -240,7 +241,7 @@ class RecordService(BaseService):
     def create_return_record(
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         entry_date, police_face, operator_id, operator_name, entry_status=None, abnormal_reason=None,
-        start_time=None, end_time=None
+        start_time=None, end_time=None, police_name=None
     ):
         """回监记录：与入监类似，但需要处理同一编号回监时的统计回退逻辑"""
         from datetime import date as date_cls
@@ -261,7 +262,7 @@ class RecordService(BaseService):
                 type='entry',
                 entry_date=entry_date,
                 police_face=police_face,
-                police_name=operator_name,
+                police_name=police_name or operator_name,
                 operator_id=operator_id,
                 operator_name=operator_name,
                 status=entry_status or 'normal',

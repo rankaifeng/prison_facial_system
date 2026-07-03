@@ -41,6 +41,8 @@ const Dashboard = () => {
   const [activePrisonerNo, setActivePrisonerNo] = useState(null);
   const [policeFaceImage, setPoliceFaceImage] = useState(null);
   const [swatFaceImage, setSwatFaceImage] = useState(null);
+  const [policeFaceName, setPoliceFaceName] = useState(null);
+  const [swatFaceName, setSwatFaceName] = useState(null);
   const [exitModalStep, setExitModalStep] = useState(0);
   const [enterModalStep, setEnterModalStep] = useState(0);
   const [selectModalOpen, setSelectModalOpen] = useState(false);
@@ -80,10 +82,14 @@ const Dashboard = () => {
     if (step === 0) {
       setPoliceFaceImage(null);
       setSwatFaceImage(null);
+      setPoliceFaceName(null);
+      setSwatFaceName(null);
     } else if (step === 1) {
       setSwatFaceImage(null);
+      setSwatFaceName(null);
     } else if (step === 2) {
       setPoliceFaceImage(null);
+      setPoliceFaceName(null);
     }
   }, []);
 
@@ -93,6 +99,7 @@ const Dashboard = () => {
     setEnterModalStep(step);
     if (step === 0) {
       setPoliceFaceImage(null);
+      setPoliceFaceName(null);
     }
   }, []);
 
@@ -106,6 +113,7 @@ const Dashboard = () => {
     } else if (data.type === 'face' && data.image_base64) {
       const b64 = data.image_base64;
       const img = 'data:image/jpeg;base64,' + b64;
+      const faceName = data.user_name || null;
       const op = activeOpRef.current;
 
       if (!op) {
@@ -116,19 +124,24 @@ const Dashboard = () => {
       if (op === 'exit') {
         const step = exitStepRef.current;
         if (step === 1) {
-          console.log('[智能事件] → 出监民警图片');
+          console.log('[智能事件] → 出监民警图片, 姓名:', faceName);
           setPoliceFaceImage(img);
+          setPoliceFaceName(faceName);
           setSwatFaceImage(null);
+          setSwatFaceName(null);
         } else if (step === 2) {
-          console.log('[智能事件] → 出监特警图片');
+          console.log('[智能事件] → 出监特警图片, 姓名:', faceName);
           setSwatFaceImage(img);
+          setSwatFaceName(faceName);
           setPoliceFaceImage(null);
+          setPoliceFaceName(null);
         }
       } else if (op === 'enter') {
         const step = enterStepRef.current;
         if (step === 1) {
-          console.log('[智能事件] → 入监民警图片');
+          console.log('[智能事件] → 入监民警图片, 姓名:', faceName);
           setPoliceFaceImage(img);
+          setPoliceFaceName(faceName);
         }
       }
     }
@@ -405,6 +418,8 @@ const Dashboard = () => {
         prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
         swatFaceImage={swatFaceImage}
+        policeFaceName={policeFaceName}
+        swatFaceName={swatFaceName}
         onStepChange={handleExitModalStepChange}
       />
       <EnterConfirmModal
@@ -413,6 +428,7 @@ const Dashboard = () => {
         onOk={() => { resetEnterModal(); handleDataUpdate(); }}
         prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
+        policeFaceName={policeFaceName}
         onStepChange={handleEnterModalStepChange}
       />
       <ReturnConfirmModal

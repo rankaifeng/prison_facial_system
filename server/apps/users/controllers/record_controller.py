@@ -25,6 +25,8 @@ class ExitRecordController(APIView):
         reason = ExitTypeRepository.get_type_name(reason_id) if reason_id else None  # 转换为名称
         police_face = data.get('police_face')
         swat_face = data.get('swat_face')
+        police_name = data.get('police_name', '')
+        swat_name = data.get('swat_name', '')
         armed_police_signature = data.get('armed_police_signature')
         hospital_name = data.get('hospital_name')
         start_time = data.get('start_time')
@@ -75,6 +77,8 @@ class ExitRecordController(APIView):
             reason=reason,
             police_face=police_face_path,
             swat_face=swat_face_path,
+            police_name=police_name,
+            swat_name=swat_name,
             armed_police_signature=signature_path,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
@@ -112,6 +116,7 @@ class EntryRecordController(APIView):
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')
         police_face = data.get('police_face')
+        police_name = data.get('police_name', '')
         entry_status = data.get('entry_status', 'normal')
         abnormal_reason = data.get('abnormal_reason', '')
         start_time = data.get('start_time')
@@ -142,6 +147,7 @@ class EntryRecordController(APIView):
             prison_area_name=prison_area_name,
             entry_date=entry_datetime,
             police_face=police_face_path,
+            police_name=police_name,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
             entry_status=entry_status,
@@ -178,6 +184,7 @@ class ReturnRecordController(APIView):
         prison_area_name = get_prison_area_name(prison_area)  # 自动转换为名称
         entry_date = data.get('entry_date')
         police_face = data.get('police_face')
+        police_name = data.get('police_name', '')
         entry_status = data.get('entry_status', 'normal')
         abnormal_reason = data.get('abnormal_reason', '')
         start_time = data.get('start_time')
@@ -209,6 +216,7 @@ class ReturnRecordController(APIView):
             prison_area_name=prison_area_name,
             entry_date=entry_datetime,
             police_face=police_face_path,
+            police_name=police_name,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
             entry_status=entry_status,

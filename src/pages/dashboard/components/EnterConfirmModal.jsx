@@ -14,10 +14,11 @@ const PRISON_AREAS = [
   { value: '七监区', label: '七监区' },
 ];
 
-const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, onStepChange }) => {
+const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, policeFaceName, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
+  const [policeName, setPoliceName] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -28,7 +29,7 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
     onStepChange?.(current);
   }, [current, onStepChange]);
 
-  // 自动填充民警人脸图片
+  // 自动填充民警人脸图片和姓名
   useEffect(() => {
     if (policeFaceImage) {
       setPoliceImage(policeFaceImage);
@@ -36,10 +37,17 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
   }, [policeFaceImage]);
 
   useEffect(() => {
+    if (policeFaceName) {
+      setPoliceName(policeFaceName);
+    }
+  }, [policeFaceName]);
+
+  useEffect(() => {
     if (visible) {
       form.resetFields();
       setCurrent(0);
       setPoliceImage(null);
+      setPoliceName(null);
       setFormValues({});
       setStartTime(null);
 
@@ -116,6 +124,7 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
       formData.append('prison_area', formValues.prisonArea);
       formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD HH:mm') : null);
       formData.append('police_face', policeImage);
+      formData.append('police_name', policeName || '');
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
       formData.append('start_time', startTime);
@@ -209,7 +218,10 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
       />
       <div className="confirm-image">
         {policeImage ? (
-          <img src={policeImage} alt="民警人脸" />
+          <>
+            <img src={policeImage} alt="民警人脸" />
+            {policeName && <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#fff' }}>{policeName}</div>}
+          </>
         ) : (
           <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
         )}

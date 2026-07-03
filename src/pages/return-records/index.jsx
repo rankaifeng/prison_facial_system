@@ -90,6 +90,7 @@ const ReturnStatistics = () => {
     { title: '回监时间', dataIndex: 'entry_date', key: 'entry_date' },
     { title: '出监原因', dataIndex: 'exit_reason', key: 'exit_reason' },
     { title: '民警确认', dataIndex: 'police_face', key: 'police_face' },
+    { title: '民警姓名', dataIndex: 'police_name', key: 'police_name' },
     { title: '录像', dataIndex: 'video', key: 'video' },
   ];
 
@@ -107,6 +108,7 @@ const ReturnStatistics = () => {
         return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       }
     },
+    { title: '民警姓名', dataIndex: 'police_name', key: 'police_name', width: 100 },
     {
       title: '录像',
       dataIndex: 'video',

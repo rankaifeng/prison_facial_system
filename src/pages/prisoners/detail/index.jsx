@@ -63,6 +63,12 @@ const PrisonerDetail = () => {
       ),
     },
     {
+      title: '民警姓名',
+      dataIndex: 'police_name',
+      key: 'police_name',
+      width: 100,
+    },
+    {
       title: '特警确认',
       dataIndex: 'swat_face',
       key: 'swat_face',
@@ -72,6 +78,11 @@ const PrisonerDetail = () => {
       ) : (
         <Tag color="default">未录入</Tag>
       ),
+    },{
+      title: '特警姓名',
+      dataIndex: 'swat_name',
+      key: 'swat_name',
+      width: 100,
     },{
       title: '武警确认',
       dataIndex: 'armed_police_signature',
