@@ -384,6 +384,8 @@ class DahuaEventService:
                                     event_user_id = eline.split('=', 1)[1].strip()
                                 if '.Name=' in eline:
                                     event_user_name = eline.split('=', 1)[1].strip()
+                                if '.CardName=' in eline:
+                                    event_user_name = eline.split('=', 1)[1].strip()
                             print(f'[智能事件] 解析结果: UserID={event_user_id}, Name={event_user_name}')
 
             except requests.RequestException as e:

@@ -159,8 +159,10 @@ def verify_mp4(path: str) -> tuple:
             streams = data.get("streams", [])
             has_video = any(s.get("codec_type") == "video" for s in streams)
             dur = float(data.get("format", {}).get("duration") or 0)
-            if has_video:
-                return True, f"视频有效，时长 {_fmt_seconds(dur) if dur > 0 else '未知'}"
+            if has_video and dur > 0:
+                return True, f"视频有效，时长 {_fmt_seconds(dur)}"
+            if has_video and dur <= 0:
+                return False, "视频时长为0（moov atom 不完整）"
             return False, "无视频流"
         return False, (r.stderr.strip() or "文件损坏，无法解析")
     except Exception as e:

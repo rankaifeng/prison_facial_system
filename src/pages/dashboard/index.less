@@ -3,102 +3,6 @@
 @card-bg: rgba(20, 25, 45, 0.85);
 @border-glow: rgba(0, 240, 255, 0.3);
 
-@keyframes message-scroll {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-50%);
-  }
-}
-
-@keyframes scan-line {
-  0% {
-    opacity: 0.5;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes tech-pulse {
-
-  0%,
-  100% {
-    filter: drop-shadow(0 0 15px @primary-glow);
-    transform: scale(1);
-  }
-
-  50% {
-    filter: drop-shadow(0 0 25px @primary-glow) drop-shadow(0 0 40px rgba(0, 240, 255, 0.5));
-    transform: scale(1.05);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 15px @primary-glow, 0 0 30px rgba(0, 240, 255, 0.5);
-    transform: scale(1);
-  }
-
-  50% {
-    box-shadow: 0 0 25px @primary-glow, 0 0 50px rgba(0, 240, 255, 0.7);
-    transform: scale(1.1);
-  }
-}
-
-@keyframes scrollUp {
-  0% {
-    transform: translateY(0);
-  }
-
-  100% {
-    transform: translateY(-50%);
-  }
-}
-
-@keyframes header-shine {
-  0% {
-    left: -100%;
-  }
-
-  50%,
-  100% {
-    left: 100%;
-  }
-}
-
-@keyframes pulse-dot {
-
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.8);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
 .dashboard {
   width: 100%;
   height: 100%;
@@ -142,7 +46,6 @@
       height: 2px;
       background: linear-gradient(90deg, transparent 0%, @primary-glow 20%, @primary-glow 80%, transparent 100%);
       box-shadow: 0 0 30px @primary-glow, 0 0 60px rgba(0, 240, 255, 0.5);
-      animation: scan-line 3s linear infinite;
     }
 
     .corner-decor {
@@ -179,7 +82,6 @@
         font-size: 30px;
         color: @primary-glow;
         filter: drop-shadow(0 0 12px @primary-glow);
-        animation: tech-pulse 2s ease-in-out infinite;
       }
 
       .header-title {
@@ -192,7 +94,6 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         letter-spacing: 4px;
-        animation: shimmer 3s linear infinite;
         text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
       }
     }
@@ -408,7 +309,6 @@
           width: 100%;
           height: 100%;
           background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-          animation: header-shine 3s ease-in-out infinite;
         }
 
         .title-content {
@@ -451,14 +351,11 @@
             border-radius: 50%;
             background: @primary-glow;
             box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-            animation: pulse-dot 2s ease-in-out infinite;
 
             &:nth-child(2) {
-              animation-delay: 0.3s;
             }
 
             &:nth-child(3) {
-              animation-delay: 0.6s;
             }
           }
         }
@@ -603,7 +500,6 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      animation: header-shine 3s ease-in-out infinite;
     }
 
     .title-content {
@@ -646,14 +542,11 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-        animation: pulse-dot 2s ease-in-out infinite;
 
         &:nth-child(2) {
-          animation-delay: 0.3s;
         }
 
         &:nth-child(3) {
-          animation-delay: 0.6s;
         }
       }
     }
@@ -709,7 +602,6 @@
         width: 50%;
         height: 100%;
         background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-        animation: header-shine 3s ease-in-out infinite;
       }
 
       .header-content {
@@ -752,14 +644,11 @@
           border-radius: 50%;
           background: @primary-glow;
           box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-          animation: pulse-dot 2s ease-in-out infinite;
 
           &:nth-child(2) {
-            animation-delay: 0.3s;
           }
 
           &:nth-child(3) {
-            animation-delay: 0.6s;
           }
         }
       }
@@ -839,7 +728,6 @@
           background: radial-gradient(circle at 30% 30%, #fff 0%, @primary-glow 50%, rgba(0, 100, 200, 0.8) 100%);
           border-radius: 50%;
           box-shadow: 0 0 15px @primary-glow, 0 0 30px rgba(0, 240, 255, 0.6);
-          animation: pulse-glow 2s ease-in-out infinite;
         }
       }
     }
@@ -890,7 +778,6 @@
         width: 50%;
         height: 100%;
         background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-        animation: header-shine 3s ease-in-out infinite;
       }
 
       .header-content {
@@ -933,14 +820,11 @@
           border-radius: 50%;
           background: @primary-glow;
           box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-          animation: pulse-dot 2s ease-in-out infinite;
 
           &:nth-child(2) {
-            animation-delay: 0.3s;
           }
 
           &:nth-child(3) {
-            animation-delay: 0.6s;
           }
         }
       }
@@ -963,7 +847,6 @@
 
         .anticon {
           font-size: 14px;
-          animation: pulse-dot 1.5s ease-in-out infinite;
         }
       }
     }
@@ -1006,7 +889,6 @@
           background: rgba(0, 240, 255, 0.2);
           color: #00f0ff;
           box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-          animation: pulse-glow 2s ease-in-out infinite;
         }
 
         &.in-prison {
@@ -1225,7 +1107,6 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      animation: header-shine 3s ease-in-out infinite;
     }
 
     .header-left {
@@ -1268,14 +1149,11 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-        animation: pulse-dot 2s ease-in-out infinite;
 
         &:nth-child(2) {
-          animation-delay: 0.3s;
         }
 
         &:nth-child(3) {
-          animation-delay: 0.6s;
         }
       }
     }
@@ -1423,7 +1301,6 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      animation: header-shine 3s ease-in-out infinite;
     }
 
     .header-content {
@@ -1466,14 +1343,11 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-        animation: pulse-dot 2s ease-in-out infinite;
 
         &:nth-child(2) {
-          animation-delay: 0.3s;
         }
 
         &:nth-child(3) {
-          animation-delay: 0.6s;
         }
       }
     }
@@ -1556,7 +1430,6 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      animation: header-shine 3s ease-in-out infinite;
     }
 
     .header-content {
@@ -1599,14 +1472,11 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-        animation: pulse-dot 2s ease-in-out infinite;
 
         &:nth-child(2) {
-          animation-delay: 0.3s;
         }
 
         &:nth-child(3) {
-          animation-delay: 0.6s;
         }
       }
     }
@@ -1781,7 +1651,6 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      animation: header-shine 3s ease-in-out infinite;
     }
 
     .header-left {
@@ -1861,14 +1730,11 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-        animation: pulse-dot 2s ease-in-out infinite;
 
         &:nth-child(2) {
-          animation-delay: 0.3s;
         }
 
         &:nth-child(3) {
-          animation-delay: 0.6s;
         }
       }
     }
