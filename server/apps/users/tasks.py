@@ -227,7 +227,7 @@ def _sync_to_dahua_direct(report_fn=None):
     log('正在测试大华平台连接...')
     try:
         url = f"{base_url}/cgi-bin/magicBox.cgi?action=getDeviceType"
-        resp = requests.get(url, auth=auth, timeout=10)
+        resp = requests.get(url, auth=auth, timeout=(5, 10))
         log(f'大华平台连接测试: status={resp.status_code}, response={resp.text[:100]}')
         if resp.status_code != 200:
             msg = f'大华平台连接失败, status={resp.status_code}'
@@ -280,7 +280,7 @@ def _sync_to_dahua_direct(report_fn=None):
         batch_num = i // batch_size + 1
         try:
             payload = {'UserList': batch}
-            resp = requests.post(user_url, json=payload, auth=auth, timeout=30)
+            resp = requests.post(user_url, json=payload, auth=auth, timeout=(5, 30))
             text = resp.text.strip()
             if 'ok' in text.lower():
                 user_success += len(batch)
@@ -288,12 +288,18 @@ def _sync_to_dahua_direct(report_fn=None):
             else:
                 user_fail += len(batch)
                 log(f'用户批次 {batch_num}/{total_batches} 失败: {text[:200]}')
+        except requests.ConnectionError as e:
+            user_fail += len(batch)
+            log(f'用户批次 {batch_num}/{total_batches} 连接失败: {e}')
+        except requests.Timeout as e:
+            user_fail += len(batch)
+            log(f'用户批次 {batch_num}/{total_batches} 超时: {e}')
         except requests.RequestException as e:
             user_fail += len(batch)
             log(f'用户批次 {batch_num}/{total_batches} 请求异常: {e}')
         time.sleep(2)
 
-    # 5. 构建照片URL映射（直接用URL，不下载）
+    # 5. 构建照片URL映射
     def fix_photo_url(url):
         if not url:
             return url
@@ -317,51 +323,61 @@ def _sync_to_dahua_direct(report_fn=None):
 
     log(f'有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
 
-    # 6. 插入人脸照片到大华（传URL，大华设备自行下载）
-    face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
-    faces = []
+    # 6. 插入人脸照片到大华（逐个插入，下载照片转 base64）
+    face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
+
+    def download_photo_base64(photo_url):
+        try:
+            r = requests.get(photo_url, timeout=10)
+            r.raise_for_status()
+            return base64.b64encode(r.content).decode('utf-8')
+        except Exception as e:
+            logger.warning(f'下载照片失败 {photo_url}: {e}')
+            return None
+
+    face_success = 0
+    face_fail = 0
     skipped = 0
-    for p in prisoners:
+    total = len(prisoners)
+    log(f'开始同步人脸照片，共 {total} 人...')
+    for idx, p in enumerate(prisoners, 1):
         photo_url = photo_map.get(p['prisoner_no'])
         if not photo_url:
             skipped += 1
             continue
-        faces.append({
-            'UserID': p['prisoner_no'],
-            'FaceData': [],
-            'PhotoData': [],
-            'PhotoURL': [photo_url],
-        })
-
-    face_success = 0
-    face_fail = 0
-    batch_size = 10
-    face_total_batches = (len(faces) + batch_size - 1) // batch_size
-    log(f'开始同步人脸照片，共 {len(faces)} 人 {face_total_batches} 批...')
-    for i in range(0, len(faces), batch_size):
-        batch = faces[i:i + batch_size]
-        batch_num = i // batch_size + 1
+        photo_b64 = download_photo_base64(photo_url)
+        if not photo_b64:
+            face_fail += 1
+            continue
         try:
-            payload = {'FaceList': batch}
-            resp = requests.post(face_url, json=payload, auth=auth, timeout=60)
-            text = resp.text.strip()
-            if 'ok' in text.lower():
-                face_success += len(batch)
-                log(f'人脸批次 {batch_num}/{face_total_batches}: 插入 {len(batch)} 个 (累计 {face_success}/{len(faces)})')
+            payload = {
+                'UserID': p['prisoner_no'],
+                'FaceData': [],
+                'PhotoData': [photo_b64],
+                'PhotoURL': [],
+            }
+            resp = requests.post(face_url, json=payload, auth=auth, timeout=(5, 60))
+            text = resp.text.strip().lower()
+            if 'ok' in text:
+                face_success += 1
             else:
-                face_fail += len(batch)
-                log(f'人脸批次 {batch_num}/{face_total_batches} 失败: {text[:200]}')
+                face_fail += 1
+                if face_fail <= 5:
+                    log(f'人脸 {idx}/{total} 失败: {resp.text[:200]}')
         except requests.RequestException as e:
-            face_fail += len(batch)
-            log(f'人脸批次 {batch_num}/{face_total_batches} 请求异常: {e}')
-        time.sleep(2)
+            face_fail += 1
+            if face_fail <= 5:
+                log(f'人脸 {idx}/{total} 请求异常: {e}')
+        if idx % 50 == 0:
+            log(f'人脸进度: {idx}/{total} (成功 {face_success}, 失败 {face_fail}, 跳过 {skipped})')
+        time.sleep(0.5)
 
     if skipped > 0:
         log(f'跳过无照片人员: {skipped} 个')
 
     # 7. 汇总
     msg = (f'大华同步完成: 用户成功 {user_success}/{len(prisoners)}, '
-           f'人脸成功 {face_success}/{len(faces)} (跳过 {skipped})')
+           f'人脸成功 {face_success}/{total} (跳过 {skipped})')
     log(msg)
 
     return face_success, face_fail, skipped, msg

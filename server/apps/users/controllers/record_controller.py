@@ -251,6 +251,7 @@ class RecordListController(APIView):
             reason=reason,
             page=page,
             page_size=page_size,
+            request_host=request.get_host(),
         )
 
         return Response({
@@ -285,6 +286,7 @@ class RecordExportController(APIView):
             prisoner_name=prisoner_name,
             prisoner_no=prisoner_no,
             reason=reason,
+            request_host=request.get_host(),
         )
 
         return Response({

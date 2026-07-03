@@ -517,51 +517,49 @@ class Command(BaseCommand):
         return total_fail == 0
 
     def _dahua_insert_faces(self, base_url, auth, prisoners, photo_map):
-        """批量插入人脸照片到大华门禁平台（传URL，大华设备自行下载）"""
-        url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
-        faces = []
-        skipped = 0
-        for p in prisoners:
+        """插入人脸照片到大华门禁平台（逐个插入，传 base64 照片数据）"""
+        url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
+        total = len(prisoners)
+        success = 0
+        fail = 0
+        skip = 0
+        flush_print(f'    开始同步人脸，共 {total} 人...')
+        for idx, p in enumerate(prisoners, 1):
             photo_url = photo_map.get(p['prisoner_no'])
             if not photo_url:
-                skipped += 1
+                skip += 1
                 continue
-            faces.append({
+            photo_b64 = self._download_photo_base64(photo_url)
+            if not photo_b64:
+                fail += 1
+                if idx % 100 == 0:
+                    flush_print(f'    人脸 {idx}/{total}: 下载照片失败 {p["prisoner_no"]}')
+                continue
+            payload = {
                 'UserID': p['prisoner_no'],
                 'FaceData': [],
-                'PhotoData': [],
-                'PhotoURL': [photo_url],
-            })
-
-        batch_size = 10
-        total_success = 0
-        total_batches = (len(faces) + batch_size - 1) // batch_size
-        flush_print(f'    开始同步人脸，共 {len(faces)} 人 {total_batches} 批...')
-        for i in range(0, len(faces), batch_size):
-            batch = faces[i:i + batch_size]
-            batch_num = i // batch_size + 1
-            payload = {'FaceList': batch}
+                'PhotoData': [photo_b64],
+                'PhotoURL': [],
+            }
             try:
                 resp = requests.post(url, json=payload, auth=auth, timeout=(5, 60))
                 text = resp.text.strip().lower()
                 if 'ok' in text:
-                    total_success += len(batch)
-                    flush_print(f'    人脸批次 {batch_num}/{total_batches}: 插入 {len(batch)} 个 (累计 {total_success}/{len(faces)})')
+                    success += 1
                 else:
-                    flush_print(f'    人脸批次 {batch_num}/{total_batches} 失败: {resp.text[:200]}')
-            except requests.ConnectionError as e:
-                flush_print(f'    人脸批次 {batch_num}/{total_batches} 连接失败: {e}')
-            except requests.Timeout as e:
-                flush_print(f'    人脸批次 {batch_num}/{total_batches} 超时: {e}')
+                    fail += 1
+                    if fail <= 5:
+                        flush_print(f'    人脸 {idx}/{total} 失败: {resp.text[:200]}')
             except requests.RequestException as e:
-                flush_print(f'    人脸批次 {batch_num}/{total_batches} 请求失败: {e}')
-            time.sleep(2)
+                fail += 1
+                if fail <= 5:
+                    flush_print(f'    人脸 {idx}/{total} 请求异常: {e}')
+            if idx % 50 == 0:
+                flush_print(f'    人脸进度: {idx}/{total} (成功 {success}, 失败 {fail}, 跳过 {skip})')
+            time.sleep(0.5)
 
-        if skipped > 0:
-            flush_print(f'    跳过无照片人员: {skipped} 个')
-        if total_success > 0:
-            flush_print(f'    人脸插入完成: {total_success}/{len(faces)}')
-        return total_success == len(faces)
+        flush_print(f'    人脸同步完成: 成功 {success}, 失败 {fail}, 跳过 {skip}')
+        return success > 0
 
     def _fix_photo_url(self, url):
         """修正照片URL，兼容旧数据中的错误地址"""

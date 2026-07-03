@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
-from apps.users.controllers.video_controller import serve_hls
+from apps.users.controllers.video_controller import serve_hls, serve_media
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,8 +9,6 @@ urlpatterns = [
     path('prison_manage/', include('apps.users.prison_urls')),
     # HLS流媒体文件服务
     re_path(r'^media/hls/(?P<path>.*)$', serve_hls, name='hls_stream'),
+    # media 文件服务（自定义视图，兼容 Daphne/Channels）
+    re_path(r'^media/(?P<path>.*)$', serve_media, name='serve_media'),
 ]
-
-# 开发环境提供 media 文件访问
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

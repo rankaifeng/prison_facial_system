@@ -419,6 +419,7 @@ const Dashboard = () => {
         visible={returnModalOpen}
         onCancel={() => setReturnModalOpen(false)}
         onOk={() => { setReturnModalOpen(false); handleDataUpdate(); }}
+        prisonerNo={activePrisonerNo}
       />
 
       {/* 同步进度弹窗 */}

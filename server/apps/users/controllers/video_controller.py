@@ -1,4 +1,5 @@
 import json
+import mimetypes
 import subprocess
 import logging
 import os
@@ -8,11 +9,22 @@ import time
 import shutil
 from io import BytesIO
 from pathlib import Path
+from django.http import FileResponse, Http404
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
+
+
+def serve_media(request, path):
+    """自定义 media 文件服务（不依赖 Django static()，兼容 Daphne/Channels）"""
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        raise Http404
+    content_type, _ = mimetypes.guess_type(file_path)
+    return FileResponse(open(file_path, 'rb'), content_type=content_type or 'application/octet-stream')
 
 logger = logging.getLogger(__name__)
 

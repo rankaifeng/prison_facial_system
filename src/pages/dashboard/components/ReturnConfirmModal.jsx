@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { returnRecord } from '@/api/globApi';
+import { returnRecord, archive } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
-const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
+const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [startTime, setStartTime] = useState(null);
+  const [loadingPrisoner, setLoadingPrisoner] = useState(false);
   const policeInputRef = useRef(null);
 
   // 当弹窗打开时重置状态
@@ -19,8 +20,30 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
       setCurrent(0);
       setPoliceImage(null);
       setFormValues({});
+      setStartTime(null);
+
+      // 根据编号查询罪犯信息并回显
+      if (prisonerNo) {
+        setLoadingPrisoner(true);
+        archive.detail({ prisoner_no: prisonerNo }).then(res => {
+          if (res?.code === 1 && res?.data) {
+            const d = res.data;
+            form.setFieldsValue({
+              prisonerNo: d.bh || prisonerNo,
+              prisonerName: d.xm || '',
+              prisonArea: d.db || '',
+            });
+          } else {
+            message.error(res?.msg || '未找到该罪犯');
+          }
+        }).catch(() => {
+          message.error('查询罪犯信息失败');
+        }).finally(() => {
+          setLoadingPrisoner(false);
+        });
+      }
     }
-  }, [visible, form]);
+  }, [visible, prisonerNo, form]);
 
   const entryStatus = Form.useWatch('entryStatus', form);
 
@@ -102,19 +125,24 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
 
   const renderStep1 = () => (
     <div className="step-content step-form">
+      {loadingPrisoner ? (
+        <div style={{ textAlign: 'center', padding: 40, width: '100%' }}>
+          <Spin tip="正在查询罪犯信息..." />
+        </div>
+      ) : (
       <Form form={form} layout="vertical">
-        <Form.Item
-          name="prisonerName"
-          label="罪犯姓名"
-        >
-          <Input placeholder="罪犯姓名（可手动输入）" />
-        </Form.Item>
-
         <Form.Item
           name="prisonerNo"
           label="罪犯编号"
         >
-          <Input placeholder="罪犯编号（可手动输入）" />
+          <Input disabled />
+        </Form.Item>
+
+        <Form.Item
+          name="prisonerName"
+          label="罪犯姓名"
+        >
+          <Input disabled />
         </Form.Item>
 
         <Form.Item
@@ -131,13 +159,13 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
           rules={[{ required: true, message: '请选择监区' }]}
         >
           <Select placeholder="请选择监区" options={[
-            { value: '1', label: '一监区' },
-            { value: '2', label: '二监区' },
-            { value: '3', label: '三监区' },
-            { value: '4', label: '四监区' },
-            { value: '5', label: '五监区' },
-            { value: '6', label: '六监区' },
-            { value: '7', label: '七监区' },
+            { value: '一监区', label: '一监区' },
+            { value: '二监区', label: '二监区' },
+            { value: '三监区', label: '三监区' },
+            { value: '四监区', label: '四监区' },
+            { value: '五监区', label: '五监区' },
+            { value: '六监区', label: '六监区' },
+            { value: '七监区', label: '七监区' },
           ]} />
         </Form.Item>
 
@@ -162,6 +190,7 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk }) => {
           </Form.Item>
         )}
       </Form>
+      )}
     </div>
   );
 

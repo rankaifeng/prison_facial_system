@@ -336,7 +336,8 @@ class RecordService(BaseService):
 
     @staticmethod
     def list_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
-                     prisoner_name=None, prisoner_no=None, reason=None, page=1, page_size=10):
+                     prisoner_name=None, prisoner_no=None, reason=None, page=1, page_size=10,
+                     request_host=None):
         queryset = RecordRepository.filter(
             type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
             prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
@@ -346,16 +347,16 @@ class RecordService(BaseService):
         offset = (page - 1) * page_size
         records = queryset[offset:offset + page_size]
 
+        host = request_host or 'localhost:8000'
+
         data = []
         for record in records:
-            # 构建完整的 HTTP URL
-            # path 格式: /media/faces/xxx.jpg 或 /media/videos/xxx.mp4
             def build_url(path):
                 if not path:
                     return None
                 if path.startswith('http'):
                     return path
-                return f"http://localhost:8000{path}"
+                return f"http://{host}{path}"
 
             # 入监记录需要显示出监原因
             exit_reason = None
@@ -422,17 +423,19 @@ class RecordService(BaseService):
         return True, '获取成功', {'data': data, 'num': total}
 
     @staticmethod
-    def get_record(record_id):
+    def get_record(record_id, request_host=None):
         record = RecordRepository.get_by_id(record_id)
         if not record:
             return False, '记录不存在', None
+
+        host = request_host or 'localhost:8000'
 
         def build_url(path):
             if not path:
                 return None
             if path.startswith('http'):
                 return path
-            return f"http://localhost:8000{path}"
+            return f"http://{host}{path}"
 
         return True, '获取成功', {
             'id': record.id,
@@ -461,7 +464,7 @@ class RecordService(BaseService):
 
     @staticmethod
     def export_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
-                       prisoner_name=None, prisoner_no=None, reason=None):
+                       prisoner_name=None, prisoner_no=None, reason=None, request_host=None):
         """导出记录为CSV数据"""
         queryset = RecordRepository.filter(
             type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
@@ -470,12 +473,14 @@ class RecordService(BaseService):
 
         records = queryset[:5000]  # 限制最多导出5000条
 
+        host = request_host or 'localhost:8000'
+
         def build_url(path):
             if not path:
                 return ''
             if path.startswith('http'):
                 return path
-            return f"http://localhost:8000{path}"
+            return f"http://{host}{path}"
 
         data = []
         for record in records:
