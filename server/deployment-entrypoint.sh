@@ -14,5 +14,17 @@ done
 echo "=== 运行数据库迁移 ==="
 python manage.py migrate --noinput
 
+echo "=== 修复字段类型 ==="
+python -c "
+from django.db import connection
+c = connection.cursor()
+try:
+    c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL')
+    c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL')
+    print('字段类型已修复')
+except Exception as e:
+    print(f'字段修复跳过: {e}')
+" || true
+
 echo "=== 启动 Daphne 服务（ASGI） ==="
 exec daphne -b 0.0.0.0 -p 8000 config.asgi:application

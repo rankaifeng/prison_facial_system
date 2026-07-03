@@ -27,7 +27,7 @@ if [ -f "$SCRIPT_DIR/.env" ]; then
 fi
 
 # ── 1. 导入新镜像 ──
-echo "[1/5] 导入新镜像..."
+echo "[1/6] 导入新镜像..."
 
 if [ -f "$SCRIPT_DIR/app-images.tar" ]; then
     docker load -i "$SCRIPT_DIR/app-images.tar" 2>&1 | sed 's/^/    /'
@@ -38,7 +38,7 @@ fi
 
 # ── 2. 更新 docker-compose.yml 环境变量 ──
 echo ""
-echo "[2/5] 更新配置..."
+echo "[2/6] 更新配置..."
 
 if [ -n "$SERVER_IP" ]; then
     # 确保 ALLOWED_HOSTS 包含当前 IP
@@ -56,7 +56,7 @@ fi
 
 # ── 3. 停止旧的图片代理服务（已由 nginx 处理）──
 echo ""
-echo "[3/5] 清理旧的图片代理..."
+echo "[3/6] 清理旧的图片代理..."
 
 if systemctl is-active --quiet prison-proxy 2>/dev/null; then
     systemctl stop prison-proxy
@@ -70,7 +70,7 @@ fi
 
 # ── 4. 重启服务 ──
 echo ""
-echo "[4/5] 重启服务..."
+echo "[4/6] 重启服务..."
 
 cd "$INSTALL_DIR"
 
@@ -106,9 +106,21 @@ sleep 10
 echo "  服务状态:"
 docker compose ps 2>/dev/null | sed 's/^/    /'
 
-# ── 5. 同步数据（修复图片路径等） ──
+# ── 5. 数据库迁移 ──
 echo ""
-echo "[5/5] 同步罪犯档案数据..."
+echo "[5/6] 数据库迁移..."
+
+# 修复 exit_date/entry_date 字段类型（DateField -> DateTimeField）
+# 如果已执行过则会跳过
+docker exec prison-backend python manage.py migrate users 0012_exit_entry_datetime --fake 2>&1 | sed 's/^/    /' || true
+
+# 确保数据库字段类型正确（幂等操作，已改过的不会报错）
+docker exec prison-backend python manage.py shell -c "from django.db import connection; c=connection.cursor(); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL'); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL'); print('done')" 2>&1 | sed 's/^/    /' || true
+echo "  数据库迁移完成"
+
+# ── 6. 同步数据（修复图片路径等） ──
+echo ""
+echo "[6/6] 同步罪犯档案数据..."
 docker exec prison-backend python manage.py sync_prisoner_data --real-api 2>&1 | sed 's/^/    /' && echo "  数据同步完成" || echo "  数据同步失败，可稍后手动执行"
 
 # ── 完成 ──

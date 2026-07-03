@@ -14,6 +14,18 @@ done
 echo "=== 运行数据库迁移 ==="
 python manage.py migrate --noinput
 
+echo "=== 修复字段类型 ==="
+python -c "
+from django.db import connection
+c = connection.cursor()
+try:
+    c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL')
+    c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL')
+    print('字段类型已修复')
+except Exception as e:
+    print(f'字段修复跳过: {e}')
+" || true
+
 echo "=== 同步罪犯档案数据 ==="
 python manage.py sync_prisoner_data --real-api || echo "同步罪犯数据失败，跳过继续启动"
 
