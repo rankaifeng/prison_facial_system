@@ -286,7 +286,7 @@ class VideoStreamUrlController(APIView):
                 output_path=str(video_path),
                 duration=duration,
                 timeout=max_wait,
-                stall_timeout=15,
+                stall_timeout=30,
                 overwrite=True,
                 pre_probe=True,
                 verbose=True,
