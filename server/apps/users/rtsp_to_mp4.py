@@ -422,17 +422,32 @@ def record_rtsp_to_mp4(
         size = output.stat().st_size
         result["size"] = size
 
-        if rc == 0 and not stall_triggered:
+        # 诊断：输出 ffprobe 完整信息
+        if verbose:
+            try:
+                diag = subprocess.run(
+                    ["ffprobe", "-v", "error", "-show_entries",
+                     "stream=codec_type,codec_name,duration,nb_frames,width,height,r_frame_rate"
+                     ":format=duration,size,nb_streams",
+                     "-of", "json", str(output)],
+                    capture_output=True, text=True, timeout=15,
+                )
+                print(f"[诊断] ffprobe 输出:\n{diag.stdout.strip()}")
+                if diag.stderr.strip():
+                    print(f"[诊断] ffprobe 错误:\n{diag.stderr.strip()}")
+            except Exception as e:
+                print(f"[诊断] ffprobe 异常: {e}")
+
+        ok, vinfo = verify_mp4(str(output))
+        if ok:
             result["success"] = True
-            result["message"] = "录制完成"
-        else:
-            ok, vinfo = verify_mp4(str(output))
-            if ok:
-                result["success"] = True
+            if rc == 0 and not stall_triggered:
+                result["message"] = "录制完成"
+            else:
                 tag = "流播完收尾" if stall_triggered else "设备断开"
                 result["message"] = f"录制完成（{tag}，返回码 {rc}，{vinfo}）"
-            else:
-                result["message"] = f"录制失败（返回码 {rc}，文件不完整: {vinfo}）"
+        else:
+            result["message"] = f"录制失败（返回码 {rc}，文件不完整: {vinfo}）"
 
         if verbose:
             size_kb = size / 1024

@@ -111,48 +111,18 @@ def _to_compact(t):
 
 
 def _build_rtsp_urls(rtsp_base, start_time, end_time):
-    """生成多种RTSP URL格式，按优先级排列"""
-    # 转换为紧凑格式
+    """生成RTSP回放URL"""
     start_compact = _to_compact(start_time)
     end_compact = _to_compact(end_time)
 
-    # ISO 格式（作为备选）
-    def to_iso(t):
-        t_clean = t.replace('Z', '')
-        if 'T' in t_clean and len(t_clean.split('T')[0]) == 8 and '-' not in t_clean:
-            d, tm = t_clean.split('T')
-            d = f"{d[:4]}-{d[4:6]}-{d[6:]}"
-            tm = f"{tm[:2]}:{tm[2:4]}:{tm[4:]}"
-            return f"{d}T{tm}Z"
-        return t if t.endswith('Z') else f"{t}Z"
-
-    start_iso = to_iso(start_time)
-    end_iso = to_iso(end_time)
-
     sep = '/' if not rtsp_base.endswith('/') else ''
+    url = f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}"
 
-    # 打印最终使用的URL
     print("="*80)
-    print("📌 最终生成的RTSP回放地址：")
-    urls_to_print = [
-        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
-        f"{rtsp_base}?starttime={start_compact}&endtime={end_compact}",
-        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
-        f"{rtsp_base}?starttime={start_iso}&endtime={end_iso}",
-        rtsp_base.rstrip('/'),
-    ]
-    for url in urls_to_print:
-        print(url)
+    print(f"📌 RTSP回放地址: {url}")
     print("="*80)
 
-    # 紧凑格式优先，ISO 格式其次
-    return [
-        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
-        f"{rtsp_base}{sep}?starttime={start_compact}&endtime={end_compact}",
-        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
-        f"{rtsp_base}{sep}?starttime={start_iso}&endtime={end_iso}",
-        rtsp_base.rstrip('/'),
-    ]
+    return [url]
 
 
 def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
