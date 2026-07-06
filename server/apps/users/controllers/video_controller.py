@@ -4,10 +4,7 @@ import subprocess
 import logging
 import os
 import yaml
-import uuid
 import time
-import shutil
-from io import BytesIO
 from pathlib import Path
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -32,9 +29,6 @@ logger = logging.getLogger(__name__)
 SERVER_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 VIDEOS_ROOT = SERVER_ROOT / 'media' / 'videos'
 VIDEOS_ROOT.mkdir(parents=True, exist_ok=True)
-
-# 兼容旧代码 (HLS相关功能)
-HLS_ROOT = VIDEOS_ROOT
 
 
 def load_cameras_config():
@@ -86,11 +80,29 @@ def _get_video_cache_path(start_time, end_time, camera_index, record_id=None):
 
 
 def _video_exists_cached(start_time, end_time, camera_index, record_id=None):
-    """检查视频是否已缓存"""
+    """检查视频是否已缓存且有效（有时长 > 0）"""
     cache_path = _get_video_cache_path(start_time, end_time, camera_index, record_id)
-    if cache_path.exists() and cache_path.stat().st_size > 10000:
-        print(f"[Cache] 视频已缓存: {cache_path}")
-        return cache_path
+    if not cache_path.exists() or cache_path.stat().st_size < 10000:
+        return None
+    # 验证 MP4 文件有时长，避免返回之前生成的 0 时长文件
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "json", str(cache_path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            data = json.loads(r.stdout)
+            dur = float(data.get("format", {}).get("duration") or 0)
+            if dur > 0:
+                print(f"[Cache] 视频已缓存且有效: {cache_path}, 时长 {dur:.1f}s")
+                return cache_path
+            else:
+                print(f"[Cache] 缓存文件时长为0，删除: {cache_path}")
+                cache_path.unlink(missing_ok=True)
+                return None
+    except Exception as e:
+        logger.warning(f"Cache verify failed: {e}")
     return None
 
 
@@ -123,96 +135,6 @@ def _build_rtsp_urls(rtsp_base, start_time, end_time):
     print("="*80)
 
     return [url]
-
-
-def _try_ffmpeg_mp4(rtsp_url, output_path, duration, max_wait=120):
-    """尝试用FFmpeg将RTSP下载为MP4"""
-    # 流拷贝模式：保留原编码，快速下载
-    ffmpeg_cmd = [
-        'ffmpeg',
-        '-loglevel', 'warning',
-        '-rtsp_transport', 'tcp',
-        '-i', rtsp_url,
-        '-an',
-        '-c', 'copy',
-        '-movflags', '+faststart',
-        '-t', str(duration),
-        '-y',
-        str(output_path),
-    ]
-
-    mp4_path = output_path
-
-    logger.info(f"FFmpeg MP4: {rtsp_url}")
-    print(f"[FFmpeg] 开始转换")
-    print(f"[FFmpeg] 目标时长: {duration} 秒")
-    print(f"[FFmpeg] 输出路径: {output_path}")
-    print(f"[FFmpeg] 等待文件生成, 最大等待: {max_wait}秒")
-    process = subprocess.Popen(
-        ffmpeg_cmd,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-    )
-
-    def _reap():
-        try:
-            process.wait(timeout=3)
-        except Exception:
-            pass
-
-    start_wait = time.time()
-    while time.time() - start_wait < max_wait:
-        if process.poll() is not None:
-            if process.returncode != 0:
-                stderr = process.stderr.read().decode('utf-8', errors='replace')
-                logger.error(f"FFmpeg exit(code={process.returncode}): {stderr[:500]}")
-                print(f"[FFmpeg] ffmpeg进程异常退出, code={process.returncode}, stderr={stderr[:500]}")
-                return False, '下载录像失败'
-            break
-
-        # 检查文件是否已经有一定大小
-        if mp4_path.exists():
-            size = mp4_path.stat().st_size
-            print(f"[FFmpeg] 文件已生成, 大小: {size} bytes")
-            if size > 10000:
-                print(f"[FFmpeg] 文件大小满足要求({size} > 10000), 等待ffmpeg结束...")
-
-        time.sleep(0.5)
-
-    if process.poll() is not None:
-        _reap()
-    else:
-        process.kill()
-        _reap()
-        print(f"[FFmpeg] 等待超时, kill掉ffmpeg进程")
-        return False, '下载录像超时'
-
-    if not mp4_path.exists() or mp4_path.stat().st_size < 10000:
-        print(f"[FFmpeg] 文件无效或大小不足")
-        return False, '下载录像文件无效'
-
-    print(f"[FFmpeg] MP4生成成功: {mp4_path.name}, size={mp4_path.stat().st_size}")
-    logger.info(f"MP4 ready: {mp4_path.name}, size={mp4_path.stat().st_size}")
-    return True, None
-
-
-def recover_hls_stream(session_id):
-    """从session元数据恢复HLS流"""
-    session_dir = HLS_ROOT / session_id
-    meta_path = session_dir / '.session.json'
-    if not meta_path.exists():
-        logger.info(f"No metadata for session {session_id}, cannot recover")
-        return False
-
-    try:
-        with open(meta_path) as f:
-            meta = json.load(f)
-    except Exception as e:
-        logger.error(f"Failed to read session metadata: {e}")
-        return False
-
-    logger.info(f"HLS recovery is disabled for session {session_id}; MP4 playback is used instead")
-    return False
 
 
 class VideoStreamUrlController(APIView):
@@ -258,10 +180,8 @@ class VideoStreamUrlController(APIView):
                 'code': 0, 'msg': '摄像头RTSP地址未配置', 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        cleanup_old_streams()
 
         rtsp_urls = _build_rtsp_urls(rtsp_base, start_time, end_time)
-        logger.info("Recovered HLS stream for session {rtsp_urls}")
 
         # 计算录像时长（秒）
         duration = _calc_duration_seconds(start_time, end_time)
@@ -339,36 +259,6 @@ class VideoStreamUrlController(APIView):
         })
 
 
-def _kill_ffmpeg(session_dir):
-    """按PID杀死与session关联的FFmpeg进程并回收"""
-    pid_file = session_dir / '.pid'
-    if not pid_file.exists():
-        return
-    try:
-        with open(pid_file) as f:
-            pid = int(f.read().strip())
-        os.kill(pid, 15)  # SIGTERM
-        # Wait and reap
-        try:
-            os.waitpid(pid, 0)
-        except ChildProcessError:
-            pass  # Already reaped
-    except (ProcessLookupError, ValueError, OSError):
-        pass
-
-
-def cleanup_old_streams():
-    now = time.time()
-    for d in HLS_ROOT.iterdir():
-        if not d.is_dir():
-            continue
-        mtime = d.stat().st_mtime
-        if now - mtime > 300:
-            _kill_ffmpeg(d)
-            shutil.rmtree(d, ignore_errors=True)
-            logger.info(f"Cleaned up stale HLS dir: {d.name}")
-
-
 class CameraListController(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -392,90 +282,3 @@ class CameraListController(APIView):
             'msg': 'success',
             'data': camera_list
         })
-
-
-from django.http import FileResponse, HttpResponseNotFound
-
-
-def _generate_m3u8(session_dir):
-    """从现有分片动态生成m3u8内容"""
-    segs = sorted(session_dir.glob('seg_*.ts'))
-    if not segs:
-        return None
-    lines = [
-        '#EXTM3U',
-        '#EXT-X-VERSION:6',
-        '#EXT-X-TARGETDURATION:2',
-        '#EXT-X-MEDIA-SEQUENCE:0',
-        '#EXT-X-INDEPENDENT-SEGMENTS',
-    ]
-    for seg in segs:
-        duration = 2.0  # default
-        lines.append(f'#EXTINF:{duration:.3f},')
-        lines.append(seg.name)
-    return '\n'.join(lines) + '\n'
-
-
-def serve_hls(request, path):
-    """提供HLS流媒体文件(m3u8/ts)，文件不存在时自动恢复"""
-    # 去掉query string
-    path = path.split('?')[0]
-    file_path = os.path.join(str(HLS_ROOT), path)
-    real_path = os.path.realpath(file_path)
-    if not real_path.startswith(os.path.realpath(str(HLS_ROOT))):
-        return HttpResponseNotFound('Invalid path')
-
-    session_id = path.split('/')[0] if '/' in path else ''
-    session_dir = HLS_ROOT / session_id if session_id else None
-
-    def _m3u8_response(content, from_file=False):
-        content_type = 'application/vnd.apple.mpegurl'
-        if from_file:
-            resp = FileResponse(open(content, 'rb'), content_type=content_type)
-        else:
-            resp = FileResponse(BytesIO(content.encode()), content_type=content_type)
-        resp['Access-Control-Allow-Origin'] = '*'
-        resp['Cache-Control'] = 'no-cache'
-        return resp
-
-    def _ts_response(filepath):
-        resp = FileResponse(open(filepath, 'rb'), content_type='video/MP2T')
-        resp['Access-Control-Allow-Origin'] = '*'
-        resp['Cache-Control'] = 'no-cache'
-        return resp
-
-    # m3u8: 直接从分片生成m3u8内容
-    if path.endswith('/playlist.m3u8'):
-        # 先生成m3u8内容，确保有足够的分片
-        max_wait = 3.0  # 最多等3秒
-        start = time.time()
-        generated = None
-
-        while time.time() - start < max_wait:
-            if session_dir and session_dir.exists():
-                generated = _generate_m3u8(session_dir)
-                if generated:
-                    seg_count = generated.count('#EXTINF')
-                    if seg_count >= 5:
-                        break
-            time.sleep(0.2)
-            generated = None
-
-        if generated:
-            logger.info(f"Serving m3u8 with {generated.count('#EXTINF')} segments for {session_id}")
-            return _m3u8_response(generated)
-
-    # .mp4: 直接返回文件
-    if path.endswith('.mp4'):
-        if not os.path.exists(real_path):
-            return HttpResponseNotFound('File not found')
-        resp = FileResponse(open(real_path, 'rb'), content_type='video/mp4')
-        resp['Access-Control-Allow-Origin'] = '*'
-        resp['Cache-Control'] = 'no-cache'
-        return resp
-
-    # .ts分片: 直接返回文件
-    if not os.path.exists(real_path):
-        return HttpResponseNotFound('File not found')
-
-    return _ts_response(real_path)
