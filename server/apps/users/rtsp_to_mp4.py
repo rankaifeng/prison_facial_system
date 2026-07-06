@@ -461,12 +461,19 @@ def record_rtsp_to_mp4(
             try:
                 if need_transcode:
                     # H.265 -> H.264 转码，同时移到文件开头
+                    if verbose:
+                        print(f"[后处理] 开始转码 H.265 -> H.264...")
                     remux = subprocess.run(
                         ["ffmpeg", "-y", "-i", str(output),
                          "-c:v", "libx264", "-preset", "fast", "-crf", "23",
                          "-c:a", "aac", "-movflags", "+faststart", tmp_path],
                         capture_output=True, text=True, timeout=300,
                     )
+                    if verbose:
+                        print(f"[后处理] ffmpeg 返回码: {remux.returncode}")
+                        if remux.stderr:
+                            # 只打印最后500字符的错误信息
+                            print(f"[后处理] ffmpeg stderr (最后500字符): {remux.stderr[-500:]}")
                 else:
                     # H.264 直接重排 moov atom
                     remux = subprocess.run(
@@ -481,7 +488,7 @@ def record_rtsp_to_mp4(
                         print(f"[后处理] ✓ {action}")
                 else:
                     if verbose:
-                        print(f"[后处理] ⚠ 处理失败，保留原文件: {remux.stderr[:200]}")
+                        print(f"[后处理] ⚠ 处理失败，保留原文件")
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
             except Exception as e:

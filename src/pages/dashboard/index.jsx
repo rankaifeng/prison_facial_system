@@ -343,7 +343,7 @@ const Dashboard = () => {
           <SafetyOutlined className="header-icon" />
           <Title level={3} className="header-title">人员出入AB门人脸识别管理系统</Title>
         </div>
-        <div className="header-center">
+        <div className="header-center" style={{visibility:'hidden'}}>
           <span className="welcome-greeting">{getGreeting()}，</span>
           <span className="welcome-name">{userName}</span>
         </div>

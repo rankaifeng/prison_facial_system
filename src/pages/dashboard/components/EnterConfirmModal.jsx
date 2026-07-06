@@ -226,7 +226,6 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
           <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
         )}
       </div>
-      <Button type="primary" onClick={() => policeInputRef.current?.click()}>确认</Button>
     </div>
   );
 

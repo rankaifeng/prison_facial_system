@@ -41,14 +41,6 @@ const OperationSelectModal = ({ visible, onSelect, prisonerNo, prisonerName }) =
           <div className="op-card-label">入监确认</div>
           <div className="op-card-desc">罪犯入监流程确认</div>
         </div>
-
-        <div className="op-card op-card-return" onClick={() => onSelect?.('return')}>
-          <div className="op-card-icon">
-            <ImportOutlined />
-          </div>
-          <div className="op-card-label">回监确认</div>
-          <div className="op-card-desc">罪犯回监流程确认</div>
-        </div>
       </div>
 
       <div className="op-select-footer">
