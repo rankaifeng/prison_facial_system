@@ -159,16 +159,16 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
         </div>
       ) : (
         <Form form={form} layout="vertical">
-          <Form.Item name="prisonerNo" label="罪犯编号">
-            <Input disabled />
+          <Form.Item name="prisonerNo" label="罪犯编号" rules={[{ required: true, message: '请输入罪犯编号' }]}>
+            <Input placeholder="请输入罪犯编号" />
           </Form.Item>
 
-          <Form.Item name="prisonerName" label="罪犯姓名">
-            <Input disabled />
+          <Form.Item name="prisonerName" label="罪犯姓名" rules={[{ required: true, message: '请输入罪犯姓名' }]}>
+            <Input placeholder="请输入罪犯姓名" />
           </Form.Item>
 
-          <Form.Item name="prisonArea" label="监区">
-            <Select disabled options={PRISON_AREAS} />
+          <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请输入监区' }]}>
+            <Input placeholder="请输入监区" />
           </Form.Item>
 
           <Form.Item

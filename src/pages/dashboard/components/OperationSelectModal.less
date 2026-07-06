@@ -163,6 +163,26 @@
     }
   }
 
+  .op-card-return {
+    background: linear-gradient(135deg, rgba(82, 196, 26, 0.08) 0%, rgba(82, 196, 26, 0.03) 100%);
+
+    .op-card-icon {
+      color: #52c41a;
+      background: rgba(82, 196, 26, 0.15);
+      border-color: rgba(82, 196, 26, 0.4);
+      box-shadow: 0 0 25px rgba(82, 196, 26, 0.3);
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(82, 196, 26, 0.15) 0%, rgba(82, 196, 26, 0.06) 100%);
+      box-shadow: 0 0 35px rgba(82, 196, 26, 0.25);
+
+      &::before {
+        background: linear-gradient(135deg, rgba(82, 196, 26, 0.6), transparent, rgba(82, 196, 26, 0.3));
+      }
+    }
+  }
+
   .op-card-icon {
     width: 56px;
     height: 56px;

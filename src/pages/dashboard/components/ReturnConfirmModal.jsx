@@ -130,66 +130,60 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
           <Spin tip="正在查询罪犯信息..." />
         </div>
       ) : (
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="prisonerNo"
-          label="罪犯编号"
-        >
-          <Input disabled />
-        </Form.Item>
-
-        <Form.Item
-          name="prisonerName"
-          label="罪犯姓名"
-        >
-          <Input disabled />
-        </Form.Item>
-
-        <Form.Item
-          name="returnDate"
-          label="回监日期"
-          rules={[{ required: true, message: '请选择回监日期' }]}
-        >
-          <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} placeholder="请选择回监日期" />
-        </Form.Item>
-
-        <Form.Item
-          name="prisonArea"
-          label="监区"
-          rules={[{ required: true, message: '请选择监区' }]}
-        >
-          <Select placeholder="请选择监区" options={[
-            { value: '一监区', label: '一监区' },
-            { value: '二监区', label: '二监区' },
-            { value: '三监区', label: '三监区' },
-            { value: '四监区', label: '四监区' },
-            { value: '五监区', label: '五监区' },
-            { value: '六监区', label: '六监区' },
-            { value: '七监区', label: '七监区' },
-          ]} />
-        </Form.Item>
-
-        <Form.Item
-          name="entryStatus"
-          label="状态"
-          rules={[{ required: true, message: '请选择状态' }]}
-        >
-          <Select placeholder="请选择状态" options={[
-            { value: 'normal', label: '正常' },
-            { value: 'abnormal', label: '异常' },
-          ]} />
-        </Form.Item>
-
-        {entryStatus === 'abnormal' && (
+        <Form form={form} layout="vertical">
           <Form.Item
-            name="abnormalReason"
-            label="异常原因"
-            rules={[{ required: true, message: '请输入异常原因' }]}
+            name="prisonerNo"
+            label="罪犯编号"
+            rules={[{ required: true, message: '请输入罪犯编号' }]}
           >
-            <Input.TextArea placeholder="请输入异常原因" rows={3} />
+            <Input placeholder="请输入罪犯编号" />
           </Form.Item>
-        )}
-      </Form>
+
+          <Form.Item
+            name="prisonerName"
+            label="罪犯姓名"
+            rules={[{ required: true, message: '请输入罪犯姓名' }]}
+          >
+            <Input placeholder="请输入罪犯姓名" />
+          </Form.Item>
+          <Form.Item
+            name="prisonArea"
+            label="监区"
+            rules={[{ required: true, message: '请输入监区' }]}
+          >
+            <Input placeholder="请输入监区" />
+          </Form.Item>
+          <Form.Item
+            name="returnDate"
+            label="回监日期"
+            rules={[{ required: true, message: '请选择回监日期' }]}
+          >
+            <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} placeholder="请选择回监日期" />
+          </Form.Item>
+
+
+
+          <Form.Item
+            name="entryStatus"
+            label="状态"
+            rules={[{ required: true, message: '请选择状态' }]}
+          >
+            <Select placeholder="请选择状态" options={[
+              { value: 'normal', label: '正常' },
+              { value: 'abnormal', label: '异常' },
+            ]} />
+          </Form.Item>
+
+          {entryStatus === 'abnormal' && (
+            <Form.Item
+              name="abnormalReason"
+              label="异常原因"
+              rules={[{ required: true, message: '请输入异常原因' }]}
+            >
+              <Input.TextArea placeholder="请输入异常原因" rows={3} />
+            </Form.Item>
+          )}
+        </Form>
       )}
     </div>
   );

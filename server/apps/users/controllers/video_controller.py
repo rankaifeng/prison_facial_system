@@ -123,7 +123,7 @@ def _to_compact(t):
 
 
 def _build_rtsp_urls(rtsp_base, start_time, end_time):
-    """生成RTSP回放URL"""
+    """生成RTSP回放URL（返回多个用于重试）"""
     start_compact = _to_compact(start_time)
     end_compact = _to_compact(end_time)
 
@@ -134,7 +134,8 @@ def _build_rtsp_urls(rtsp_base, start_time, end_time):
     print(f"📌 RTSP回放地址: {url}")
     print("="*80)
 
-    return [url]
+    # 返回 3 个相同 URL，用于重试（NVR 第一次连接可能不稳定）
+    return [url, url, url]
 
 
 class VideoStreamUrlController(APIView):
@@ -243,8 +244,8 @@ class VideoStreamUrlController(APIView):
     def _build_response(self, request, filename, camera, is_live=False, is_cached=False):
         import time
         ts = int(time.time())
-        # 视频文件直接通过 media/videos/ 路径访问
-        mp4_url = f"{request.scheme}://{request.get_host()}/media/videos/{filename}?v={ts}"
+        # 用相对路径，避免返回后端内部地址（127.0.0.1:8000）
+        mp4_url = f"/media/videos/{filename}?v={ts}"
         return Response({
             'code': 1,
             'msg': '缓存命中' if is_cached else ('success' if not is_live else '未找到录像，当前为实时画面'),

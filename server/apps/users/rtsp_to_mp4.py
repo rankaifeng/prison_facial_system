@@ -439,6 +439,31 @@ def record_rtsp_to_mp4(
 
         ok, vinfo = verify_mp4(str(output))
         if ok:
+            # 将 moov atom 移到文件开头，支持网络渐进式播放
+            if verbose:
+                print(f"[后处理] 正在将 moov 移到文件开头...")
+            try:
+                tmp_path = str(output) + ".tmp"
+                remux = subprocess.run(
+                    ["ffmpeg", "-y", "-i", str(output),
+                     "-c", "copy", "-movflags", "+faststart", tmp_path],
+                    capture_output=True, text=True, timeout=120,
+                )
+                if remux.returncode == 0 and os.path.exists(tmp_path):
+                    os.replace(tmp_path, str(output))
+                    if verbose:
+                        print(f"[后处理] ✓ moov 已移到文件开头")
+                else:
+                    if verbose:
+                        print(f"[后处理] ⚠ 重排失败，保留原文件: {remux.stderr[:200]}")
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+            except Exception as e:
+                if verbose:
+                    print(f"[后处理] ⚠ 重排异常: {e}")
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
             result["success"] = True
             if rc == 0 and not stall_triggered:
                 result["message"] = "录制完成"

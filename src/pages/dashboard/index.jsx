@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, LoginOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -162,6 +162,8 @@ const Dashboard = () => {
       setExitModalOpen(true);
     } else if (type === 'enter') {
       setEnterModalOpen(true);
+    } else if (type === 'return') {
+      setReturnModalOpen(true);
     }
   }, []);
 
@@ -346,6 +348,8 @@ const Dashboard = () => {
           <span className="welcome-name">{userName}</span>
         </div>
         <div className="header-right">
+          <Button className="exit-btn" icon={<LogoutOutlined />} onClick={() => setExitModalOpen(true)}>出监确认</Button>
+          <Button className="exit-btn" icon={<LoginOutlined />} onClick={() => setReturnModalOpen(true)}>回监确认</Button>
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
             className="fullscreen-btn"
