@@ -439,28 +439,54 @@ def record_rtsp_to_mp4(
 
         ok, vinfo = verify_mp4(str(output))
         if ok:
-            # 将 moov atom 移到文件开头，支持网络渐进式播放
-            if verbose:
-                print(f"[后处理] 正在将 moov 移到文件开头...")
+            # 检查是否需要转码（H.265/HEVC 浏览器不支持，需转为 H.264）
+            need_transcode = False
             try:
-                tmp_path = str(output) + ".tmp"
-                remux = subprocess.run(
-                    ["ffmpeg", "-y", "-i", str(output),
-                     "-c", "copy", "-movflags", "+faststart", tmp_path],
-                    capture_output=True, text=True, timeout=120,
+                probe = subprocess.run(
+                    ["ffprobe", "-v", "error", "-select_streams", "v:0",
+                     "-show_entries", "stream=codec_name", "-of", "csv=p=0",
+                     str(output)],
+                    capture_output=True, text=True, timeout=10,
                 )
+                codec = probe.stdout.strip().lower()
+                if codec in ("hevc", "h265"):
+                    need_transcode = True
+                    if verbose:
+                        print(f"[后处理] 检测到 H.265/HEVC 编码，浏览器不支持，转码为 H.264...")
+            except Exception as e:
+                if verbose:
+                    print(f"[后处理] 探测编码异常: {e}")
+
+            tmp_path = str(output) + ".tmp"
+            try:
+                if need_transcode:
+                    # H.265 -> H.264 转码，同时移到文件开头
+                    remux = subprocess.run(
+                        ["ffmpeg", "-y", "-i", str(output),
+                         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                         "-c:a", "aac", "-movflags", "+faststart", tmp_path],
+                        capture_output=True, text=True, timeout=300,
+                    )
+                else:
+                    # H.264 直接重排 moov atom
+                    remux = subprocess.run(
+                        ["ffmpeg", "-y", "-i", str(output),
+                         "-c", "copy", "-movflags", "+faststart", tmp_path],
+                        capture_output=True, text=True, timeout=120,
+                    )
                 if remux.returncode == 0 and os.path.exists(tmp_path):
                     os.replace(tmp_path, str(output))
                     if verbose:
-                        print(f"[后处理] ✓ moov 已移到文件开头")
+                        action = "转码完成" if need_transcode else "moov 已移到文件开头"
+                        print(f"[后处理] ✓ {action}")
                 else:
                     if verbose:
-                        print(f"[后处理] ⚠ 重排失败，保留原文件: {remux.stderr[:200]}")
+                        print(f"[后处理] ⚠ 处理失败，保留原文件: {remux.stderr[:200]}")
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
             except Exception as e:
                 if verbose:
-                    print(f"[后处理] ⚠ 重排异常: {e}")
+                    print(f"[后处理] ⚠ 处理异常: {e}")
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
 

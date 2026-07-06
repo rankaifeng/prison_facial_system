@@ -21,6 +21,13 @@ def serve_media(request, path):
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         raise Http404
     content_type, _ = mimetypes.guess_type(file_path)
+
+    # 对于视频文件，使用 FileResponse 并支持 Range 请求
+    if content_type and content_type.startswith('video/'):
+        response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+        response['Accept-Ranges'] = 'bytes'
+        return response
+
     return FileResponse(open(file_path, 'rb'), content_type=content_type or 'application/octet-stream')
 
 logger = logging.getLogger(__name__)
@@ -80,7 +87,7 @@ def _get_video_cache_path(start_time, end_time, camera_index, record_id=None):
 
 
 def _video_exists_cached(start_time, end_time, camera_index, record_id=None):
-    """检查视频是否已缓存且有效（有时长 > 0）"""
+    """检查视频是否已缓存且有效（有时长 > 0，且非 H.265 编码）"""
     cache_path = _get_video_cache_path(start_time, end_time, camera_index, record_id)
     if not cache_path.exists() or cache_path.stat().st_size < 10000:
         return None
@@ -88,12 +95,20 @@ def _video_exists_cached(start_time, end_time, camera_index, record_id=None):
     try:
         r = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-show_entries", "stream=codec_name", "-select_streams", "v:0",
              "-of", "json", str(cache_path)],
             capture_output=True, text=True, timeout=10,
         )
         if r.returncode == 0 and r.stdout.strip():
             data = json.loads(r.stdout)
             dur = float(data.get("format", {}).get("duration") or 0)
+            # 检查编码格式，H.265 需要重新转码
+            streams = data.get("streams", [])
+            codec = streams[0].get("codec_name", "").lower() if streams else ""
+            if codec in ("hevc", "h265"):
+                print(f"[Cache] 缓存文件为 H.265 编码，需重新转码: {cache_path}")
+                cache_path.unlink(missing_ok=True)
+                return None
             if dur > 0:
                 print(f"[Cache] 视频已缓存且有效: {cache_path}, 时长 {dur:.1f}s")
                 return cache_path
