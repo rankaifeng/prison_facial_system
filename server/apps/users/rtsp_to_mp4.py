@@ -15,6 +15,7 @@ RTSP 转 MP4 录制工具
   - 停滞检测：回放流播完后 NVR 不关连接时，主动收尾
   - 管道安全排空：SIGINT 后正确排空 stderr，防止死锁导致 MP4 尾部丢失
   - MP4 有效性验证：确认视频流存在且时长 > 0
+  - HEVC → H.264 自动转码（含 10 位色彩降级），确保浏览器可播放
   - 可作为命令行工具，也可作为模块导入（供 Django/DRF 调用）
 
 用法：
@@ -169,6 +170,45 @@ def verify_mp4(path: str) -> tuple:
         return False, f"验证异常: {e}"
 
 
+def probe_video_codec(path: str) -> str:
+    """
+    探测视频编码格式，返回小写编码名（如 hevc / h264）。
+
+    用于判断是否需要 HEVC → H.264 转码。
+    """
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name", "-of", "csv=p=0", path],
+            capture_output=True, text=True, timeout=10,
+        )
+        return r.stdout.strip().lower()
+    except Exception:
+        return ""
+
+
+def detect_h264_encoder():
+    """
+    检测可用的 H.264 编码器，按优先级返回。
+
+    libx264 是软件编码器，质量最好但速度一般；
+    h264_videotoolbox 是 macOS 硬件加速，速度快；
+    openh264 是 Google 的开源实现，兼容性好但质量一般。
+    """
+    for enc in ["libx264", "h264_videotoolbox", "openh264", "h264_nvenc", "h264_amf"]:
+        try:
+            r = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-f", "lavfi", "-i", "color=red",
+                 "-t", "0.1", "-c:v", enc, "-f", "null", "-"],
+                capture_output=True, timeout=10,
+            )
+            if r.returncode == 0:
+                return enc
+        except Exception:
+            continue
+    return None
+
+
 def _drain_and_wait(proc: subprocess.Popen, timeout: float = 60,
                     log_lines: list = None) -> int:
     """
@@ -211,6 +251,138 @@ def _drain_and_wait(proc: subprocess.Popen, timeout: float = 60,
     return proc.returncode
 
 
+# ──────────────────────────── 后处理：转码 + moov ────────────────────────────
+
+def post_process_video(output: Path, verbose: bool = True) -> tuple:
+    """
+    后处理：HEVC → H.264 转码 + moov atom 移到文件开头。
+
+    修复要点（相比原代码）：
+      1. 转码命令加 -pix_fmt yuv420p，解决 10 位 HEVC（yuv420p10le）转码失败
+      2. 转码失败时明确报错，不再用 -c copy 冒充转码成功
+      3. 转码前检测编码器可用性，libx264 不可用时自动降级
+      4. 转码后验证输出编码确实是 H.264
+      5. 日志准确反映实际操作，不再误报
+
+    参数:
+      output: MP4 文件路径（Path 对象）
+      verbose: 是否打印日志
+
+    返回:
+      (ok: bool, message: str)
+    """
+    tmp_path = str(output) + ".tmp.mp4"
+
+    # ── 1. 探测编码格式 ──
+    codec = probe_video_codec(str(output))
+    is_hevc = codec in ("hevc", "h265")
+
+    if verbose:
+        print(f"[后处理] 当前编码: {codec or '未知'}")
+
+    # ── 2. HEVC → H.264 转码 ──
+    if is_hevc:
+        # 检测可用的 H.264 编码器
+        encoder = detect_h264_encoder()
+        if encoder is None:
+            return False, (
+                "检测到 HEVC 编码，但当前 ffmpeg 没有任何可用的 H.264 编码器。"
+                "请安装完整版 ffmpeg：brew install ffmpeg"
+            )
+
+        if verbose:
+            print(f"[后处理] 检测到 HEVC，使用 {encoder} 转码为 H.264...")
+
+        # 按编码器类型构建命令
+        if encoder == "libx264":
+            cmd = [
+                "ffmpeg", "-y", "-i", str(output),
+                "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                "-an",
+                "-pix_fmt", "yuv420p",        # ← 关键：10位降8位，浏览器兼容
+                "-movflags", "+faststart",
+                tmp_path,
+            ]
+        elif encoder == "h264_videotoolbox":
+            # macOS 硬件编码，用比特率代替 CRF
+            cmd = [
+                "ffmpeg", "-y", "-i", str(output),
+                "-c:v", "h264_videotoolbox", "-b:v", "2M",
+                "-an",
+                "-pix_fmt", "yuv420p",
+                "-movflags", "+faststart",
+                tmp_path,
+            ]
+        else:
+            # openh264 / h264_nvenc / h264_amf 等
+            cmd = [
+                "ffmpeg", "-y", "-i", str(output),
+                "-c:v", encoder, "-b:v", "2M",
+                "-an",
+                "-pix_fmt", "yuv420p",
+                "-movflags", "+faststart",
+                tmp_path,
+            ]
+
+        if verbose:
+            print(f"[后处理] ffmpeg 命令: {' '.join(cmd)}")
+
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
+        if verbose:
+            print(f"[后处理] ffmpeg 返回码: {r.returncode}")
+            if r.returncode != 0 and r.stderr:
+                print(f"[后处理] ffmpeg 错误:\n{r.stderr[-500:]}")
+
+        # 转码失败：明确报错，不用 -c copy 冒充
+        if r.returncode != 0 or not os.path.exists(tmp_path) or os.path.getsize(tmp_path) == 0:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            err_tail = r.stderr[-500:] if r.stderr else "无错误输出"
+            return False, (
+                f"转码失败（编码器 {encoder}）。\n"
+                f"ffmpeg 错误:\n{err_tail}"
+            )
+
+        # 转码成功，验证输出确实是 H.264
+        out_codec = probe_video_codec(tmp_path)
+        if out_codec not in ("h264", "avc"):
+            if verbose:
+                print(f"[后处理] ⚠ 转码后编码仍为 {out_codec}，不符合预期")
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            return False, f"转码后编码仍为 {out_codec}，不是 H.264"
+
+        # 替换原文件
+        os.replace(tmp_path, str(output))
+        if verbose:
+            print(f"[后处理] ✓ 转码完成 HEVC → H.264（{encoder}），moov 已移到开头")
+        return True, "转码完成 HEVC → H.264"
+
+    # ── 3. 非 HEVC：只移动 moov atom ──
+    else:
+        if verbose:
+            print(f"[后处理] 无需转码，移动 moov atom 到文件开头...")
+
+        cmd = [
+            "ffmpeg", "-y", "-i", str(output),
+            "-c", "copy", "-movflags", "+faststart",
+            tmp_path,
+        ]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+        if r.returncode == 0 and os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 0:
+            os.replace(tmp_path, str(output))
+            if verbose:
+                print(f"[后处理] ✓ moov atom 已移到文件开头")
+            return True, "moov 已移到文件开头"
+        else:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            err_tail = r.stderr[-300:] if r.stderr else "未知错误"
+            return False, f"移动 moov atom 失败: {err_tail}"
+
+
 # ──────────────────────────── 核心录制 ────────────────────────────
 
 def record_rtsp_to_mp4(
@@ -218,7 +390,7 @@ def record_rtsp_to_mp4(
     output_path: str,
     duration: float = None,
     timeout: int = 600,
-    stall_timeout: int = 30,
+    stall_timeout: int = 8,
     overwrite: bool = False,
     pre_probe: bool = True,
     verbose: bool = True,
@@ -439,70 +611,23 @@ def record_rtsp_to_mp4(
 
         ok, vinfo = verify_mp4(str(output))
         if ok:
-            # 检查是否需要转码（H.265/HEVC 浏览器不支持，需转为 H.264）
-            need_transcode = False
-            try:
-                probe = subprocess.run(
-                    ["ffprobe", "-v", "error", "-select_streams", "v:0",
-                     "-show_entries", "stream=codec_name", "-of", "csv=p=0",
-                     str(output)],
-                    capture_output=True, text=True, timeout=10,
-                )
-                codec = probe.stdout.strip().lower()
-                if codec in ("hevc", "h265"):
-                    need_transcode = True
-                    if verbose:
-                        print(f"[后处理] 检测到 H.265/HEVC 编码，浏览器不支持，转码为 H.264...")
-            except Exception as e:
-                if verbose:
-                    print(f"[后处理] 探测编码异常: {e}")
+            # ── 6. 后处理：HEVC → H.264 转码 + moov atom 移到开头 ──
+            pp_ok, pp_msg = post_process_video(output, verbose=verbose)
 
-            tmp_path = str(output) + ".tmp"
-            try:
-                if need_transcode:
-                    # H.265 -> H.264 转码，同时移到文件开头
-                    if verbose:
-                        print(f"[后处理] 开始转码 H.265 -> H.264...")
-                    remux = subprocess.run(
-                        ["ffmpeg", "-y", "-i", str(output),
-                         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-                         "-c:a", "aac", "-movflags", "+faststart", tmp_path],
-                        capture_output=True, text=True, timeout=300,
-                    )
-                    if verbose:
-                        print(f"[后处理] ffmpeg 返回码: {remux.returncode}")
-                        if remux.stderr:
-                            # 只打印最后500字符的错误信息
-                            print(f"[后处理] ffmpeg stderr (最后500字符): {remux.stderr[-500:]}")
+            if pp_ok:
+                result["success"] = True
+                if rc == 0 and not stall_triggered:
+                    result["message"] = f"录制完成（{pp_msg}）"
                 else:
-                    # H.264 直接重排 moov atom
-                    remux = subprocess.run(
-                        ["ffmpeg", "-y", "-i", str(output),
-                         "-c", "copy", "-movflags", "+faststart", tmp_path],
-                        capture_output=True, text=True, timeout=120,
-                    )
-                if remux.returncode == 0 and os.path.exists(tmp_path):
-                    os.replace(tmp_path, str(output))
-                    if verbose:
-                        action = "转码完成" if need_transcode else "moov 已移到文件开头"
-                        print(f"[后处理] ✓ {action}")
-                else:
-                    if verbose:
-                        print(f"[后处理] ⚠ 处理失败，保留原文件")
-                    if os.path.exists(tmp_path):
-                        os.remove(tmp_path)
-            except Exception as e:
-                if verbose:
-                    print(f"[后处理] ⚠ 处理异常: {e}")
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-
-            result["success"] = True
-            if rc == 0 and not stall_triggered:
-                result["message"] = "录制完成"
+                    tag = "流播完收尾" if stall_triggered else "设备断开"
+                    result["message"] = f"录制完成（{tag}，返回码 {rc}，{vinfo}，{pp_msg}）"
             else:
-                tag = "流播完收尾" if stall_triggered else "设备断开"
-                result["message"] = f"录制完成（{tag}，返回码 {rc}，{vinfo}）"
+                # 后处理失败：文件已录制但浏览器可能无法播放
+                result["success"] = False
+                result["message"] = f"录制成功但后处理失败: {pp_msg}"
+                if verbose:
+                    print(f"[后处理] ✗ {pp_msg}")
+
         else:
             result["message"] = f"录制失败（返回码 {rc}，文件不完整: {vinfo}）"
 

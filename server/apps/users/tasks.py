@@ -100,7 +100,7 @@ def generate_exit_video(record_id):
             output_path=str(video_path),
             duration=duration,
             timeout=max_wait,
-            stall_timeout=8,
+            stall_timeout=60,
             overwrite=True,
             pre_probe=True,
             verbose=True,
