@@ -28,6 +28,7 @@ class ExitRecordController(APIView):
         police_name = data.get('police_name', '')
         swat_name = data.get('swat_name', '')
         armed_police_signature = data.get('armed_police_signature')
+        armed_police_face = data.get('armed_police_face')
         hospital_name = data.get('hospital_name')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
@@ -59,6 +60,7 @@ class ExitRecordController(APIView):
         police_face_path = RecordService.save_image(police_face, 'police')
         swat_face_path = RecordService.save_image(swat_face, 'swat')
         signature_path = RecordService.save_image(armed_police_signature, 'signature')
+        armed_police_face_path = RecordService.save_image(armed_police_face, 'armed_police')
 
         # 处理附件
         attachment_paths = []
@@ -80,6 +82,7 @@ class ExitRecordController(APIView):
             police_name=police_name,
             swat_name=swat_name,
             armed_police_signature=signature_path,
+            armed_police_face=armed_police_face_path,
             operator_id=request.user.id,
             operator_name=request.user.first_name or request.user.username,
             hospital_name=hospital_name,

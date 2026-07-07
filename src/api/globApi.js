@@ -28,6 +28,7 @@ import {
   CAMERA_LIST,
   SYNC_START,
   SYNC_STATUS,
+  SNAPSHOT,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -105,4 +106,8 @@ export const video = {
 export const sync = {
   start: () => http.post(SYNC_START, {}),
   status: (task_id) => http.get(SYNC_STATUS, { task_id }),
+};
+
+export const snapshot = {
+  capture: (data) => http.get(SNAPSHOT, data),
 };

@@ -26,3 +26,4 @@ export const VIDEO_STREAM_URL = '/user_manage/video/stream_url';
 export const CAMERA_LIST = '/user_manage/video/camera_list';
 export const SYNC_START = '/user_manage/sync/start';
 export const SYNC_STATUS = '/user_manage/sync/status';
+export const SNAPSHOT = '/user_manage/snapshot';

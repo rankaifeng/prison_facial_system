@@ -213,6 +213,15 @@ const Statistics = () => {
       }
     },
     {
+      title: '武警照片',
+      dataIndex: 'armed_police_face',
+      key: 'armed_police_face',
+      width: 100,
+      render: (val) => {
+        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+      }
+    },
+    {
       title: '录像',
       dataIndex: 'video',
       key: 'video',

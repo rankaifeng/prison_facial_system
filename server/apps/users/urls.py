@@ -23,6 +23,7 @@ from .controllers import (
     ArchiveDetailController,
     SyncStartController,
     SyncStatusController,
+    SnapshotController,
 )
 
 urlpatterns = [
@@ -50,4 +51,5 @@ urlpatterns = [
     re_path(r'^archive/detail/?$', ArchiveDetailController.as_view(), name='archive_detail'),
     re_path(r'^sync/start/?$', SyncStartController.as_view(), name='sync_start'),
     re_path(r'^sync/status/?$', SyncStatusController.as_view(), name='sync_status'),
+    re_path(r'^snapshot/?$', SnapshotController.as_view(), name='snapshot'),
 ]

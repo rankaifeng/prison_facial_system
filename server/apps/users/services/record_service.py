@@ -95,7 +95,8 @@ class RecordService(BaseService):
         prisoner_no, prisoner_name, prisoner_photo, prison_area, prison_area_name,
         exit_date, reason, police_face, swat_face, armed_police_signature,
         operator_id, operator_name, hospital_name=None, attachments=None,
-        start_time=None, end_time=None, police_name=None, swat_name=None
+        start_time=None, end_time=None, police_name=None, swat_name=None,
+        armed_police_face=None
     ):
         with transaction.atomic():
             # 保存武警签名为图片文件
@@ -115,6 +116,7 @@ class RecordService(BaseService):
                 swat_face=swat_face,
                 swat_name=swat_name or '',
                 armed_police_signature=signature_path,
+                armed_police_face=armed_police_face,
                 operator_id=operator_id,
                 operator_name=operator_name,
                 hospital_name=hospital_name,
@@ -379,6 +381,7 @@ class RecordService(BaseService):
                 'swat_face': build_url(record.swat_face),
                 'swat_name': record.swat_name,
                 'armed_police_signature': build_url(record.armed_police_signature),
+                'armed_police_face': build_url(record.armed_police_face),
                 'armed_police_name': record.armed_police_name,
                 'hospital_name': record.hospital_name,
                 'start_time': record.start_time,
@@ -452,6 +455,7 @@ class RecordService(BaseService):
             'swat_face': build_url(record.swat_face),
             'swat_name': record.swat_name,
             'armed_police_signature': build_url(record.armed_police_signature),
+            'armed_police_face': build_url(record.armed_police_face),
             'armed_police_name': record.armed_police_name,
             'hospital_type': record.hospital_type,
             'hospital_name': record.hospital_name,
@@ -503,6 +507,7 @@ class RecordService(BaseService):
                 'swat_face': build_url(record.swat_face),
                 'swat_name': record.swat_name or '',
                 'armed_police_signature': build_url(record.armed_police_signature),
+                'armed_police_face': build_url(record.armed_police_face),
                 'armed_police_name': record.armed_police_name or '',
                 'hospital_name': record.hospital_name if record.reason == '外出就医' else '',
                 'video': 'https://www.w3schools.com/html/mov_bbb.mp4',

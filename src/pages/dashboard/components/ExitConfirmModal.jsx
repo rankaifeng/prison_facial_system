@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
-import { UserOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons';
+import { UserOutlined, SafetyOutlined, TeamOutlined, CameraOutlined } from '@ant-design/icons';
 import SignatureCanvas from './SignatureCanvas';
-import { exitRecord, exitType, archive } from '@/api/globApi';
+import { exitRecord, exitType, archive, snapshot } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const HOSPITALS_CENTER = [
@@ -45,6 +45,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
   const [policeName, setPoliceName] = useState(null);
   const [swatName, setSwatName] = useState(null);
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
+  const [armedPoliceImage, setArmedPoliceImage] = useState(null);
+  const [captureLoading, setCaptureLoading] = useState(false);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [startTime, setStartTime] = useState(null);
@@ -67,6 +69,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       setPoliceName(null);
       setSwatName(null);
       setArmedPoliceSignature(null);
+      setArmedPoliceImage(null);
       
       // 通知父组件重置图片状态
       onStepChange?.(0);
@@ -162,6 +165,10 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     } else if (current === 2) {
       setCurrent(3);
     } else {
+      if (!armedPoliceImage) {
+        message.warning('请先拍照');
+        return;
+      }
       if (!armedPoliceSignature) {
         message.warning('请先签字确认');
         return;
@@ -205,6 +212,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     formData.append('police_name', policeName || '');
     formData.append('swat_name', swatName || '');
     formData.append('armed_police_signature', armedPoliceSignature);
+    formData.append('armed_police_face', armedPoliceImage || '');
     formData.append('hospital_name', hospitalName || '');
     formData.append('start_time', startTime);
     formData.append('end_time', end);
@@ -225,6 +233,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     setPoliceImage(null);
     setSwatImage(null);
     setArmedPoliceSignature(null);
+    setArmedPoliceImage(null);
     setStartTime(null);
     onCancel?.();
   };
@@ -349,14 +358,55 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     </div>
   );
 
+  const handleCapture = async () => {
+    setCaptureLoading(true);
+    try {
+      const res = await snapshot.capture({ channel: 1 });
+      if (res?.code === 1 && res?.data?.image_base64) {
+        setArmedPoliceImage('data:image/jpeg;base64,' + res.data.image_base64);
+        message.success('拍照成功');
+      } else {
+        message.error(res?.msg || '拍照失败');
+      }
+    } catch (e) {
+      message.error('拍照请求失败');
+    } finally {
+      setCaptureLoading(false);
+    }
+  };
+
   const renderStep4 = () => (
-    <div className="step-content confirm-step" style={{ display: current === 3 ? 'flex' : 'none' }}>
-      <div className="signature-wrapper">
-        {armedPoliceSignature ? (
-          <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
-        ) : (
-          <SignatureCanvas onSave={(data) => setArmedPoliceSignature(data)} onClear={() => setArmedPoliceSignature(null)} />
-        )}
+    <div className="step-content confirm-step" style={{ display: current === 3 ? 'flex' : 'none', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', gap: 24, width: '100%', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <div style={{ textAlign: 'center', flex: 1, maxWidth: 260 }}>
+          <div style={{ marginBottom: 8, color: '#fff', fontSize: 14 }}>武警人脸</div>
+          <div className="confirm-image" style={{ width: '100%', height: 220 }}>
+            {armedPoliceImage ? (
+              <img src={armedPoliceImage} alt="武警照片" />
+            ) : (
+              <div className="image-placeholder"><UserOutlined /><span>未拍照</span></div>
+            )}
+          </div>
+          <Button
+            icon={<CameraOutlined />}
+            loading={captureLoading}
+            onClick={handleCapture}
+            style={{ marginTop: 16 }}
+            type="primary"
+          >
+            拍照
+          </Button>
+        </div>
+        <div style={{ textAlign: 'center', flex: 1, maxWidth: 320 }}>
+          <div style={{ marginBottom: 8, color: '#fff', fontSize: 14 }}>武警签字</div>
+          <div className="signature-wrapper">
+            {armedPoliceSignature ? (
+              <img src={armedPoliceSignature} alt="签字" className="signature-preview" />
+            ) : (
+              <SignatureCanvas onSave={(data) => setArmedPoliceSignature(data)} onClear={() => setArmedPoliceSignature(null)} />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

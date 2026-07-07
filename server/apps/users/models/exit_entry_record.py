@@ -26,6 +26,7 @@ class ExitEntryRecord(models.Model):
     swat_face = models.CharField('特警人脸', max_length=255, blank=True)
     swat_name = models.CharField('特警姓名', max_length=64, blank=True)
     armed_police_signature = models.TextField('武警签名', blank=True)
+    armed_police_face = models.CharField('武警人脸照片', max_length=512, blank=True, null=True)
     armed_police_name = models.CharField('武警姓名', max_length=64, blank=True)
     hospital_type = models.CharField('医院类型', max_length=32, blank=True, null=True)
     hospital_name = models.CharField('医院名称', max_length=128, blank=True, null=True)
