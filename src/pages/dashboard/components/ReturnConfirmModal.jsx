@@ -214,9 +214,6 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
           </div>
         )}
       </div>
-      <Button type="primary" onClick={() => policeInputRef.current?.click()}>
-        确认
-      </Button>
     </div>
   );
 
