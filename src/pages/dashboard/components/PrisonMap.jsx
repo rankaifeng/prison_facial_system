@@ -31,7 +31,7 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
     { name: '五监区', province: '湖南', code: '430000', coordinates: [112.94, 28.24], totalCount: 0, yearlyExitCount: 0 },
     { name: '六监区', province: '广东', code: '440000', coordinates: [113.26, 23.13], totalCount: 0, yearlyExitCount: 0 },
     { name: '七监区', province: '江西', code: '360000', coordinates: [115.89, 28.68], totalCount: 0, yearlyExitCount: 0 },
-    { name: '备用监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, yearlyExitCount: 0 },
+    { name: '八监区', province: '重庆', code: '500000', coordinates: [106.55, 29.56], totalCount: 0, yearlyExitCount: 0 },
   ];
 
   // 非管理员只显示登录的监区
@@ -160,10 +160,10 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
                 show: true,
                 position: 'top',
                 formatter: (params) => `📍 ${params.data.name}\n👥 实时在监人数: ${params.data.totalCount}\n🚶 当年累计出监人数: ${params.data.yearlyExitCount}`,
-                fontSize: 11,
+                fontSize: 10,
                 color: '#fff',
                 backgroundColor: 'rgba(20, 25, 45, 0.9)',
-                padding: [6, 10],
+                padding: [6, 5],
                 borderRadius: 4,
                 borderColor: 'rgba(0, 240, 255, 0.3)',
                 distance: 10,
