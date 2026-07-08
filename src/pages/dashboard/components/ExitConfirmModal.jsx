@@ -70,7 +70,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       setSwatName(null);
       setArmedPoliceSignature(null);
       setArmedPoliceImage(null);
-      
+
       // 通知父组件重置图片状态
       onStepChange?.(0);
 
@@ -397,7 +397,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
             拍照
           </Button>
         </div>
-        <div style={{ textAlign: 'center', flex: 1, maxWidth: 320 }}>
+        <div style={{ textAlign: 'center', flex: 1, maxWidth: 320, marginLeft: 10 }}>
           <div style={{ marginBottom: 8, color: '#fff', fontSize: 14 }}>武警签字</div>
           <div className="signature-wrapper">
             {armedPoliceSignature ? (
