@@ -183,7 +183,7 @@ class RecordService(BaseService):
             # 如果有对应的出监记录，回退出监统计
             if exit_record:
                 today = date_cls.today()
-                exit_date = exit_record.exit_date
+                exit_date = exit_record.exit_date.date() if exit_record.exit_date else None
                 print(f'[入监DEBUG] exit_date={exit_date}, today={today}')
 
                 if exit_date and exit_date != today:
@@ -271,7 +271,7 @@ class RecordService(BaseService):
             # 如果有对应的出监记录，需要回退出监统计数据
             if exit_record:
                 today = date_cls.today()
-                exit_date = exit_record.exit_date
+                exit_date = exit_record.exit_date.date() if exit_record.exit_date else None
                 print(f'[回监DEBUG] exit_date={exit_date}, today={today}, same_day={exit_date == today}')
 
                 if exit_date and exit_date != today:
