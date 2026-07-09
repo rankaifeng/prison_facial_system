@@ -22,6 +22,7 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
   const [formValues, setFormValues] = useState({});
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
   const [startTime, setStartTime] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const policeInputRef = useRef(null);
 
   // 通知父组件当前步骤
@@ -130,13 +131,19 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
       formData.append('start_time', startTime);
       formData.append('end_time', end);
 
-      const res = await entryRecord.submit(formData);
-      if (res.code === 1) {
-        message.success('提交成功');
-        onOk?.(formValues);
-        handleReset();
-      } else {
-        message.error(res.msg || '提交失败');
+      if (submitting) return;
+      setSubmitting(true);
+      try {
+        const res = await entryRecord.submit(formData);
+        if (res.code === 1) {
+          message.success('提交成功');
+          onOk?.(formValues);
+          handleReset();
+        } else {
+          message.error(res.msg || '提交失败');
+        }
+      } finally {
+        setSubmitting(false);
       }
     } catch {
       message.error('提交失败');
@@ -244,7 +251,7 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
       footer={[
         <Button key="cancel" onClick={handleReset}>取消</Button>,
         current > 0 && <Button key="back" onClick={handleBack}>上一步</Button>,
-        <Button key="next" type="primary" onClick={handleNext}>
+        <Button key="next" type="primary" onClick={handleNext} loading={current === 1 && submitting}>
           {current === 1 ? '确认提交' : '下一步'}
         </Button>,
       ].filter(Boolean)}

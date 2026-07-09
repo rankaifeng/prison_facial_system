@@ -464,6 +464,10 @@ def sync_prisoner_data_with_progress(self):
         total = len(ids)
         report('fetch_ids', 10, 100, f'获取到 {total} 个罪犯编号')
 
+        # 清空旧数据，确保数据一致
+        deleted_count, _ = PrisonerArchive.objects.all().delete()
+        logger.info(f'清空档案库: 删除 {deleted_count} 条旧记录')
+
         # Step 2: 逐个同步基础信息+媒体信息
         success = 0
         fail = 0

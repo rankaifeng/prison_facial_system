@@ -15,6 +15,7 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
   const [formValues, setFormValues] = useState({});
   const [startTime, setStartTime] = useState(null);
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const policeInputRef = useRef(null);
 
   // 当弹窗打开时重置状态
@@ -106,13 +107,19 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
       formData.append('start_time', startTime);
       formData.append('end_time', end);
 
-      const res = await returnRecord.submit(formData);
-      if (res.code === 1) {
-        message.success('提交成功');
-        onOk?.(formValues);
-        handleReset();
-      } else {
-        message.error(res.msg || '提交失败');
+      if (submitting) return;
+      setSubmitting(true);
+      try {
+        const res = await returnRecord.submit(formData);
+        if (res.code === 1) {
+          message.success('提交成功');
+          onOk?.(formValues);
+          handleReset();
+        } else {
+          message.error(res.msg || '提交失败');
+        }
+      } finally {
+        setSubmitting(false);
       }
     } catch (error) {
       message.error('提交失败');
@@ -242,7 +249,7 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
             上一步
           </Button>
         ),
-        <Button key="next" type="primary" onClick={handleNext}>
+        <Button key="next" type="primary" onClick={handleNext} loading={current === 1 && submitting}>
           {current === 1 ? '确认提交' : '下一步'}
         </Button>,
       ].filter(Boolean)}

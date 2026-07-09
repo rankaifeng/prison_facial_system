@@ -213,6 +213,10 @@ class Command(BaseCommand):
             return
         self.stdout.write(self.style.SUCCESS(f'    获取到 {len(prisoner_ids)} 个编号'))
 
+        # 清空旧数据，确保数据一致
+        deleted_count, _ = PrisonerArchive.objects.all().delete()
+        self.stdout.write(self.style.WARNING(f'    清空档案库: 删除 {deleted_count} 条旧记录'))
+
         # ── 第2步 + 第3步: 逐个查询基础信息和媒体信息，保存档案 ──
         self.stdout.write('\n>>> 第2步: 逐个查询基础信息 + 媒体信息并保存...')
         success = 0
