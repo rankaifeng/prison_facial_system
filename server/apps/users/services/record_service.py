@@ -1,21 +1,11 @@
 import logging
 import base64
 import uuid
-import threading
 from django.db import transaction
 from apps.users.repositories import RecordRepository, StatisticsRepository
 from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
-
-
-def _run_video_generation_async(record_id):
-    """在新线程中异步执行视频生成，不阻塞主线程"""
-    from apps.users.tasks import generate_exit_video
-    try:
-        generate_exit_video(record_id)
-    except Exception as e:
-        logger.error(f"视频生成线程异常: record_id={record_id}, error={e}")
 
 
 class RecordService(BaseService):
@@ -146,9 +136,9 @@ class RecordService(BaseService):
 
             logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}, total={stat.exit_count}")
 
-            # 启动后台线程生成视频
-            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
-            t.start()
+            # 通过 Celery 异步生成视频
+            from apps.users.tasks import generate_exit_video
+            generate_exit_video.delay(record.id)
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -233,9 +223,9 @@ class RecordService(BaseService):
             print(f'[入监DEBUG] 保存后: exit_count={stat.exit_count}, entry_count={stat.entry_count}')
             logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
 
-            # 启动后台线程生成视频
-            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
-            t.start()
+            # 通过 Celery 异步生成视频
+            from apps.users.tasks import generate_exit_video
+            generate_exit_video.delay(record.id)
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -329,9 +319,9 @@ class RecordService(BaseService):
             print(f'[回监DEBUG] 保存后: exit_count={stat.exit_count}, entry_count={stat.entry_count}')
             logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 
-            # 启动后台线程生成视频
-            t = threading.Thread(target=_run_video_generation_async, args=(record.id,))
-            t.start()
+            # 通过 Celery 异步生成视频
+            from apps.users.tasks import generate_exit_video
+            generate_exit_video.delay(record.id)
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 

@@ -14,7 +14,7 @@ from .exit_type_controller import (
     ExitTypeDeleteController,
 )
 from .message_controller import PrisonMessagesController
-from .video_controller import VideoStreamUrlController, CameraListController
+from .video_controller import VideoStreamUrlController, CameraListController, VideoTaskStatusController
 from .archive_controller import ArchiveListController, ArchiveDetailController
 from .sync_controller import SyncStartController, SyncStatusController
 from .snapshot_controller import SnapshotController
@@ -39,6 +39,7 @@ __all__ = [
     'PrisonMessagesController',
     'VideoStreamUrlController',
     'CameraListController',
+    'VideoTaskStatusController',
     'ArchiveListController',
     'ArchiveDetailController',
     'SyncStartController',

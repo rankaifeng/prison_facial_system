@@ -170,6 +170,7 @@ class VideoStreamUrlController(APIView):
         start_time = request.query_params.get('start_time', '').strip()
         end_time = request.query_params.get('end_time', '').strip()
         camera_index = int(request.query_params.get('camera', 0))
+        record_id = request.query_params.get('record_id', '').strip()
 
         if not start_time or not end_time:
             return Response({
@@ -196,18 +197,32 @@ class VideoStreamUrlController(APIView):
                 'code': 0, 'msg': '摄像头RTSP地址未配置', 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
-
-        rtsp_urls = _build_rtsp_urls(rtsp_base, start_time, end_time)
-
-        # 计算录像时长（秒）
-        duration = _calc_duration_seconds(start_time, end_time)
-        print(f"[FFmpeg] 录像时长: {duration} 秒")
-
         # 先检查是否已有缓存
-        cached_path = _video_exists_cached(start_time, end_time, camera_index)
+        cached_path = _video_exists_cached(start_time, end_time, camera_index, record_id or None)
         if cached_path:
             print(f"[Cache] 命中缓存，直接返回: {cached_path}")
             return self._build_response(request, cached_path.name, camera, False, is_cached=True)
+
+        # 有 record_id 时走 Celery 异步队列
+        if record_id:
+            from apps.users.tasks import generate_exit_video
+            task = generate_exit_video.delay(int(record_id))
+            print(f"[Video] 异步任务已提交: task_id={task.id}, record_id={record_id}")
+            return Response({
+                'code': 1,
+                'msg': '视频生成中',
+                'data': {
+                    'task_id': task.id,
+                    'status': 'pending',
+                    'camera_name': camera.get('name'),
+                    'channel': camera.get('channel'),
+                }
+            })
+
+        # 没有 record_id 时同步生成（兼容旧调用）
+        rtsp_urls = _build_rtsp_urls(rtsp_base, start_time, end_time)
+        duration = _calc_duration_seconds(start_time, end_time)
+        print(f"[FFmpeg] 录像时长: {duration} 秒")
 
         from apps.users.rtsp_to_mp4 import record_rtsp_to_mp4
 
@@ -273,6 +288,57 @@ class VideoStreamUrlController(APIView):
                 'is_cached': is_cached,
             }
         })
+
+
+class VideoTaskStatusController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        task_id = request.query_params.get('task_id', '').strip()
+        if not task_id:
+            return Response({'code': 0, 'msg': '缺少 task_id', 'data': None})
+
+        from celery.result import AsyncResult
+        from prison_backend.celery import app as celery_app
+
+        result = AsyncResult(task_id, app=celery_app)
+
+        if result.state == 'PENDING':
+            return Response({
+                'code': 1, 'msg': '等待中',
+                'data': {'status': 'pending', 'task_id': task_id}
+            })
+        elif result.state == 'PROGRESS':
+            return Response({
+                'code': 1, 'msg': '生成中',
+                'data': {'status': 'progress', 'task_id': task_id, **result.info}
+            })
+        elif result.state == 'SUCCESS':
+            info = result.info
+            if isinstance(info, str) and info.startswith('成功:'):
+                video_url = info.replace('成功: ', '').strip()
+                return Response({
+                    'code': 1, 'msg': '完成',
+                    'data': {'status': 'success', 'task_id': task_id, 'url': video_url}
+                })
+            elif isinstance(info, str) and '缓存' in info:
+                video_url = info.split(':')[-1].strip()
+                return Response({
+                    'code': 1, 'msg': '完成',
+                    'data': {'status': 'success', 'task_id': task_id, 'url': video_url}
+                })
+            else:
+                return Response({
+                    'code': 1, 'msg': str(info),
+                    'data': {'status': 'success', 'task_id': task_id, 'url': None}
+                })
+        else:
+            error = str(result.info) if result.info else '未知错误'
+            return Response({
+                'code': 0, 'msg': f'生成失败: {error[:200]}',
+                'data': {'status': 'failure', 'task_id': task_id}
+            })
 
 
 class CameraListController(APIView):
