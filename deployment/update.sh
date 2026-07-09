@@ -118,10 +118,10 @@ docker exec prison-backend python manage.py migrate users 0012_exit_entry_dateti
 docker exec prison-backend python manage.py shell -c "from django.db import connection; c=connection.cursor(); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL'); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL'); print('done')" 2>&1 | sed 's/^/    /' || true
 echo "  数据库迁移完成"
 
-# ── 6. 同步数据（修复图片路径等） ──
+# ── 6. 同步人脸照片到大华平台 ──
 echo ""
-echo "[6/6] 同步罪犯档案数据..."
-docker exec prison-backend python manage.py sync_prisoner_data --real-api 2>&1 | sed 's/^/    /' && echo "  数据同步完成" || echo "  数据同步失败，可稍后手动执行"
+echo "[6/6] 同步人脸照片到大华门禁平台..."
+docker exec prison-backend python manage.py sync_dahua_faces 2>&1 | sed 's/^/    /' && echo "  大华同步完成" || echo "  大华同步失败，可稍后手动执行"
 
 # ── 完成 ──
 echo ""

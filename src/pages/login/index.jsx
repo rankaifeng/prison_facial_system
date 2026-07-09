@@ -50,7 +50,7 @@ const Login = () => {
             <div className="logo-icon">
               <img src={logoImg} alt="logo" />
             </div>
-            <h1 className="login-title">人员出入AB门人脸识别管理系统</h1>
+            <h1 className="login-title">罪犯进出AB门人脸识别系统</h1>
             <p className="login-subtitle">Prison Facial Recognition System</p>
           </div>
 
@@ -96,7 +96,7 @@ const Login = () => {
           </Form>
 
           <div className="login-footer">
-            <span>© 2025 人员出入AB门人脸识别管理系统</span>
+            <span>© 2026 罪犯进出AB门人脸识别系统</span>
           </div>
         </div>
       </div>

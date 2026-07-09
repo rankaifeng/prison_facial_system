@@ -238,18 +238,18 @@ def _sync_to_dahua_direct(report_fn=None):
         logger.error(f'[大华同步] {msg}')
         return 0, 0, 0, msg
 
-    # 3. 获取档案数据
+    # 3. 获取档案数据（增量同步，不清空设备）
     log('正在读取档案数据...')
     archives = PrisonerArchive.objects.all()
-    prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info'))
+    prisoners = list(archives.values('prisoner_no', 'prisoner_name', 'id_card', 'media_info', 'last_synced_photo_url'))
     if not prisoners:
         msg = '档案库无数据，跳过大华同步'
         log(msg)
         return 0, 0, 0, msg
 
-    log(f'待同步人数: {len(prisoners)}')
+    log(f'总人数: {len(prisoners)}')
 
-    # 4. 先插入用户到大华（不管照片能不能下载）
+    # 5. 先插入用户到大华（不管照片能不能下载）
     user_url = f"{base_url}/cgi-bin/AccessUser.cgi?action=insertMulti"
     users = []
     for p in prisoners:
@@ -311,76 +311,198 @@ def _sync_to_dahua_direct(report_fn=None):
 
     photo_map = {}
     no_photo = 0
+    need_sync = []  # [(prisoner_no, photo_url), ...]
     for p in prisoners:
         media = p.get('media_info') or []
+        current_url = ''
         for m in media:
             xp = fix_photo_url(m.get('xp', ''))
             if xp:
+                current_url = xp
                 photo_map[p['prisoner_no']] = xp
                 break
-        if p['prisoner_no'] not in photo_map:
+        if not current_url:
             no_photo += 1
+            continue
+        # 比对：照片URL有变化才需要同步
+        if current_url != p.get('last_synced_photo_url', ''):
+            need_sync.append((p['prisoner_no'], current_url))
 
-    log(f'有照片: {len(photo_map)} 人, 无照片: {no_photo} 人')
+    already_synced = len(prisoners) - no_photo - len(need_sync)
+    log(f'有照片: {len(prisoners) - no_photo} 人, 无照片: {no_photo} 人')
+    log(f'需同步: {len(need_sync)} 人, 已同步跳过: {already_synced} 人')
 
-    # 6. 插入人脸照片到大华（逐个插入，下载照片转 base64）
-    face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
+    # 6. 插入人脸照片到大华（insertMulti 批量，每批最多10张，照片压缩到100KB以下）
+    face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
 
-    def download_photo_base64(photo_url):
+    def compress_photo(photo_bytes, max_size=50 * 1024):
+        """压缩照片，目标50KB（base64后约67KB，留足够余量）"""
+        from io import BytesIO
+        from PIL import Image
+        img = Image.open(BytesIO(photo_bytes))
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        for quality in (70, 55, 40, 30, 20, 15, 10):
+            buf = BytesIO()
+            img.save(buf, format='JPEG', quality=quality)
+            if buf.tell() <= max_size:
+                return buf.getvalue()
+        w, h = img.size
+        for scale in (0.75, 0.5, 0.35, 0.25):
+            resized = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+            for quality in (50, 35, 20, 10):
+                buf = BytesIO()
+                resized.save(buf, format='JPEG', quality=quality)
+                if buf.tell() <= max_size:
+                    return buf.getvalue()
+        return buf.getvalue()
+
+    def download_photo_bytes(photo_url):
         try:
-            r = requests.get(photo_url, timeout=10)
+            r = requests.get(photo_url, timeout=15)
             r.raise_for_status()
-            return base64.b64encode(r.content).decode('utf-8')
+            content = r.content
+            if len(content) < 100:
+                log(f'照片文件过小({len(content)}B): {photo_url}')
+                return None
+            return content
+        except requests.Timeout:
+            log(f'下载照片超时: {photo_url}')
+            return None
+        except requests.ConnectionError:
+            log(f'下载照片连接失败: {photo_url}')
+            return None
+        except requests.HTTPError as e:
+            log(f'下载照片HTTP错误({e.response.status_code}): {photo_url}')
+            return None
         except Exception as e:
-            logger.warning(f'下载照片失败 {photo_url}: {e}')
+            log(f'下载照片异常: {photo_url} -> {e}')
             return None
 
     face_success = 0
     face_fail = 0
-    skipped = 0
-    total = len(prisoners)
-    log(f'开始同步人脸照片，共 {total} 人...')
-    for idx, p in enumerate(prisoners, 1):
-        photo_url = photo_map.get(p['prisoner_no'])
-        if not photo_url:
-            skipped += 1
-            continue
-        photo_b64 = download_photo_base64(photo_url)
-        if not photo_b64:
-            face_fail += 1
-            continue
-        try:
-            payload = {
-                'UserID': p['prisoner_no'],
-                'FaceData': [],
-                'PhotoData': [photo_b64],
-                'PhotoURL': [],
-            }
-            resp = requests.post(face_url, json=payload, auth=auth, timeout=(5, 60))
-            text = resp.text.strip().lower()
-            if 'ok' in text:
-                face_success += 1
-            else:
-                face_fail += 1
-                if face_fail <= 5:
-                    log(f'人脸 {idx}/{total} 失败: {resp.text[:200]}')
-        except requests.RequestException as e:
-            face_fail += 1
-            if face_fail <= 5:
-                log(f'人脸 {idx}/{total} 请求异常: {e}')
-        if idx % 50 == 0:
-            log(f'人脸进度: {idx}/{total} (成功 {face_success}, 失败 {face_fail}, 跳过 {skipped})')
-        time.sleep(0.5)
+    download_fail = 0
+    total = len(need_sync)
 
-    if skipped > 0:
-        log(f'跳过无照片人员: {skipped} 个')
+    if not need_sync:
+        log('所有照片已是最新，无需同步')
+    else:
+        log(f'开始增量同步人脸照片，共 {total} 人...')
+
+        # 下载并压缩需要同步的照片
+        ready_list = []  # [(prisoner_no, photo_b64, photo_url), ...]
+        download_count = 0
+        for prisoner_no, photo_url in need_sync:
+            download_count += 1
+            photo_bytes = download_photo_bytes(photo_url)
+            if not photo_bytes:
+                download_fail += 1
+                continue
+            compressed = compress_photo(photo_bytes)
+            photo_b64 = base64.b64encode(compressed).decode('utf-8')
+            ready_list.append((prisoner_no, photo_b64, photo_url))
+            if download_count % 50 == 0:
+                log(f'下载进度: {download_count}/{total} (成功 {len(ready_list)}, 失败 {download_fail})')
+
+        log(f'准备就绪: {len(ready_list)} 人, 下载失败: {download_fail} 人')
+
+        # 逐张验证大小，过滤掉仍然过大的
+        import json as json_mod
+        final_list = []
+        for prisoner_no, photo_b64, photo_url in ready_list:
+            b64_size = len(photo_b64)
+            if b64_size > 100 * 1024:  # base64超过100KB的跳过
+                log(f'跳过 {prisoner_no}: 照片base64过大({b64_size // 1024}KB)')
+                continue
+            final_list.append((prisoner_no, photo_b64, photo_url))
+
+        log(f'验证通过: {len(final_list)} 人, 被过滤: {len(ready_list) - len(final_list)} 人')
+
+        # 诊断: 测试第一张照片
+        if final_list:
+            test_pid, test_b64, _ = final_list[0]
+            log(f'诊断: 测试用户 {test_pid}, base64大小 {len(test_b64)} bytes')
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': [], 'FaceData': []}]}
+            log(f'诊断: insertMulti 请求体 {len(json_mod.dumps(test_payload))} bytes')
+            try:
+                r = requests.post(face_url, json=test_payload, auth=auth, timeout=(5, 30))
+                log(f'诊断: insertMulti 响应 [HTTP {r.status_code}] {repr(r.text)}')
+            except Exception as e:
+                log(f'诊断: insertMulti 异常 {e}')
+            # 测试 insertSingle
+            single_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
+            try:
+                r = requests.post(single_url, json={'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}, auth=auth, timeout=(5, 30))
+                log(f'诊断: insertSingle 响应 [HTTP {r.status_code}] {repr(r.text)}')
+            except Exception as e:
+                log(f'诊断: insertSingle 异常 {e}')
+
+        def _send_single(pid, b64_data):
+            """发送单个人脸，返回 (ok, error_msg)"""
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': [], 'FaceData': []}]}
+            try:
+                r = requests.post(face_url, json=single_payload, auth=auth, timeout=(5, 60))
+                if 'ok' in r.text.strip().lower():
+                    return True, None
+                return False, f'[HTTP {r.status_code}] {r.text.strip()}'
+            except Exception as e:
+                return False, str(e)
+
+        # 批量发送，每批10张
+        batch_size = 10
+        total_batches = (len(final_list) + batch_size - 1) // batch_size if final_list else 0
+        for i in range(0, len(final_list), batch_size):
+            batch = final_list[i:i + batch_size]
+            batch_num = i // batch_size + 1
+            face_list = [{'UserID': pid, 'PhotoData': [b64], 'PhotoURL': [], 'FaceData': []} for pid, b64, _ in batch]
+            payload = {'FaceList': face_list}
+            payload_size = len(json_mod.dumps(payload))
+            batch_ok = False
+
+            for attempt in range(3):
+                try:
+                    resp = requests.post(face_url, json=payload, auth=auth, timeout=(5, 120))
+                    text = resp.text.strip().lower()
+                    if 'ok' in text:
+                        for prisoner_no, _, photo_url in batch:
+                            PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(last_synced_photo_url=photo_url)
+                        face_success += len(batch)
+                        log(f'人脸批次 {batch_num}/{total_batches}: 成功 {len(batch)} 个 (累计 {face_success}/{len(final_list)})')
+                        batch_ok = True
+                        break
+                    else:
+                        log(f'人脸批次 {batch_num}/{total_batches} 尝试{attempt+1}/3 失败: [HTTP {resp.status_code}] {resp.text.strip()} (请求体 {payload_size // 1024}KB)')
+                        if attempt < 2:
+                            time.sleep(3)
+                except requests.RequestException as e:
+                    log(f'人脸批次 {batch_num}/{total_batches} 尝试{attempt+1}/3 异常: {e}')
+                    if attempt < 2:
+                        time.sleep(3)
+
+            if not batch_ok:
+                log(f'人脸批次 {batch_num}/{total_batches} 批量失败，逐个发送排查...')
+                batch_success = 0
+                batch_fail = 0
+                for pid, b64_data, photo_url in batch:
+                    ok, err = _send_single(pid, b64_data)
+                    if ok:
+                        PrisonerArchive.objects.filter(prisoner_no=pid).update(last_synced_photo_url=photo_url)
+                        batch_success += 1
+                    else:
+                        batch_fail += 1
+                        log(f'  用户 {pid} 失败: {err} (base64 {len(b64_data) // 1024}KB)')
+                    time.sleep(0.5)
+                face_success += batch_success
+                face_fail += batch_fail
+                log(f'人脸批次 {batch_num}/{total_batches} 逐个结果: 成功 {batch_success}, 失败 {batch_fail}')
+            time.sleep(1)
 
     # 7. 汇总
     msg = (f'大华同步完成: 用户成功 {user_success}/{len(prisoners)}, '
-           f'人脸成功 {face_success}/{total} (跳过 {skipped})')
+           f'人脸成功 {face_success}/{total}, 下载失败 {download_fail}')
     log(msg)
 
-    return face_success, face_fail, skipped, msg
+    return face_success, face_fail, 0, msg
 
 
 @shared_task(bind=True)
@@ -464,13 +586,12 @@ def sync_prisoner_data_with_progress(self):
         total = len(ids)
         report('fetch_ids', 10, 100, f'获取到 {total} 个罪犯编号')
 
-        # 清空旧数据，确保数据一致
-        deleted_count, _ = PrisonerArchive.objects.all().delete()
-        logger.info(f'清空档案库: 删除 {deleted_count} 条旧记录')
-
-        # Step 2: 逐个同步基础信息+媒体信息
+        # Step 2: 逐个同步基础信息+媒体信息（增量，不清空）
         success = 0
         fail = 0
+        created = 0
+        updated = 0
+        api_ids = set(ids)
         for i, pid in enumerate(ids):
             try:
                 # 获取基础信息
@@ -525,7 +646,7 @@ def sync_prisoner_data_with_progress(self):
                     except (ValueError, TypeError):
                         return None
 
-                PrisonerArchive.objects.update_or_create(
+                _, is_new = PrisonerArchive.objects.update_or_create(
                     prisoner_no=pid,
                     defaults={
                         'prisoner_name': basic.get('xm', ''),
@@ -554,6 +675,10 @@ def sync_prisoner_data_with_progress(self):
                         'media_info': media_list,
                     },
                 )
+                if is_new:
+                    created += 1
+                else:
+                    updated += 1
                 success += 1
             except Exception as e:
                 fail += 1
@@ -565,7 +690,14 @@ def sync_prisoner_data_with_progress(self):
             if (i + 1) % 50 == 0:
                 time.sleep(2)
 
-        report('sync_basic', 80, 100, f'本地同步完成: 成功 {success}, 失败 {fail}')
+        # 标记已从系统移除的罪犯
+        local_ids = set(PrisonerArchive.objects.values_list('prisoner_no', flat=True))
+        removed_ids = local_ids - api_ids
+        if removed_ids:
+            PrisonerArchive.objects.filter(prisoner_no__in=removed_ids).update(is_released=True)
+            logger.info(f'标记已移除: {len(removed_ids)} 人')
+
+        report('sync_basic', 80, 100, f'本地同步完成: 成功 {success}, 失败 {fail}, 新增 {created}, 更新 {updated}, 移除 {len(removed_ids)}')
 
         # Step 3: 同步到大华门禁（直接调用，不走 management command）
         report('sync_dahua', 80, 100, '正在同步到大华门禁...')

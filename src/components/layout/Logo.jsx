@@ -15,19 +15,19 @@ const Logo = ({ collapsed }) => {
         borderBottom: '1px solid rgba(255,255,255,0.1)',
       }}
     >
-      <SafetyOutlined style={{ fontSize: 24, color: '#1890ff' }} />
       {!collapsed && (
         <Text
           strong
           style={{
             color: '#fff',
             marginLeft: 8,
-            fontSize: 16,
+            fontSize: 14,
             whiteSpace: 'nowrap',
           }}
         >
-          AB门人脸识别管理系统
+          罪犯进出AB门人脸识别系统
         </Text>
+        
       )}
     </div>
   );

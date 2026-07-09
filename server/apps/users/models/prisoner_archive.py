@@ -37,6 +37,9 @@ class PrisonerArchive(models.Model):
     media_info = models.JSONField('媒体信息列表', default=list, blank=True,
         help_text='每条包含: media_code, media_category, photo_path, remark')
 
+    last_synced_photo_url = models.CharField('上次同步到大华的照片URL', max_length=512, blank=True, default='',
+        help_text='用于增量同步，比对照片是否变化')
+
     synced_at = models.DateTimeField('同步时间', auto_now=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
