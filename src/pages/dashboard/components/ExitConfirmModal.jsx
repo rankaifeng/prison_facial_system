@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
 import { UserOutlined, SafetyOutlined, TeamOutlined, CameraOutlined } from '@ant-design/icons';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
 import SignatureCanvas from './SignatureCanvas';
 import { exitRecord, exitType, archive, snapshot } from '@/api/globApi';
 import './ExitConfirmModal.less';
+
+moment.locale('zh-cn');
 
 const HOSPITALS_CENTER = [
   { value: '中心医院', label: '中心医院' },
@@ -245,7 +249,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           <Spin tip="正在查询罪犯信息..." />
         </div>
       ) : (
-        <Form form={form} layout="vertical" initialValues={{ exitDate: null }}>
+        <Form form={form} layout="vertical" initialValues={{ exitDate: moment() }}>
           <Form.Item name="prisonerNo" label="罪犯编号" rules={[{ required: true, message: '请输入罪犯编号' }]}>
             <Input placeholder="请输入罪犯编号" />
           </Form.Item>

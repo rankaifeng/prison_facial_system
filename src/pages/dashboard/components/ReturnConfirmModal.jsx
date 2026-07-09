@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
 import { returnRecord, archive } from '@/api/globApi';
 import './ExitConfirmModal.less';
+
+moment.locale('zh-cn');
 
 const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
   const [form] = Form.useForm();
@@ -130,7 +134,7 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo }) => {
           <Spin tip="正在查询罪犯信息..." />
         </div>
       ) : (
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" initialValues={{ returnDate: moment() }}>
           <Form.Item
             name="prisonerNo"
             label="罪犯编号"
