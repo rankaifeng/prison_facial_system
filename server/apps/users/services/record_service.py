@@ -329,6 +329,8 @@ class RecordService(BaseService):
     def list_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
                      prisoner_name=None, prisoner_no=None, reason=None, page=1, page_size=10,
                      request_host=None):
+        from django.utils import timezone as tz
+
         queryset = RecordRepository.filter(
             type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
             prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
@@ -355,6 +357,11 @@ class RecordService(BaseService):
                 exit_record = RecordRepository.get_last_exit_by_prisoner_no(record.prisoner_no)
                 exit_reason = exit_record.reason if exit_record else None
 
+            # 转换为本地时区后再格式化
+            exit_date_local = tz.localtime(record.exit_date) if record.exit_date else None
+            entry_date_local = tz.localtime(record.entry_date) if record.entry_date else None
+            created_at_local = tz.localtime(record.created_at) if record.created_at else None
+
             data.append({
                 'id': record.id,
                 'prisoner_no': record.prisoner_no,
@@ -364,8 +371,8 @@ class RecordService(BaseService):
                 'type': record.type,
                 'reason': record.reason,  # 入监时填写的理由（可为空）
                 'exit_reason': exit_reason,  # 出监原因（入监记录特有）
-                'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else None,
-                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
+                'exit_date': exit_date_local.strftime('%Y-%m-%d %H:%M') if exit_date_local else None,
+                'entry_date': entry_date_local.strftime('%Y-%m-%d %H:%M') if entry_date_local else None,
                 'police_face': build_url(record.police_face),
                 'police_name': record.police_name,
                 'swat_face': build_url(record.swat_face),
@@ -379,7 +386,7 @@ class RecordService(BaseService):
                 'video_url': build_url(record.video_url),
                 'attachments': [build_url(a) for a in (record.attachments or [])],
                 'status': record.status,
-                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'created_at': created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else '',
             })
 
         return True, '获取成功', {
@@ -416,6 +423,8 @@ class RecordService(BaseService):
 
     @staticmethod
     def get_record(record_id, request_host=None):
+        from django.utils import timezone as tz
+
         record = RecordRepository.get_by_id(record_id)
         if not record:
             return False, '记录不存在', None
@@ -429,6 +438,10 @@ class RecordService(BaseService):
                 return path
             return f"http://{host}{path}"
 
+        # 转换为本地时区后再格式化
+        exit_date_local = tz.localtime(record.exit_date) if record.exit_date else None
+        entry_date_local = tz.localtime(record.entry_date) if record.entry_date else None
+
         return True, '获取成功', {
             'id': record.id,
             'prisoner_no': record.prisoner_no,
@@ -438,8 +451,8 @@ class RecordService(BaseService):
             'prison_area_name': record.prison_area_name,
             'type': record.type,
             'reason': record.reason,
-            'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else None,
-            'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else None,
+            'exit_date': exit_date_local.strftime('%Y-%m-%d %H:%M') if exit_date_local else None,
+            'entry_date': entry_date_local.strftime('%Y-%m-%d %H:%M') if entry_date_local else None,
             'police_face': build_url(record.police_face),
             'police_name': record.police_name,
             'swat_face': build_url(record.swat_face),
@@ -459,6 +472,8 @@ class RecordService(BaseService):
     def export_records(type=None, start_timestamp=None, end_timestamp=None, prison_area=None,
                        prisoner_name=None, prisoner_no=None, reason=None, request_host=None):
         """导出记录为CSV数据"""
+        from django.utils import timezone as tz
+
         queryset = RecordRepository.filter(
             type=type, start_timestamp=start_timestamp, end_timestamp=end_timestamp, prison_area=prison_area,
             prisoner_name=prisoner_name, prisoner_no=prisoner_no, reason=reason
@@ -483,13 +498,18 @@ class RecordService(BaseService):
                 exit_record = RecordRepository.get_last_exit_by_prisoner_no(record.prisoner_no)
                 exit_reason = exit_record.reason if exit_record else None
 
+            # 转换为本地时区后再格式化
+            exit_date_local = tz.localtime(record.exit_date) if record.exit_date else None
+            entry_date_local = tz.localtime(record.entry_date) if record.entry_date else None
+            created_at_local = tz.localtime(record.created_at) if record.created_at else None
+
             data.append({
                 'prison_area_name': record.prison_area_name,
                 'prisoner_name': record.prisoner_name,
                 'prisoner_no': record.prisoner_no,
                 'type': '出监' if record.type == 'exit' else '入监',
-                'exit_date': record.exit_date.strftime('%Y-%m-%d %H:%M') if record.exit_date else '',
-                'entry_date': record.entry_date.strftime('%Y-%m-%d %H:%M') if record.entry_date else '',
+                'exit_date': exit_date_local.strftime('%Y-%m-%d %H:%M') if exit_date_local else '',
+                'entry_date': entry_date_local.strftime('%Y-%m-%d %H:%M') if entry_date_local else '',
                 'reason': record.reason or '',
                 'exit_reason': exit_reason or '',
                 'police_face': build_url(record.police_face),
@@ -502,7 +522,7 @@ class RecordService(BaseService):
                 'hospital_name': record.hospital_name if record.reason == '外出就医' else '',
                 'video': 'https://www.w3schools.com/html/mov_bbb.mp4',
                 'status': record.status,
-                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'created_at': created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else '',
             })
 
         return True, '导出成功', data

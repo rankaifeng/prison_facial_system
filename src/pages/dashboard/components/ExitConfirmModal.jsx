@@ -205,7 +205,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     formData.append('prisoner_no', formValues.prisonerNo);
     formData.append('prisoner_name', formValues.prisonerName);
     formData.append('prison_area', formValues.prisonArea);
-    formData.append('exit_date', formValues.exitDate ? formValues.exitDate.format('YYYY-MM-DD') : null);
+    formData.append('exit_date', formValues.exitDate ? formValues.exitDate.format('YYYY-MM-DD HH:mm') : null);
     formData.append('reason', formValues.exitReason);
     formData.append('police_face', policeImage);
     formData.append('swat_face', swatImage);
