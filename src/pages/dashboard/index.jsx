@@ -43,6 +43,8 @@ const Dashboard = () => {
   const [swatFaceImage, setSwatFaceImage] = useState(null);
   const [policeFaceName, setPoliceFaceName] = useState(null);
   const [swatFaceName, setSwatFaceName] = useState(null);
+  const [capturedFaceImage, setCapturedFaceImage] = useState(null);
+  const [archiveFaceImage, setArchiveFaceImage] = useState(null);
   const [exitModalStep, setExitModalStep] = useState(0);
   const [enterModalStep, setEnterModalStep] = useState(0);
   const [selectModalOpen, setSelectModalOpen] = useState(false);
@@ -116,6 +118,14 @@ const Dashboard = () => {
       const faceName = data.user_name || null;
       const op = activeOpRef.current;
 
+      // 存储终端抓拍图片
+      setCapturedFaceImage(img);
+
+      // 存储档案照片
+      if (data.archive_image_base64) {
+        setArchiveFaceImage('data:image/jpeg;base64,' + data.archive_image_base64);
+      }
+
       if (!op) {
         console.log('[前端] 未选择操作类型，跳过图片分配');
         return;
@@ -171,6 +181,8 @@ const Dashboard = () => {
     setExitModalOpen(false);
     setPoliceFaceImage(null);
     setSwatFaceImage(null);
+    setCapturedFaceImage(null);
+    setArchiveFaceImage(null);
     setExitModalStep(0);
     setActiveOperation(null);
     activeOpRef.current = null;
@@ -179,6 +191,8 @@ const Dashboard = () => {
   const resetEnterModal = useCallback(() => {
     setEnterModalOpen(false);
     setPoliceFaceImage(null);
+    setCapturedFaceImage(null);
+    setArchiveFaceImage(null);
     setEnterModalStep(0);
     setActiveOperation(null);
     activeOpRef.current = null;
@@ -424,6 +438,8 @@ const Dashboard = () => {
         swatFaceImage={swatFaceImage}
         policeFaceName={policeFaceName}
         swatFaceName={swatFaceName}
+        capturedFaceImage={capturedFaceImage}
+        archiveFaceImage={archiveFaceImage}
         onStepChange={handleExitModalStepChange}
       />
       <EnterConfirmModal
@@ -433,13 +449,19 @@ const Dashboard = () => {
         prisonerNo={activePrisonerNo}
         policeFaceImage={policeFaceImage}
         policeFaceName={policeFaceName}
+        capturedFaceImage={capturedFaceImage}
+        archiveFaceImage={archiveFaceImage}
         onStepChange={handleEnterModalStepChange}
       />
       <ReturnConfirmModal
         visible={returnModalOpen}
-        onCancel={() => setReturnModalOpen(false)}
-        onOk={() => { setReturnModalOpen(false); handleDataUpdate(); }}
+        onCancel={() => { setReturnModalOpen(false); setCapturedFaceImage(null); setArchiveFaceImage(null); }}
+        onOk={() => { setReturnModalOpen(false); setCapturedFaceImage(null); setArchiveFaceImage(null); handleDataUpdate(); }}
         prisonerNo={activePrisonerNo}
+        capturedFaceImage={capturedFaceImage}
+        archiveFaceImage={archiveFaceImage}
+        policeFaceImage={policeFaceImage}
+        policeFaceName={policeFaceName}
       />
 
       {/* 同步进度弹窗 */}

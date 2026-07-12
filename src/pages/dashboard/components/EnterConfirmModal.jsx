@@ -14,7 +14,7 @@ const PRISON_AREAS = [
   { value: '七监区', label: '七监区' },
 ];
 
-const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, policeFaceName, onStepChange }) => {
+const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, policeFaceName, capturedFaceImage, archiveFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -160,6 +160,29 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
 
   const renderStep1 = () => (
     <div className="step-content step-form">
+      {/* 双图片展示区 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginBottom: 20 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="confirm-image" style={{ width: 140, height: 140 }}>
+            {capturedFaceImage ? (
+              <img src={capturedFaceImage} alt="终端抓拍" />
+            ) : (
+              <div className="image-placeholder"><UserOutlined /><span>无抓拍</span></div>
+            )}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>终端抓拍</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div className="confirm-image" style={{ width: 140, height: 140 }}>
+            {archiveFaceImage ? (
+              <img src={archiveFaceImage} alt="档案照片" />
+            ) : (
+              <div className="image-placeholder"><UserOutlined /><span>无档案</span></div>
+            )}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>档案照片</div>
+        </div>
+      </div>
       {loadingPrisoner ? (
         <div style={{ textAlign: 'center', padding: 40, width: '100%' }}>
           <Spin tip="正在查询罪犯信息..." />

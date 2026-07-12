@@ -619,7 +619,7 @@ class Command(BaseCommand):
             test_pid, test_b64 = ready_list[0]
             flush_print(f'    [诊断] 测试用户 {test_pid}, base64大小 {len(test_b64)} bytes')
             import json as _json
-            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': [], 'FaceData': []}]}
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}]}
             flush_print(f'    [诊断] insertMulti 请求体 {len(_json.dumps(test_payload))} bytes')
             try:
                 r = requests.post(url, json=test_payload, auth=auth, timeout=(5, 30))
@@ -634,7 +634,7 @@ class Command(BaseCommand):
                 flush_print(f'    [诊断] insertSingle 异常 {e}')
 
         def _send_single(pid, b64_data):
-            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': [], 'FaceData': []}]}
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': b64_data, 'PhotoURL': '', 'FaceData': ''}]}
             try:
                 r = requests.post(url, json=single_payload, auth=auth, timeout=(5, 60))
                 if 'ok' in r.text.strip().lower():
@@ -648,7 +648,7 @@ class Command(BaseCommand):
         for i in range(0, len(ready_list), batch_size):
             batch = ready_list[i:i + batch_size]
             batch_num = i // batch_size + 1
-            face_list = [{'UserID': pid, 'PhotoData': [b64_str], 'PhotoURL': [], 'FaceData': []} for pid, b64_str in batch]
+            face_list = [{'UserID': pid, 'PhotoData': b64_str, 'PhotoURL': '', 'FaceData': ''} for pid, b64_str in batch]
             payload = {'FaceList': face_list}
             payload_size = len(json_mod.dumps(payload))
             batch_ok = False
@@ -734,7 +734,7 @@ class Command(BaseCommand):
             test_pid, test_b64, _ = ready_list[0]
             flush_print(f'    [诊断] 测试用户 {test_pid}, base64大小 {len(test_b64)} bytes')
             import json as _json
-            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': [], 'FaceData': []}]}
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}]}
             flush_print(f'    [诊断] insertMulti 请求体 {len(_json.dumps(test_payload))} bytes')
             try:
                 r = requests.post(url, json=test_payload, auth=auth, timeout=(5, 30))
@@ -749,7 +749,7 @@ class Command(BaseCommand):
                 flush_print(f'    [诊断] insertSingle 异常 {e}')
 
         def _send_single(pid, b64_data):
-            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': [], 'FaceData': []}]}
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': b64_data, 'PhotoURL': '', 'FaceData': ''}]}
             try:
                 r = requests.post(url, json=single_payload, auth=auth, timeout=(5, 60))
                 if 'ok' in r.text.strip().lower():
@@ -763,7 +763,7 @@ class Command(BaseCommand):
         for i in range(0, len(ready_list), batch_size):
             batch = ready_list[i:i + batch_size]
             batch_num = i // batch_size + 1
-            face_list = [{'UserID': pid, 'PhotoData': [b64_str], 'PhotoURL': [], 'FaceData': []} for pid, b64_str, _ in batch]
+            face_list = [{'UserID': pid, 'PhotoData': b64_str, 'PhotoURL': '', 'FaceData': ''} for pid, b64_str, _ in batch]
             payload = {'FaceList': face_list}
             payload_size = len(json_mod.dumps(payload))
             batch_ok = False

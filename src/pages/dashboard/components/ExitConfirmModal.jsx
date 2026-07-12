@@ -41,7 +41,7 @@ const PRISON_AREA_NAME_TO_ID = {
   '五监区': '5', '六监区': '6', '七监区': '7',
 };
 
-const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, policeFaceName, swatFaceName, onStepChange }) => {
+const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, policeFaceName, swatFaceName, capturedFaceImage, archiveFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -252,6 +252,29 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
 
   const renderStep1 = () => (
     <div className="step-content step-form" style={{ display: current === 0 ? 'flex' : 'none' }}>
+      {/* 双图片展示区 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginBottom: 20 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="confirm-image" style={{ width: 140, height: 140 }}>
+            {capturedFaceImage ? (
+              <img src={capturedFaceImage} alt="终端抓拍" />
+            ) : (
+              <div className="image-placeholder"><UserOutlined /><span>无抓拍</span></div>
+            )}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>终端抓拍</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div className="confirm-image" style={{ width: 140, height: 140 }}>
+            {archiveFaceImage ? (
+              <img src={archiveFaceImage} alt="档案照片" />
+            ) : (
+              <div className="image-placeholder"><UserOutlined /><span>无档案</span></div>
+            )}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>档案照片</div>
+        </div>
+      </div>
       {loadingPrisoner ? (
         <div style={{ textAlign: 'center', padding: 40, width: '100%' }}>
           <Spin tip="正在查询罪犯信息..." />
@@ -332,15 +355,15 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           }
         }}
       />
-      <div className="confirm-image">
-        {policeImage ? (
-          <>
+      <div style={{ textAlign: 'center' }}>
+        <div className="confirm-image">
+          {policeImage ? (
             <img src={policeImage} alt="民警照片" />
-            {policeName && <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#fff' }}>{policeName}</div>}
-          </>
-        ) : (
-          <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
-        )}
+          ) : (
+            <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
+          )}
+        </div>
+        {policeName && <div style={{ marginTop: 12, fontSize: 16, color: '#fff', fontWeight: 600 }}>{policeName}</div>}
       </div>
     </div>
   );
@@ -357,15 +380,15 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           }
         }}
       />
-      <div className="confirm-image">
-        {swatImage ? (
-          <>
+      <div style={{ textAlign: 'center' }}>
+        <div className="confirm-image">
+          {swatImage ? (
             <img src={swatImage} alt="特警照片" />
-            {swatName && <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#fff' }}>{swatName}</div>}
-          </>
-        ) : (
-          <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
-        )}
+          ) : (
+            <div className="image-placeholder"><UserOutlined /><span>等待录入</span></div>
+          )}
+        </div>
+        {swatName && <div style={{ marginTop: 12, fontSize: 16, color: '#fff', fontWeight: 600 }}>{swatName}</div>}
       </div>
     </div>
   );

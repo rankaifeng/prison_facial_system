@@ -263,7 +263,7 @@ class Command(BaseCommand):
             flush_print(f'测试用户: {test_pid}, base64大小: {len(test_b64)} bytes')
 
             # 测试1: insertMulti 单张
-            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': [], 'FaceData': []}]}
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}]}
             import json
             flush_print(f'insertMulti 请求体大小: {len(json.dumps(test_payload))} bytes')
             try:
@@ -306,7 +306,7 @@ class Command(BaseCommand):
         # 根据诊断结果选择发送方式
         def _send_single(pid, b64_data):
             """发送单个人脸，返回 (ok, error_msg)"""
-            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': [], 'FaceData': []}]}
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': b64_data, 'PhotoURL': '', 'FaceData': ''}]}
             try:
                 r = requests.post(url, json=single_payload, auth=auth, timeout=(5, 60))
                 if 'ok' in r.text.strip().lower():
@@ -325,7 +325,7 @@ class Command(BaseCommand):
         for i in range(0, len(final_list), batch_size):
             batch = final_list[i:i + batch_size]
             batch_num = i // batch_size + 1
-            face_list = [{'UserID': pid, 'PhotoData': [b64], 'PhotoURL': [], 'FaceData': []} for pid, b64, _ in batch]
+            face_list = [{'UserID': pid, 'PhotoData': b64, 'PhotoURL': '', 'FaceData': ''} for pid, b64, _ in batch]
             payload = {'FaceList': face_list}
             payload_size = len(json.dumps(payload))
             batch_ok = False

@@ -38,6 +38,17 @@ class DahuaEventService:
         logger.info('大华事件订阅服务已启动（双设备）')
 
     @classmethod
+    def _fix_photo_url(cls, url):
+        """修正照片URL，兼容旧数据中的错误地址"""
+        if not url:
+            return url
+        url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+        return url
+
+    @classmethod
     def _load_config(cls):
         config_path = os.path.join(settings.BASE_DIR, 'config', 'cameras.yml')
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -362,6 +373,24 @@ class DahuaEventService:
                             broadcast_data['user_name'] = event_user_name
                         if event_user_id:
                             broadcast_data['user_id'] = event_user_id
+                            # 查询档案照片
+                            try:
+                                from apps.users.models import PrisonerArchive
+                                archive = PrisonerArchive.objects.filter(prisoner_no=event_user_id).first()
+                                if archive and archive.media_info:
+                                    for m in archive.media_info:
+                                        xp = m.get('xp', '')
+                                        if xp:
+                                            xp = cls._fix_photo_url(xp)
+                                            try:
+                                                r = requests.get(xp, timeout=5)
+                                                if r.status_code == 200 and len(r.content) > 100:
+                                                    broadcast_data['archive_image_base64'] = base64.b64encode(r.content).decode('ascii')
+                                                    break
+                                            except Exception:
+                                                pass
+                            except Exception as e:
+                                logger.warning(f'查询档案照片失败: {e}')
                         cls._broadcast(broadcast_data)
                         # 重置，等待下一组事件
                         event_user_id = ''
