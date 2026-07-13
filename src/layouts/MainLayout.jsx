@@ -51,7 +51,7 @@ const MainLayout = () => {
           trigger={null}
           collapsible
           collapsed={collapsed}
-          width={220}
+          width={180}
           style={{
             overflow: 'auto',
             height: '100vh',
@@ -79,7 +79,7 @@ const MainLayout = () => {
       )}
       <Layout
         style={{
-          marginLeft: isDashboard ? 0 : (collapsed ? 80 : 220),
+          marginLeft: isDashboard ? 0 : (collapsed ? 80 : 180),
           transition: 'margin-left 0.2s',
           height: '100vh',
           overflow: 'hidden',
@@ -119,12 +119,12 @@ const MainLayout = () => {
         )}
         <Content
           style={{
-            margin: 0,
+            margin: isDashboard ? 0 : 8,
             padding: 0,
             background: 'transparent',
             borderRadius: 0,
             overflow: 'hidden',
-            height: isDashboard ? '100vh' : 'calc(100vh - 64px)',
+            height: isDashboard ? '100vh' : 'calc(100vh - 64px - 16px)',
             flex: 1,
           }}
         >
