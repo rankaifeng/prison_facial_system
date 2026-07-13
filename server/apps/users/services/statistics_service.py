@@ -1,7 +1,5 @@
 import logging
 from datetime import date, datetime
-from django.db.models import Sum
-from apps.users.repositories import StatisticsRepository
 from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
@@ -11,7 +9,7 @@ class StatisticsService(BaseService):
 
     @staticmethod
     def get_realtime_statistics(prison_area=None):
-        from apps.users.models import PrisonerArchive, ExitType, ExitEntryRecord
+        from apps.users.models import PrisonerArchive, ExitType, ExitEntryRecord, TodayExitRecord
         from django.db.models import Count
 
         today = date.today()
@@ -30,33 +28,51 @@ class StatisticsService(BaseService):
         if not all_reasons:
             all_reasons = ['刑满释放', '外出就医', '外出教育', '离监探亲', '押回重审']
 
-        # ========== 从每日统计表获取出入监数据 ==========
-        queryset = StatisticsRepository.get_daily_stats(prison_area, today)
+        # ========== 从今日出监记录表获取出监数据 ==========
+        today_records = TodayExitRecord.objects.all()
+        if prison_area:
+            today_records = today_records.filter(prison_area_name=prison_area)
 
-        area_stats = queryset.values(
-            'prison_area', 'prison_area_name'
-        ).annotate(
-            exit_count=Sum('exit_count'),
-            entry_count=Sum('entry_count'),
+        # 按监区分组统计出监人数
+        area_exit_stats = today_records.values('prison_area_name').annotate(
+            exit_count=Count('id')
         )
 
+        # 按出监原因分组统计
+        reason_stats = today_records.values('exit_reason').annotate(
+            count=Count('id')
+        )
         total_reason_stats = {reason: 0 for reason in all_reasons}
-        area_list = []
-        total_exit = 0
-        total_entry = 0
+        for item in reason_stats:
+            if item['exit_reason'] in total_reason_stats:
+                total_reason_stats[item['exit_reason']] = item['count']
+
+        total_exit = today_records.count()
 
         # 年度出监统计（按监区名称归一化合并）
+        from datetime import timedelta
         year_start = date(today.year, 1, 1)
+        tomorrow = today + timedelta(days=1)
         from apps.users.dict import get_prison_area_name, get_prison_area_id
 
         yearly_by_area = {}  # key=监区名称, value=count
         yearly_records = ExitEntryRecord.objects.filter(
-            type='exit', exit_date__gte=year_start, exit_date__lte=today
-        ).values('prison_area', 'prison_area_name')
+            type='exit', exit_date__gte=year_start, exit_date__lt=tomorrow
+        ).values('prisoner_no', 'prison_area', 'prison_area_name')
+
+        # 预加载罪犯档案的监区信息（用于回退）
+        prisoner_nos = [r['prisoner_no'] for r in yearly_records if r['prisoner_no']]
+        archive_area_map_cache = {}
+        if prisoner_nos:
+            for pa in PrisonerArchive.objects.filter(prisoner_no__in=prisoner_nos).values('prisoner_no', 'prison_area'):
+                if pa['prison_area']:
+                    archive_area_map_cache[pa['prisoner_no']] = pa['prison_area']
 
         for item in yearly_records:
-            # 归一化：优先用 prison_area_name，没有则从 prison_area ID 转换
+            # 归一化：优先用 prison_area_name，没有则从 prison_area ID 转换，最后回退到档案监区
             name = item['prison_area_name'] or get_prison_area_name(item['prison_area'])
+            if not name:
+                name = archive_area_map_cache.get(item['prisoner_no'], '')
             if not name:
                 continue
             yearly_by_area[name] = yearly_by_area.get(name, 0) + 1
@@ -70,42 +86,48 @@ class StatisticsService(BaseService):
             if area_id:
                 yearly_stats[str(area_id)] = entry
 
+        # 按监区构建出监原因分布
+        area_reason_map = {}
+        for record in today_records.values('prison_area_name', 'exit_reason'):
+            area_name = record['prison_area_name']
+            reason = record['exit_reason']
+            if area_name not in area_reason_map:
+                area_reason_map[area_name] = {}
+            area_reason_map[area_name][reason] = area_reason_map[area_name].get(reason, 0) + 1
+
         processed_areas = set()
-        if area_stats:
-            for stat in area_stats:
-                exit_cnt = stat['exit_count'] or 0
-                entry_cnt = stat['entry_count'] or 0
-                total_exit += exit_cnt
-                total_entry += entry_cnt
+        area_list = []
 
-                db_stat = queryset.filter(prison_area=stat['prison_area']).first()
-                reason_stats = db_stat.reason_stats if db_stat and db_stat.reason_stats else {}
+        for stat in area_exit_stats:
+            area_name = stat['prison_area_name']
+            exit_cnt = stat['exit_count'] or 0
+            area_id = get_prison_area_id(area_name)
+            area_key = str(area_id) if area_id else area_name
 
-                area_reasons = []
-                for reason in all_reasons:
-                    count = reason_stats.get(reason, 0)
-                    area_reasons.append({'name': reason, 'count': count})
-                    if reason in total_reason_stats:
-                        total_reason_stats[reason] += count
+            area_reasons = []
+            for reason in all_reasons:
+                count = area_reason_map.get(area_name, {}).get(reason, 0)
+                area_reasons.append({'name': reason, 'count': count})
 
-                area_name = stat['prison_area_name']
-                area_list.append({
-                    'prison_area': stat['prison_area'],
-                    'prison_area_name': area_name,
-                    'in_prison_count': archive_area_map.get(area_name, 0),
-                    'exit_count': exit_cnt,
-                    'entry_count': entry_cnt,
-                    'yearly_exit_count': yearly_stats.get(stat['prison_area'], {}).get('yearly_exit', 0),
-                    'reasons': area_reasons
-                })
-                processed_areas.add(stat['prison_area'])
+            area_list.append({
+                'prison_area': area_key,
+                'prison_area_name': area_name,
+                'in_prison_count': archive_area_map.get(area_name, 0),
+                'exit_count': exit_cnt,
+                'entry_count': 0,
+                'yearly_exit_count': yearly_stats.get(area_name, {}).get('yearly_exit', 0),
+                'reasons': area_reasons
+            })
+            processed_areas.add(area_name)
 
-        # 补充档案库中有但每日统计中没有的监区
+        # 补充档案库中有但今日出监记录中没有的监区
         for area_name, count in archive_area_map.items():
             if area_name not in processed_areas:
-                yearly_match = next((v for k, v in yearly_stats.items() if v['prison_area_name'] == area_name), None)
+                area_id = get_prison_area_id(area_name)
+                area_key = str(area_id) if area_id else area_name
+                yearly_match = yearly_stats.get(area_name)
                 area_list.append({
-                    'prison_area': area_name,
+                    'prison_area': area_key,
                     'prison_area_name': area_name,
                     'in_prison_count': count,
                     'exit_count': 0,
@@ -119,7 +141,7 @@ class StatisticsService(BaseService):
         result = {
             'total': {
                 'exit_count': total_exit,
-                'entry_count': total_entry,
+                'entry_count': 0,
                 'in_prison_count': total_in_prison,
                 'reasons': total_reasons
             },

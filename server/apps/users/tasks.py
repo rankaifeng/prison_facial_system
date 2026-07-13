@@ -4,7 +4,7 @@ Celery 定时任务
 import logging
 from datetime import date, timedelta
 from celery import shared_task
-from apps.users.models import DailyStatistics, HistoryStatistics
+from apps.users.models import DailyStatistics, HistoryStatistics, TodayExitRecord
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +125,10 @@ def reset_daily_stats():
     """
     每天凌晨执行：同步昨日数据到历史记录，并重置当日统计
     """
+    # 清空今日出监记录表
+    deleted_count, _ = TodayExitRecord.objects.all().delete()
+    logger.info(f'已清空今日出监记录: {deleted_count} 条')
+
     today = date.today()
     yesterday = today - timedelta(days=1)
 

@@ -6,6 +6,7 @@ from apps.users.config import JWTAuthentication
 from apps.users.services import RecordService
 from apps.users.dict import get_prison_area_name
 from apps.users.repositories import ExitTypeRepository
+from apps.users.models import PrisonerArchive
 
 
 class ExitRecordController(APIView):
@@ -38,6 +39,14 @@ class ExitRecordController(APIView):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 校验罪犯档案是否存在
+        if not PrisonerArchive.objects.filter(prisoner_no=prisoner_no).exists():
+            return Response({
+                'code': 0,
+                'msg': f'罪犯编号 {prisoner_no} 在档案库中不存在，请先同步档案数据',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -132,6 +141,14 @@ class EntryRecordController(APIView):
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # 校验罪犯档案是否存在
+        if not PrisonerArchive.objects.filter(prisoner_no=prisoner_no).exists():
+            return Response({
+                'code': 0,
+                'msg': f'罪犯编号 {prisoner_no} 在档案库中不存在，请先同步档案数据',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         entry_datetime = RecordService.parse_datetime(entry_date)
         if not entry_datetime:
             return Response({
@@ -197,6 +214,14 @@ class ReturnRecordController(APIView):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 校验罪犯档案是否存在
+        if not PrisonerArchive.objects.filter(prisoner_no=prisoner_no).exists():
+            return Response({
+                'code': 0,
+                'msg': f'罪犯编号 {prisoner_no} 在档案库中不存在，请先同步档案数据',
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 

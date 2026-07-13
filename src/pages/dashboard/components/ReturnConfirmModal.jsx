@@ -87,10 +87,10 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
         return;
       }
     } else {
-      if (!policeImage) {
-        message.warning('请先录入人脸');
-        return;
-      }
+      // if (!policeImage) {
+      //   message.warning('请先录入人脸');
+      //   return;
+      // }
       handleSubmit();
     }
   };

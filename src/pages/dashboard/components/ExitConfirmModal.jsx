@@ -170,14 +170,14 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     } else if (current === 2) {
       setCurrent(3);
     } else {
-      if (!armedPoliceImage) {
-        message.warning('请先拍照');
-        return;
-      }
-      if (!armedPoliceSignature) {
-        message.warning('请先签字确认');
-        return;
-      }
+      // if (!armedPoliceImage) {
+      //   message.warning('请先拍照');
+      //   return;
+      // }
+      // if (!armedPoliceSignature) {
+      //   message.warning('请先签字确认');
+      //   return;
+      // }
       handleSubmit();
     }
   };
