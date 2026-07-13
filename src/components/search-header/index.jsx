@@ -29,11 +29,11 @@ const SearchHeader = (props) => {
       case 'treeSelect':
         return <TreeSelect style={{ width: 200 }} allowClear fieldNames={fieldNames} treeData={treeData} {...itemProps} />;
       case 'date':
-        return <DatePicker style={{ width: 160 }} {...itemProps} />;
+        return <DatePicker style={{ width: 3300 }} {...itemProps} />;
       case 'dateRange':
-        return <RangePicker style={{ width: 260 }} {...itemProps} showTime format="YYYY-MM-DD HH:mm" />;
+        return <RangePicker style={{ width: 320 }} {...itemProps} showTime format="YYYY-MM-DD HH:mm" />;
       case 'range':
-        return <RangePicker style={{ width: 260 }} {...itemProps} />;
+        return <RangePicker style={{ width: 320 }} {...itemProps} />;
       case 'number':
         return <InputNumber style={{ width: 160 }} {...itemProps} />;
       case 'custom':

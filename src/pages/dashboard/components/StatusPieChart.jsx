@@ -59,26 +59,14 @@ const StatusPieChart = ({ data }) => {
 
     const option = {
       backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(10, 14, 26, 0.95)',
-        borderColor: 'rgba(0, 240, 255, 0.5)',
-        borderWidth: 1,
-        textStyle: { color: '#fff', fontSize: 13 },
-        formatter: (params) => {
-          return `<div style="font-weight:600;margin-bottom:4px">${params.name}</div>
-                  <div>数量: <span style="color:#00f0ff;font-weight:700">${params.value}</span></div>
-                  <div>占比: <span style="color:#00f0ff;font-weight:700">${params.percent}%</span></div>`;
-        },
-        extraCssText: 'box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); border-radius: 8px;',
-      },
+     
       legend: {
         show: false,
       },
       graphic: [{
         type: 'text',
         left: 'center',
-        top: 'center',
+        top: '42%',
         style: {
           text: totalCount.toString(),
           textAlign: 'center',
@@ -126,39 +114,25 @@ const StatusPieChart = ({ data }) => {
             },
           }],
         },
-        // 主饼图 - 南丁格尔玫瑰图
+        // 主饼图
         {
           type: 'pie',
-          radius: ['35%', '78%'],
+          radius: ['45%', '75%'],
           center: ['50%', '45%'],
-          roseType: 'area',
           animationType: 'expansion',
-          animationDuration: 1800,
-          animationEasing: 'elasticOut',
+          animationDuration: 1200,
           itemStyle: {
-            borderRadius: 6,
+            borderRadius: 4,
             borderColor: 'rgba(10, 14, 26, 0.9)',
-            borderWidth: 3,
-            shadowBlur: 25,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            borderWidth: 2,
+            shadowBlur: 15,
+            shadowColor: 'rgba(0, 0, 0, 0.4)',
           },
           label: {
-            show: true,
-            position: 'outside',
-            formatter: '{b}\n{d}%',
-            fontSize: 10,
-            color: 'rgba(255,255,255,0.7)',
-            lineHeight: 14,
-            distanceToLabelLine: 4,
+            show: false,
           },
           labelLine: {
-            length: 10,
-            length2: 12,
-            lineStyle: {
-              color: 'rgba(0, 240, 255, 0.3)',
-              width: 1,
-            },
-            smooth: true,
+            show: false,
           },
           emphasis: {
             scale: true,
@@ -180,7 +154,7 @@ const StatusPieChart = ({ data }) => {
         // 内圈发光
         {
           type: 'pie',
-          radius: ['30%', '32%'],
+          radius: ['40%', '42%'],
           center: ['50%', '45%'],
           silent: true,
           label: { show: false },

@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 class AccountService(BaseService):
 
     @staticmethod
-    def list_accounts():
-        users = UserRepository.get_all()
+    def list_accounts(username=None):
+        users = UserRepository.get_all(username=username)
         data = []
         for user in users:
             data.append({

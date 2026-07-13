@@ -23,9 +23,12 @@ class UserRepository:
             return None
 
     @staticmethod
-    def get_all():
-        """获取所有用户"""
-        return User.objects.all().order_by('-id')
+    def get_all(username=None):
+        """获取所有用户，可按用户名模糊搜索"""
+        queryset = User.objects.all().order_by('-id')
+        if username:
+            queryset = queryset.filter(username__icontains=username)
+        return queryset
 
     @staticmethod
     def create(username, password, name='', role='user', prison_id='', prison_name=''):

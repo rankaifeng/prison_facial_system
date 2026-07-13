@@ -20,7 +20,8 @@ class AccountListController(APIView):
                 'data': None
             }, status=status.HTTP_200_OK)
 
-        success, message, data = AccountService.list_accounts()
+        username = request.query_params.get('username', '').strip()
+        success, message, data = AccountService.list_accounts(username=username or None)
 
         return Response({
             'code': 1,
