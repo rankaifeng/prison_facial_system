@@ -5,8 +5,8 @@ import * as echarts from 'echarts';
 const StatusPieChart = ({ data }) => {
   const chartRef = useRef(null);
 
-  // 从API获取的数据结构: data.total.reasons = [{name: '刑满释放', count: 100}, ...]
   const reasons = data?.total?.reasons || [];
+  const totalCount = (data?.total?.exit_count) || reasons.reduce((s, r) => s + (r.count || 0), 0);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -21,69 +21,187 @@ const StatusPieChart = ({ data }) => {
       { name: '押回重审', value: 0 }
     ];
 
-    // 使用API返回的reasons数据，如果没有则用defaultData
     const chartData = reasons.length > 0 ? reasons.map(item => ({
       name: item.name,
       value: item.count || 0
     })) : defaultData;
 
-    const colors = ['#1890ff', '#52c41a', '#ff4d4f', '#faad14', '#722ed1'];
+    const colorList = [
+      new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+        { offset: 0, color: '#00f0ff' },
+        { offset: 1, color: '#0080ff' }
+      ]),
+      new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+        { offset: 0, color: '#52c41a' },
+        { offset: 1, color: '#237804' }
+      ]),
+      new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+        { offset: 0, color: '#ff7a45' },
+        { offset: 1, color: '#cf1322' }
+      ]),
+      new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+        { offset: 0, color: '#ffc53d' },
+        { offset: 1, color: '#d48806' }
+      ]),
+      new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+        { offset: 0, color: '#b37feb' },
+        { offset: 1, color: '#531dab' }
+      ]),
+    ];
+
+    const borderColorList = [
+      'rgba(0, 240, 255, 0.8)',
+      'rgba(82, 196, 26, 0.8)',
+      'rgba(255, 122, 69, 0.8)',
+      'rgba(255, 197, 61, 0.8)',
+      'rgba(179, 127, 235, 0.8)',
+    ];
 
     const option = {
       backgroundColor: 'transparent',
-      // tooltip: {
-      //   trigger: 'item',
-      //   backgroundColor: 'rgba(20, 25, 45, 0.95)',
-      //   borderColor: 'rgba(0, 240, 255, 0.5)',
-      //   borderWidth: 1,
-      //   textStyle: { color: '#fff' },
-      //   formatter: '{b}: {c} ({d}%)',
-      //   z: 9999,
-      //   extraCssText: 'z-index: 9999; position: absolute;',
-      // },
-      legend: {
-        orient: 'horizontal',
-        bottom: 0,
-        textStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 10 },
-        itemWidth: 10,
-        itemHeight: 10
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(10, 14, 26, 0.95)',
+        borderColor: 'rgba(0, 240, 255, 0.5)',
+        borderWidth: 1,
+        textStyle: { color: '#fff', fontSize: 13 },
+        formatter: (params) => {
+          return `<div style="font-weight:600;margin-bottom:4px">${params.name}</div>
+                  <div>数量: <span style="color:#00f0ff;font-weight:700">${params.value}</span></div>
+                  <div>占比: <span style="color:#00f0ff;font-weight:700">${params.percent}%</span></div>`;
+        },
+        extraCssText: 'box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); border-radius: 8px;',
       },
-      series: [{
-        type: 'pie',
-        radius: ['40%', '80%'],
-        center: ['50%', '45%'],
-        depth: 45,
-        animationType: 'expansion',
-        animationDuration: 1500,
-        animationEasing: 'elasticOut',
-        animationDelay: (idx) => idx * 100,
-        itemStyle: {
-          borderRadius: 8,
-          borderColor: 'rgba(20, 25, 45, 0.9)',
-          borderWidth: 3,
-          shadowBlur: 20,
-          shadowColor: 'rgba(0, 0, 0, 0.6)'
+      legend: {
+        show: false,
+      },
+      graphic: [{
+        type: 'text',
+        left: 'center',
+        top: 'center',
+        style: {
+          text: totalCount.toString(),
+          textAlign: 'center',
+          fill: '#00f0ff',
+          fontSize: 28,
+          fontWeight: 'bold',
+          fontFamily: 'DIN Alternate, -apple-system, sans-serif',
+          textShadowColor: 'rgba(0, 240, 255, 0.6)',
+          textShadowBlur: 12,
         },
-        label: {
-          show: false
+      }],
+      series: [
+        // 外圈装饰脉冲环
+        {
+          type: 'pie',
+          radius: ['88%', '90%'],
+          center: ['50%', '45%'],
+          silent: true,
+          label: { show: false },
+          labelLine: { show: false },
+          animation: false,
+          data: [{
+            value: 1,
+            itemStyle: {
+              color: 'rgba(0, 240, 255, 0.08)',
+            },
+          }],
         },
-        emphasis: {
-          scale: true,
-          scaleSize: 12,
+        // 中圈装饰虚线环
+        {
+          type: 'pie',
+          radius: ['82%', '83%'],
+          center: ['50%', '45%'],
+          silent: true,
+          label: { show: false },
+          labelLine: { show: false },
+          animation: false,
+          data: [{
+            value: 1,
+            itemStyle: {
+              color: 'transparent',
+              borderWidth: 1,
+              borderColor: 'rgba(0, 240, 255, 0.15)',
+              borderType: 'dashed',
+            },
+          }],
+        },
+        // 主饼图 - 南丁格尔玫瑰图
+        {
+          type: 'pie',
+          radius: ['35%', '78%'],
+          center: ['50%', '45%'],
+          roseType: 'area',
+          animationType: 'expansion',
+          animationDuration: 1800,
+          animationEasing: 'elasticOut',
           itemStyle: {
-            shadowBlur: 35,
-            shadowColor: 'rgba(0, 240, 255, 0.8)'
-          }
+            borderRadius: 6,
+            borderColor: 'rgba(10, 14, 26, 0.9)',
+            borderWidth: 3,
+            shadowBlur: 25,
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          label: {
+            show: true,
+            position: 'outside',
+            formatter: '{b}\n{d}%',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.7)',
+            lineHeight: 14,
+            distanceToLabelLine: 4,
+          },
+          labelLine: {
+            length: 10,
+            length2: 12,
+            lineStyle: {
+              color: 'rgba(0, 240, 255, 0.3)',
+              width: 1,
+            },
+            smooth: true,
+          },
+          emphasis: {
+            scale: true,
+            scaleSize: 8,
+            itemStyle: {
+              shadowBlur: 40,
+              shadowColor: 'rgba(0, 240, 255, 0.6)',
+            },
+          },
+          data: chartData.map((item, index) => ({
+            ...item,
+            itemStyle: {
+              color: colorList[index % colorList.length],
+              borderColor: borderColorList[index % borderColorList.length],
+              borderWidth: 2,
+            },
+          })),
         },
-        data: chartData.map((item, index) => ({
-          ...item,
-          itemStyle: {
-            color: colors[index % colors.length]
-          }
-        }))
-      }]
+        // 内圈发光
+        {
+          type: 'pie',
+          radius: ['30%', '32%'],
+          center: ['50%', '45%'],
+          silent: true,
+          label: { show: false },
+          labelLine: { show: false },
+          animation: false,
+          data: [{
+            value: 1,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: 'rgba(0, 240, 255, 0.15)' },
+                { offset: 0.5, color: 'rgba(0, 240, 255, 0.25)' },
+                { offset: 1, color: 'rgba(0, 240, 255, 0.15)' },
+              ]),
+            },
+          }],
+        },
+      ],
     };
+
     chart.setOption(option);
+
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
 
@@ -91,7 +209,17 @@ const StatusPieChart = ({ data }) => {
       window.removeEventListener('resize', handleResize);
       chart.dispose();
     };
-  }, [reasons]);
+  }, [reasons, totalCount]);
+
+  // 自定义图例
+  const colors = ['#00f0ff', '#52c41a', '#ff7a45', '#ffc53d', '#b37feb'];
+  const legendData = (reasons.length > 0 ? reasons : [
+    { name: '刑满释放', count: 0 },
+    { name: '外出就医', count: 0 },
+    { name: '外出教育', count: 0 },
+    { name: '离监探亲', count: 0 },
+    { name: '押回重审', count: 0 },
+  ]);
 
   return (
     <div className="status-pie-chart" style={{ position: 'relative', zIndex: 1 }}>
@@ -109,6 +237,15 @@ const StatusPieChart = ({ data }) => {
       </div>
       <div className="chart-wrapper" style={{ position: 'relative', zIndex: 1 }}>
         <div ref={chartRef} className="echarts-container" style={{ position: 'relative', zIndex: 1 }} />
+      </div>
+      <div className="pie-legend">
+        {legendData.map((item, i) => (
+          <div key={i} className="pie-legend-item">
+            <span className="legend-dot" style={{ background: colors[i % colors.length] }}></span>
+            <span className="legend-name">{item.name}</span>
+            <span className="legend-count">{item.count || 0}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

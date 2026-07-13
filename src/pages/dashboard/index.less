@@ -14,6 +14,19 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   display: flex;
   flex-direction: column;
+  position: relative;
+
+  .dashboard-scan-beam {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.03) 40%, rgba(0, 240, 255, 0.06) 50%, rgba(0, 240, 255, 0.03) 60%, transparent 100%);
+    animation: scanBeam 12s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
 
   .dashboard-header {
     flex-shrink: 0;
@@ -21,7 +34,7 @@
     justify-content: space-between;
     align-items: center;
     height: 65px;
-    padding: 0 30px;
+    padding: 0 24px;
     background: linear-gradient(90deg, rgba(5, 10, 25, 0.99) 0%, rgba(15, 25, 50, 0.97) 30%, rgba(15, 25, 50, 0.97) 70%, rgba(5, 10, 25, 0.99) 100%);
     position: relative;
     overflow: hidden;
@@ -48,45 +61,21 @@
       box-shadow: 0 0 30px @primary-glow, 0 0 60px rgba(0, 240, 255, 0.5);
     }
 
-    .corner-decor {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      pointer-events: none;
-
-      &.tl {
-        top: 6px;
-        left: 6px;
-        border-top: 2px solid @primary-glow;
-        border-left: 2px solid @primary-glow;
-        box-shadow: -3px -3px 10px rgba(0, 240, 255, 0.3);
-      }
-
-      &.tr {
-        top: 6px;
-        right: 6px;
-        border-top: 2px solid @primary-glow;
-        border-right: 2px solid @primary-glow;
-        box-shadow: 3px -3px 10px rgba(0, 240, 255, 0.3);
-      }
-    }
-
     .header-left {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 15px; }
+      gap: 12px;
       z-index: 1;
 
       .header-icon {
-        font-size: 30px;
+        font-size: 28px;
         color: @primary-glow;
         filter: drop-shadow(0 0 12px @primary-glow);
       }
 
       .header-title {
         margin: 0;
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         background: linear-gradient(90deg, #fff 0%, @primary-glow 50%, #fff 100%);
         background-size: 200% 100%;
@@ -104,8 +93,7 @@
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 6px; }
+      gap: 6px;
 
       .welcome-greeting {
         font-size: 18px;
@@ -126,17 +114,10 @@
     .header-right {
       display: flex;
       align-items: center;
+      gap: 12px;
       color: rgba(255, 255, 255, 0.9);
       font-size: 12px;
       z-index: 1;
-
-      > * {
-        margin-left: 16px;
-
-        &:first-child {
-          margin-left: 0;
-        }
-      }
 
       .current-time {
         padding: 6px 14px;
@@ -164,7 +145,7 @@
       }
 
       .fullscreen-btn {
-        font-size: 20px;
+        font-size: 18px;
         padding: 8px;
         display: inline-flex;
         align-items: center;
@@ -187,7 +168,7 @@
 
       .nav-icon,
       .user-icon {
-        font-size: 20px;
+        font-size: 18px;
         color: @primary-glow;
         cursor: pointer;
         padding: 8px;
@@ -203,6 +184,41 @@
           box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 10px rgba(0, 240, 255, 0.15);
           transform: translateY(-1px);
         }
+      }
+    }
+
+    // 响应式：平板
+    @media (max-width: 1024px) {
+      height: 56px;
+      padding: 0 16px;
+
+      .header-left {
+        .header-icon { font-size: 24px; }
+        .header-title { font-size: 16px; letter-spacing: 2px; }
+      }
+
+      .header-right {
+        gap: 8px;
+        .current-time { display: none; }
+        .exit-btn { font-size: 12px; padding: 4px 8px; }
+      }
+    }
+
+    // 响应式：手机
+    @media (max-width: 768px) {
+      height: 50px;
+      padding: 0 12px;
+
+      .header-left {
+        .header-icon { font-size: 20px; }
+        .header-title { font-size: 14px; letter-spacing: 1px; }
+      }
+
+      .header-center { display: none; }
+
+      .header-right {
+        gap: 6px;
+        .exit-btn { display: none; }
       }
     }
   }
@@ -253,77 +269,100 @@
   }
 }
 
+@keyframes scanBeam {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200vw); }
+}
+
+@keyframes gridRotate {
+  0% { opacity: 0.015; }
+  50% { opacity: 0.04; }
+  100% { opacity: 0.015; }
+}
+
 .dashboard-content {
   flex: 1;
   display: flex;
-  padding: 8px;
-  // Chrome 81: gap not supported, use margin instead
-  > * + * { margin-left: 8px; }
+  padding: 12px;
+  gap: 12px;
   min-height: 0;
   overflow: hidden;
 
   .left-area {
-    width: 20%;
+    width: 22%;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-top: 8px; }
+    gap: 12px;
     min-height: 0;
-    align-content: flex-start;
   }
 
   .center-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-top: 10px; }
+    gap: 12px;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
 
     .prisons-section {
-      flex: 1.1;
+      flex: 1.6;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 300px;
+      background: @card-bg;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+      position: relative;
+      overflow: hidden;
+
+      .corner-decor {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: rgba(0, 240, 255, 0.6);
+        border-style: solid;
+        z-index: 1;
+        pointer-events: none;
+
+        &.top-left { top: 0; left: 0; border-width: 2px 0 0 2px; }
+        &.top-right { top: 0; right: 0; border-width: 2px 2px 0 0; }
+        &.bottom-left { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+        &.bottom-right { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+      }
+
+      .grid-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background:
+          linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        animation: gridRotate 8s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+      }
 
       .section-title {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 10px; }
-        margin-bottom: 10px;
-        padding: 8px 12px;
-        border-radius: 6px;
-        position: relative;
-        overflow: hidden;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding: 0;
         flex-shrink: 0;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-        }
 
         .title-content {
           display: flex;
           align-items: center;
-          // Chrome 81: gap not supported, use margin instead
-          > * + * { margin-left: 8px; }
+          gap: 8px;
           color: @primary-glow;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 1.5px;
           text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-          position: relative;
-          z-index: 1;
 
           .anticon {
             font-size: 16px;
@@ -340,10 +379,7 @@
         .title-decor {
           display: flex;
           align-items: center;
-          // Chrome 81: gap not supported, use margin instead
-          > * + * { margin-left: 4px; }
-          position: relative;
-          z-index: 1;
+          gap: 4px;
 
           .decor-dot {
             width: 6px;
@@ -351,12 +387,6 @@
             border-radius: 50%;
             background: @primary-glow;
             box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-            &:nth-child(2) {
-            }
-
-            &:nth-child(3) {
-            }
           }
         }
       }
@@ -365,156 +395,98 @@
         flex: 1;
         min-height: 0;
       }
-
-      .prisons-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 8px; }
-        flex: 1;
-        min-height: 0;
-        align-content: start;
-
-        .prison-card {
-          background: @card-bg;
-          border-radius: 8px;
-          border: none;
-          overflow: hidden;
-          transition: all 0.3s ease;
-          display: flex;
-          flex-direction: column;
-          min-height: 90px;
-          box-shadow: 0 0 10px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(0, 240, 255, 0.02);
-
-          &:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 30px rgba(0, 240, 255, 0.05);
-          }
-
-          .prison-image {
-            flex: 1;
-            position: relative;
-            min-height: 0;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            overflow: hidden;
-
-            img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-              display: block;
-            }
-          }
-
-          .prison-info {
-            flex-shrink: 0;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
-            padding: 6px;
-            border-top: 1px solid @border-glow;
-
-            .prison-name {
-              text-align: center;
-              font-size: 11px;
-              font-weight: 500;
-              color: #fff;
-              margin-bottom: 4px;
-            }
-
-            .prison-stats {
-              display: flex;
-              justify-content: space-around;
-
-              .stat-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-
-                .stat-label {
-                  font-size: 8px;
-                  color: rgba(255, 255, 255, 0.6);
-                }
-
-                .stat-value {
-                  font-size: 12px;
-                  font-weight: 600;
-                  color: #fff;
-                }
-
-                &.highlight .stat-value {
-                  color: #52c41a;
-                }
-              }
-            }
-          }
-        }
-      }
     }
 
     .chart-section {
-      flex: 0.4;
+      flex: 0.65;
       background: @card-bg;
-      border-radius: 10px;
-      border: none;
-      padding: 8px;
+      border-radius: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+      min-height: 160px;
+      position: relative;
+      overflow: hidden;
+
+      .corner-decor {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-color: rgba(0, 240, 255, 0.5);
+        border-style: solid;
+        z-index: 1;
+        pointer-events: none;
+
+        &.top-left { top: 0; left: 0; border-width: 2px 0 0 2px; }
+        &.top-right { top: 0; right: 0; border-width: 2px 2px 0 0; }
+        &.bottom-left { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+        &.bottom-right { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+      }
     }
   }
 
   .right-area {
-    width: 20%;
+    width: 22%;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-top: 8px; }
+    gap: 12px;
     min-height: 0;
+  }
+
+  // 响应式：平板
+  @media (max-width: 1024px) {
+    padding: 8px;
+    gap: 8px;
+
+    .left-area { width: 25%; }
+    .right-area { width: 25%; }
+  }
+
+  // 响应式：手机（纵向排列）
+  @media (max-width: 768px) {
+    flex-direction: column;
+    overflow-y: auto;
+
+    .left-area,
+    .right-area {
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .center-area {
+      flex: none;
+      min-height: 400px;
+    }
   }
 }
 
 .status-pie-chart {
   flex-shrink: 0;
   background: @card-bg;
-  border-radius: 10px;
-  border: none;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 16px;
   overflow: hidden;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
   .chart-title {
     display: flex;
     align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 10px; }
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-    }
+    gap: 10px;
+    margin-bottom: 12px;
 
     .title-content {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
+      gap: 8px;
       color: @primary-glow;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-      position: relative;
-      z-index: 1;
 
       .anticon {
         font-size: 16px;
@@ -531,10 +503,7 @@
     .title-decor {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
+      gap: 4px;
 
       .decor-dot {
         width: 6px;
@@ -542,22 +511,60 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-        &:nth-child(2) {
-        }
-
-        &:nth-child(3) {
-        }
       }
     }
   }
 
   .chart-wrapper {
-    height: 260px;
+    height: clamp(160px, 18vw, 240px);
 
     .echarts-container {
       width: 100%;
       height: 100%;
+    }
+  }
+
+  .pie-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    justify-content: center;
+    padding: 8px 8px 4px;
+    border-top: 1px solid rgba(0, 240, 255, 0.1);
+
+    .pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba(0, 240, 255, 0.08);
+      }
+
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px currentColor;
+      }
+
+      .legend-name {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .legend-count {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        min-width: 16px;
+        text-align: right;
+      }
     }
   }
 }
@@ -565,58 +572,39 @@
 .left-panel {
   display: flex;
   flex-direction: column;
-  // Chrome 81: gap not supported, use margin instead
-  > * + * { margin-top: 8px; }
+  gap: 12px;
   height: 100%;
   min-height: 0;
 
   .total-section {
-    flex: 0.4;
-    border-radius: 10px;
-    border: none;
-    padding: 10px;
-    box-shadow:
-      0 0 30px rgba(0, 240, 255, 0.15),
-      inset 0 0 50px rgba(0, 240, 255, 0.03);
+    flex: 0.45;
+    border-radius: 12px;
+    padding: 16px;
+    background: @card-bg;
     display: flex;
-    position: relative;
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
     border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
     .chart-header {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 10px; }
-      margin-bottom: 8px;
-      padding: 8px 12px;
-      overflow: hidden;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 50%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      }
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
 
       .header-content {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 8px; }
+        gap: 8px;
         color: @primary-glow;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1.5px;
         text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-        position: relative;
-        z-index: 1;
 
         .anticon {
           font-size: 16px;
@@ -633,10 +621,7 @@
       .header-decor {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 4px; }
-        position: relative;
-        z-index: 1;
+        gap: 4px;
 
         .decor-dot {
           width: 6px;
@@ -644,12 +629,6 @@
           border-radius: 50%;
           background: @primary-glow;
           box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-          &:nth-child(2) {
-          }
-
-          &:nth-child(3) {
-          }
         }
       }
     }
@@ -660,11 +639,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 0;
 
       .total-circle {
-        width: 140px;
-        height: 140px;
+        width: clamp(100px, 12vw, 150px);
+        height: clamp(100px, 12vw, 150px);
         border-radius: 50%;
         background: radial-gradient(circle at 35% 35%, rgba(0, 240, 255, 0.95) 0%, rgba(24, 119, 255, 0.7) 25%, rgba(0, 80, 200, 0.5) 50%, rgba(0, 20, 80, 0.9) 100%);
         border: 3px solid rgba(0, 240, 255, 0.8);
@@ -673,12 +651,7 @@
         align-items: center;
         justify-content: center;
         position: relative;
-        box-shadow:
-          0 0 40px rgba(0, 240, 255, 0.8),
-          0 0 80px rgba(0, 240, 255, 0.5),
-          inset 0 0 40px rgba(0, 240, 255, 0.5),
-          inset -6px -6px 30px rgba(0, 30, 120, 0.6);
-        transform: perspective(200px) rotateX(8deg);
+        box-shadow: 0 0 40px rgba(0, 240, 255, 0.8), 0 0 80px rgba(0, 240, 255, 0.5), inset 0 0 40px rgba(0, 240, 255, 0.5);
 
         &::before {
           content: '';
@@ -693,7 +666,7 @@
         }
 
         .total-value {
-          font-size: 36px;
+          font-size: clamp(28px, 3vw, 40px);
           font-weight: 700;
           color: #fff;
           line-height: 1;
@@ -701,7 +674,7 @@
         }
 
         .total-unit {
-          font-size: 13px;
+          font-size: 12px;
           color: rgba(255, 255, 255, 0.9);
           margin-top: 4px;
           text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
@@ -711,8 +684,7 @@
       .total-decoration {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 8px; }
+        gap: 8px;
         margin-top: 12px;
 
         .decoration-line {
@@ -734,65 +706,34 @@
   }
 
   .stats-section {
-    flex: 0.8;
+    flex: 0.55;
     background: @card-bg;
-    border-radius: 10px;
-    border: none;
-    padding: 10px;
+    border-radius: 12px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    box-shadow:
-      0 0 30px rgba(0, 240, 255, 0.15),
-      inset 0 0 50px rgba(0, 240, 255, 0.03);
     overflow: hidden;
     border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: 10px;
-      border: 1px solid rgba(0, 240, 255, 0.1);
-      pointer-events: none;
-    }
-
-    .section-header {
+    .chart-header {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 10px; }
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      position: relative;
-      overflow: hidden;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 50%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-      }
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
 
       .header-content {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 8px; }
+        gap: 8px;
         color: @primary-glow;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1.5px;
         text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-        position: relative;
-        z-index: 1;
 
         .anticon {
           font-size: 16px;
@@ -809,10 +750,7 @@
       .header-decor {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 4px; }
-        position: relative;
-        z-index: 1;
+        gap: 4px;
 
         .decor-dot {
           width: 6px;
@@ -820,259 +758,18 @@
           border-radius: 50%;
           background: @primary-glow;
           box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-          &:nth-child(2) {
-          }
-
-          &:nth-child(3) {
-          }
-        }
-      }
-
-      .header-stat {
-        display: flex;
-        align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 6px; }
-        padding: 4px 12px;
-        background: linear-gradient(135deg, rgba(255, 77, 79, 0.15) 0%, rgba(255, 77, 79, 0.1) 100%);
-        border: 1px solid rgba(255, 77, 79, 0.4);
-        border-radius: 20px;
-        color: #ff6b6b;
-        font-size: 12px;
-        font-weight: 500;
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 0 15px rgba(255, 77, 79, 0.2);
-
-        .anticon {
-          font-size: 14px;
         }
       }
     }
 
-    .stats-grid {
-      display: flex;
-      flex-direction: column;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-top: 6px; }
-      overflow-y: auto;
-    }
-
-    .stat-box {
-      display: flex;
-      align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 12px; }
-      padding: 10px 12px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.2s ease;
-
-      &:hover {
-        background: rgba(0, 240, 255, 0.05);
-        border-color: @border-glow;
-      }
-
-      .stat-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
-
-        &.exit-total-icon {
-          background: rgba(0, 240, 255, 0.2);
-          color: #00f0ff;
-          box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-        }
-
-        &.in-prison {
-          background: rgba(24, 119, 255, 0.2);
-          color: #1890ff;
-          box-shadow: 0 0 10px rgba(24, 119, 255, 0.3);
-        }
-
-        &.working {
-          background: rgba(82, 196, 26, 0.2);
-          color: #52c41a;
-          box-shadow: 0 0 10px rgba(82, 196, 26, 0.3);
-        }
-
-        &.hospital {
-          background: rgba(255, 77, 79, 0.2);
-          color: #ff4d4f;
-          box-shadow: 0 0 10px rgba(255, 77, 79, 0.3);
-        }
-
-        &.isolated {
-          background: rgba(255, 154, 38, 0.2);
-          color: #faad14;
-          box-shadow: 0 0 10px rgba(255, 154, 38, 0.3);
-        }
-
-        &.quarantine {
-          background: rgba(139, 92, 246, 0.2);
-          color: #8b5cf6;
-          box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-        }
-
-        &.visiting {
-          background: rgba(0, 206, 200, 0.2);
-          color: #00cec8;
-          box-shadow: 0 0 10px rgba(0, 206, 200, 0.3);
-        }
-
-        &.punishment {
-          background: rgba(255, 138, 0, 0.2);
-          color: #ff8a00;
-          box-shadow: 0 0 10px rgba(255, 138, 0, 0.3);
-        }
-      }
-
-      .exit-total {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(24, 119, 255, 0.1) 100%);
-        border: 1px solid rgba(0, 240, 255, 0.3);
-
-        .stat-content {
-          .stat-label {
-            color: @primary-glow;
-            font-weight: 600;
-          }
-
-          .stat-number {
-            color: @primary-glow;
-            text-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
-          }
-        }
-      }
-
-      .stat-content {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        min-width: 0;
-
-        .stat-info {
-          display: flex;
-          flex-direction: column;
-          // Chrome 81: gap not supported, use margin instead
-          > * + * { margin-top: 2px; }
-        }
-
-        .stat-label {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .stat-number {
-          font-size: 20px;
-          font-weight: 700;
-          color: #fff;
-          text-shadow: 0 0 10px currentColor;
-        }
-      }
-    }
-  }
-}
-
-.door-events-panel {
-  flex-shrink: 0;
-  background: @card-bg;
-  border-radius: 10px;
-  border: none;
-  padding: 10px;
-  max-height: 200px;
-  overflow: hidden;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 10px; }
-    margin-bottom: 8px;
-    padding: 4px 0;
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
-      color: @primary-glow;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-
-    .header-line {
+    .chart-wrapper {
       flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.1), transparent);
-    }
-  }
+      min-height: 0;
 
-  .door-events-list {
-    overflow-y: auto;
-    max-height: 150px;
-
-    &::-webkit-scrollbar {
-      width: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 240, 255, 0.3);
-      border-radius: 2px;
-    }
-  }
-
-  .event-empty {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 12px;
-    padding: 10px 0;
-  }
-
-  .door-event-item {
-    display: flex;
-    align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 8px; }
-    padding: 5px 8px;
-    margin-bottom: 4px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    border-left: 3px solid @primary-glow;
-    font-size: 12px;
-
-    .event-code {
-      color: @primary-glow;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .event-user {
-      color: #fff;
-      white-space: nowrap;
-    }
-
-    .event-status {
-      color: #52c41a;
-      white-space: nowrap;
-
-      &:last-child {
-        color: #ff6b6b;
+      .echarts-container {
+        width: 100%;
+        height: 100%;
       }
-    }
-
-    .event-sim {
-      color: #faad14;
-      white-space: nowrap;
     }
   }
 }
@@ -1080,48 +777,31 @@
 .right-panel {
   flex: 1;
   background: @card-bg;
-  border-radius: 10px;
-  border: none;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
 
   .panel-header {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 10px; }
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-    }
+    gap: 10px;
+    padding: 12px 16px;
 
     .header-left {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
+      gap: 8px;
       color: @primary-glow;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-      position: relative;
-      z-index: 1;
 
       .anticon {
         font-size: 16px;
@@ -1138,10 +818,7 @@
     .header-decor {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
+      gap: 4px;
 
       .decor-dot {
         width: 6px;
@@ -1149,44 +826,43 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-        &:nth-child(2) {
-        }
-
-        &:nth-child(3) {
-        }
       }
     }
 
     .detail-btn {
       padding: 0;
-      font-size: 10px;
+      font-size: 12px;
       color: @primary-glow;
       height: auto;
-      position: relative;
-      z-index: 1;
     }
   }
 
   .message-list {
     flex: 1;
     overflow-y: auto;
-    position: relative;
     min-height: 0;
-    padding: 8px 0;
+    padding: 0 12px 12px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.3);
+      border-radius: 2px;
+    }
 
     .message-scroll {
       width: 100%;
     }
 
     .message-item {
-      padding: 8px 10px;
-      margin-bottom: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 10px; }
-      border-radius: 4px;
+      gap: 10px;
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.03);
       border-left: 3px solid transparent;
       transition: all 0.2s ease;
@@ -1211,9 +887,7 @@
         line-height: 1.5;
         display: flex;
         align-items: center;
-        flex-wrap: nowrap;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 4px; }
+        gap: 6px;
         overflow: hidden;
 
         .person-name {
@@ -1259,8 +933,7 @@
       width: 100%;
       height: 100%;
       min-height: 100px;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-top: 10px; }
+      gap: 10px;
 
       .empty-icon {
         font-size: 32px;
@@ -1286,36 +959,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 10px; }
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-    }
+    gap: 10px;
+    margin-bottom: 12px;
 
     .header-content {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
+      gap: 8px;
       color: @primary-glow;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-      position: relative;
-      z-index: 1;
 
       .anticon {
         font-size: 16px;
@@ -1332,10 +988,7 @@
     .header-decor {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
+      gap: 4px;
 
       .decor-dot {
         width: 6px;
@@ -1343,42 +996,6 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-        &:nth-child(2) {
-        }
-
-        &:nth-child(3) {
-        }
-      }
-    }
-
-    .chart-tabs {
-      display: flex;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
-
-      .tab-btn {
-        padding: 3px 10px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(0, 240, 255, 0.15);
-        border-radius: 4px;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &:hover {
-          background: rgba(0, 240, 255, 0.1);
-          color: @primary-glow;
-        }
-
-        &.active {
-          background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(24, 119, 255, 0.2) 100%);
-          border-color: rgba(0, 240, 255, 0.4);
-          color: @primary-glow;
-        }
       }
     }
   }
@@ -1386,243 +1003,96 @@
   .chart-content {
     flex: 1;
     display: flex;
-    min-height: 0;
-
-    .chart-area {
-      flex: 1;
-      min-height: 0;
-
-      .echarts-container {
-        width: 100%;
-        height: 100%;
-      }
-    }
-  }
-}
-
-.gender-ratio-section {
-  flex: 0.5;
-  background: @card-bg;
-  border-radius: 10px;
-  padding: 8px;
-  min-height: 0;
-  overflow: hidden;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
-  display: flex;
-  flex-direction: column;
-
-  .section-header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 10px; }
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-    }
-
-    .header-content {
-      display: flex;
-      align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
-      color: @primary-glow;
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
-      position: relative;
-      z-index: 1;
-
-      .anticon {
-        font-size: 16px;
-        filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
-      }
-    }
-
-    .header-line {
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.1), transparent);
-    }
-
-    .header-decor {
-      display: flex;
-      align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
-
-      .decor-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: @primary-glow;
-        box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-        &:nth-child(2) {
-        }
-
-        &:nth-child(3) {
-        }
-      }
-    }
-  }
-
-  .gender-row {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 8px; }
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .gender-side {
-    flex: 1;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-left: 6px; }
-    padding: 6px;
-    border-radius: 6px;
-    min-width: 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    gap: 16px;
+    min-height: 0;
 
-    &:hover {
-      background: rgba(0, 240, 255, 0.05);
-      border-color: @border-glow;
-    }
-  }
+    .exit-count-display {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-  .male-side {
-    .icon-col {
-      .gender-icon {
-        color: #00f0ff;
-        filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.6));
+      .exit-count-ring {
+        width: clamp(90px, 10vw, 130px);
+        height: clamp(90px, 10vw, 130px);
+        border-radius: 50%;
+        border: 2px solid rgba(0, 240, 255, 0.4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        background: radial-gradient(circle, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
+
+        .exit-count-number {
+          font-size: clamp(32px, 3.5vw, 48px);
+          font-weight: 700;
+          color: #00f0ff;
+          line-height: 1;
+          text-shadow: 0 0 20px rgba(0, 240, 255, 0.8), 0 0 40px rgba(0, 240, 255, 0.4);
+        }
+
+        .exit-count-label {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.6);
+          margin-top: 4px;
+          letter-spacing: 2px;
+        }
+      }
+
+      .exit-count-ring-glow {
+        position: absolute;
+        width: clamp(100px, 11vw, 140px);
+        height: clamp(100px, 11vw, 140px);
+        border-radius: 50%;
+        border: 1px solid rgba(0, 240, 255, 0.15);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.15), inset 0 0 30px rgba(0, 240, 255, 0.05);
+        z-index: 0;
       }
     }
 
-    .gender-count {
-      color: #00f0ff;
-    }
-  }
+    .exit-reason-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      padding: 0 4px;
 
-  .female-side {
-    flex-direction: row-reverse;
+      .exit-reason-tag {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(0, 240, 255, 0.08);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 16px;
+        transition: all 0.2s ease;
 
-    .icon-col {
-      .gender-icon {
-        color: #ff4d4f;
-        filter: drop-shadow(0 0 6px rgba(255, 77, 79, 0.6));
+        &:hover {
+          background: rgba(0, 240, 255, 0.15);
+          border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        .tag-name {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tag-count {
+          font-size: 13px;
+          font-weight: 600;
+          color: #00f0ff;
+          text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
       }
-    }
 
-    .gender-count {
-      color: #ff6b6b;
-    }
-  }
-
-  .icon-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-top: 2px; }
-    flex-shrink: 0;
-
-    .gender-icon {
-      font-size: clamp(16px, 2.5vw, 28px);
-    }
-
-    .gender-label {
-      font-size: clamp(8px, 0.8vw, 12px);
-      color: rgba(255, 255, 255, 0.6);
-    }
-  }
-
-  .count-col {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    // Chrome 81: gap not supported, use margin instead
-    > * + * { margin-top: 1px; }
-    min-width: 0;
-    overflow: hidden;
-
-    .gender-count {
-      font-size: clamp(14px, 1.8vw, 22px);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .gender-percent {
-      font-size: clamp(8px, 0.8vw, 12px);
-      color: rgba(255, 255, 255, 0.5);
-    }
-  }
-
-  .female-side .count-col {
-    align-items: flex-end;
-  }
-
-  .gender-ring-wrapper {
-    position: relative;
-    width: clamp(60px, 25%, 120px);
-    min-width: 60px;
-    aspect-ratio: 1;
-    flex-shrink: 0;
-
-    .ring-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .ring-progress {
-      transition: stroke-dasharray 0.8s ease;
-    }
-
-    .male-ring {
-      filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
-    }
-
-    .female-ring {
-      filter: drop-shadow(0 0 6px rgba(255, 77, 79, 0.8));
-    }
-
-    .outer-ring {
-      filter: blur(1px);
-    }
-
-    .ring-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-
-      .ring-total {
-        font-size: clamp(10px, 1.2vw, 16px);
-        font-weight: 700;
-        color: #fff;
-        text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+      .exit-reason-empty {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.35);
       }
     }
   }
@@ -1638,43 +1108,26 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    padding: 6px 10px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.03), rgba(0, 150, 255, 0.05), rgba(0, 200, 255, 0.03), transparent);
-    }
+    margin-bottom: 12px;
 
     .header-left {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 8px; }
-      position: relative;
-      z-index: 1;
+      gap: 8px;
 
       .header-content {
         display: flex;
         align-items: center;
-        // Chrome 81: gap not supported, use margin instead
-        > * + * { margin-left: 8px; }
+        gap: 8px;
         color: @primary-glow;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1.5px;
         text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
 
         .anticon {
-          font-size: 14px;
+          font-size: 16px;
           filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
         }
       }
@@ -1689,9 +1142,8 @@
     .header-total {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 6px; }
-      padding: 4px 14px;
+      gap: 6px;
+      padding: 6px 16px;
       background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(24, 119, 255, 0.1) 100%);
       border: 1px solid rgba(0, 240, 255, 0.4);
       border-radius: 20px;
@@ -1699,30 +1151,27 @@
 
       .total-label {
         color: rgba(255, 255, 255, 0.7);
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 500;
       }
 
       .total-value {
         color: @primary-glow;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
         text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
       }
 
       .total-unit {
         color: rgba(255, 255, 255, 0.6);
-        font-size: 11px;
+        font-size: 12px;
       }
     }
 
-    .header-right {
+    .header-decor {
       display: flex;
       align-items: center;
-      // Chrome 81: gap not supported, use margin instead
-      > * + * { margin-left: 4px; }
-      position: relative;
-      z-index: 1;
+      gap: 4px;
 
       .decor-dot {
         width: 6px;
@@ -1730,12 +1179,6 @@
         border-radius: 50%;
         background: @primary-glow;
         box-shadow: 0 0 8px @primary-glow, 0 0 12px rgba(0, 240, 255, 0.6);
-
-        &:nth-child(2) {
-        }
-
-        &:nth-child(3) {
-        }
       }
     }
   }

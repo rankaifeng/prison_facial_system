@@ -352,6 +352,7 @@ const Dashboard = () => {
   };
   return (
     <div className="dashboard">
+      <div className="dashboard-scan-beam"></div>
       <div className="dashboard-header">
         <div className="header-left">
           <SafetyOutlined className="header-icon" />
@@ -398,6 +399,11 @@ const Dashboard = () => {
 
         <div className="center-area">
           <div className="prisons-section">
+            <div className="corner-decor top-left"></div>
+            <div className="corner-decor top-right"></div>
+            <div className="corner-decor bottom-left"></div>
+            <div className="corner-decor bottom-right"></div>
+            <div className="grid-overlay"></div>
             <div className="section-title">
               <div className="title-content">
                 <SafetyOutlined />
@@ -414,6 +420,10 @@ const Dashboard = () => {
           </div>
 
           <div className="chart-section">
+            <div className="corner-decor top-left"></div>
+            <div className="corner-decor top-right"></div>
+            <div className="corner-decor bottom-left"></div>
+            <div className="corner-decor bottom-right"></div>
             <ExitReasonBarChart data={realtimeData} />
           </div>
         </div>
