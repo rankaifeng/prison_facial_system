@@ -7,6 +7,16 @@ import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
 
+const PRISON_AREAS = [
+  { value: '一监区', label: '一监区' },
+  { value: '二监区', label: '二监区' },
+  { value: '三监区', label: '三监区' },
+  { value: '四监区', label: '四监区' },
+  { value: '五监区', label: '五监区' },
+  { value: '六监区', label: '六监区' },
+  { value: '七监区', label: '七监区' },
+];
+
 const STORAGE_KEY = 'prisoner_list_page';
 
 const PrisonerList = () => {
@@ -102,8 +112,9 @@ const PrisonerList = () => {
     {
       label: '监区',
       name: 'prison_area',
-      type: 'input',
-      props: { placeholder: '请输入监区' }
+      type: 'select',
+      options: PRISON_AREAS,
+      props: { placeholder: '请选择监区' }
     },
     {
       label: '罪名',
