@@ -13,6 +13,7 @@ import EnterConfirmModal from './components/EnterConfirmModal';
 import OperationSelectModal from './components/OperationSelectModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
 import { realtimeStatistics, sync, prisonMessages } from '@/api/globApi';
+import jinghuiImg from '@/imgs/jinghui.png';
 import useDoorEvents from '@/hooks/useDoorEvents';
 import cache from '@/utils/cache';
 import './index.less';
@@ -357,11 +358,7 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <div className="header-logo">
-            <svg viewBox="0 0 32 32" width="32" height="32" fill="none">
-              <path d="M16 2L4 8v8c0 7.7 5.1 14.9 12 16.8C22.9 30.9 28 23.7 28 16V8L16 2z" fill="rgba(0,240,255,0.15)" stroke="#00f0ff" strokeWidth="1.5"/>
-              <path d="M16 6L7 10v6c0 5.8 3.8 11.2 9 12.6C21.2 27.2 25 21.8 25 16v-6L16 6z" fill="rgba(0,240,255,0.08)" stroke="rgba(0,240,255,0.4)" strokeWidth="1"/>
-              <path d="M12 16l3 3 5-6" stroke="#00f0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src={jinghuiImg} alt="警徽" style={{ width: 36, height: 36, borderRadius: '50%' }} />
           </div>
           <Title level={3} className="header-title">罪犯进出AB门人脸识别系统</Title>
         </div>

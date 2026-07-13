@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Input, message } from 'antd';
+import { ConfigProvider, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { getFirstMenuPath } from '@/router/menus';
 import { userLogin } from '@/api/globApi';
-import logoImg from '@/imgs/logo.png';
 import cache from '@/utils/cache';
+import jinghuiImg from '@/imgs/jinghui.png';
 import './index.less';
 
 const Login = () => {
@@ -36,24 +36,46 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      <div className="login-bg">
-        <div className="bg-shape shape1"></div>
-        <div className="bg-shape shape2"></div>
-        <div className="bg-shape shape3"></div>
-        <div className="bg-shape shape4"></div>
-        <div className="bg-shape shape5"></div>
-      </div>
+      {/* 背景装饰 */}
+      <div className="login-bg-grid"></div>
+      <div className="login-bg-glow glow1"></div>
+      <div className="login-bg-glow glow2"></div>
+      <div className="login-bg-scan"></div>
 
       <div className="login-container">
         <div className="login-card">
+          {/* 顶部装饰线 */}
+          <div className="card-top-line"></div>
+
+          {/* 警徽Logo */}
           <div className="login-header">
-            <div className="logo-icon">
-              <img src={logoImg} alt="logo" />
+            <div className="logo-emblem">
+              <img src={jinghuiImg} alt="警徽" style={{ width: 64, height: 64, borderRadius: '50%' }} />
             </div>
             <h1 className="login-title">罪犯进出AB门人脸识别系统</h1>
-            <p className="login-subtitle">Prison Facial Recognition System</p>
+            <p className="login-subtitle">PRISON AB-GATE FACIAL RECOGNITION SYSTEM</p>
+            <div className="title-divider">
+              <span className="divider-line"></span>
+              <span className="divider-diamond"></span>
+              <span className="divider-line"></span>
+            </div>
           </div>
 
+          <ConfigProvider
+            theme={{
+              components: {
+                Input: {
+                  colorBgContainer: 'rgba(255, 255, 255, 0.04)',
+                  colorBorder: 'rgba(255, 255, 255, 0.08)',
+                  colorText: 'rgba(255, 255, 255, 0.85)',
+                  colorTextPlaceholder: 'rgba(255, 255, 255, 0.25)',
+                  activeBorderColor: 'rgba(212, 175, 55, 0.5)',
+                  hoverBorderColor: 'rgba(212, 175, 55, 0.3)',
+                  activeShadow: '0 0 0 2px rgba(212, 175, 55, 0.08)',
+                },
+              },
+            }}
+          >
           <Form
             form={form}
             onFinish={onFinish}
@@ -65,10 +87,11 @@ const Login = () => {
               rules={[{ required: true, message: '请输入账号' }]}
             >
               <Input
-                prefix={<UserOutlined />}
+                prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15 }} />}
                 placeholder="请输入账号"
                 size="large"
                 className="login-input"
+                style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
               />
             </Form.Item>
 
@@ -77,10 +100,11 @@ const Login = () => {
               rules={[{ required: true, message: '请输入密码' }]}
             >
               <Input.Password
-                prefix={<LockOutlined />}
+                prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15 }} />}
                 placeholder="请输入密码"
                 size="large"
                 className="login-input"
+                style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
               />
             </Form.Item>
 
@@ -90,14 +114,25 @@ const Login = () => {
                 className="submit-btn"
                 disabled={loading}
               >
-                {loading ? '登录中...' : '登 录'}
+                {loading ? (
+                  <span className="btn-loading">
+                    <span className="btn-spinner"></span>
+                    登录中...
+                  </span>
+                ) : '安 全 登 录'}
               </button>
             </Form.Item>
           </Form>
+          </ConfigProvider>
 
           <div className="login-footer">
             <span>© 2026 罪犯进出AB门人脸识别系统</span>
           </div>
+        </div>
+
+        {/* 底部标语 */}
+        <div className="login-motto">
+          科技赋能监管 · 智慧守护安全
         </div>
       </div>
     </div>
