@@ -5,6 +5,8 @@ const StatisticsChart = ({ data }) => {
   const exitCount = data?.total?.exit_count || 0;
   const reasons = data?.total?.reasons || [];
 
+  const colors = ['#00f0ff', '#1890ff', '#52c41a', '#faad14', '#722ed1'];
+
   return (
     <div className="statistics-chart">
       <div className="chart-header">
@@ -20,23 +22,28 @@ const StatisticsChart = ({ data }) => {
         </div>
       </div>
       <div className="chart-content">
-        <div className="exit-count-display">
-          <div className="exit-count-ring">
-            <div className="exit-count-number">{exitCount}</div>
-            <div className="exit-count-label">今日出监</div>
-          </div>
-          <div className="exit-count-ring-glow"></div>
+        <div className="exit-hero">
+          <div className="exit-hero-label">今日出监人数</div>
+          <span className="exit-hero-number">{exitCount}</span>
+          <span className="exit-hero-unit">人</span>
         </div>
-        <div className="exit-reason-tags">
-          {reasons.filter(r => r.count > 0).map((r, i) => (
-            <div key={i} className="exit-reason-tag">
-              <span className="tag-name">{r.name}</span>
-              <span className="tag-count">{r.count}</span>
+        <div className="exit-reason-list">
+          {reasons.map((r, i) => (
+            <div key={i} className="exit-reason-row">
+              <span className="reason-dot" style={{ background: colors[i % colors.length] }} />
+              <span className="reason-name">{r.name}</span>
+              <span className="reason-bar-wrap">
+                <span
+                  className="reason-bar"
+                  style={{
+                    width: `${exitCount > 0 ? (r.count / exitCount) * 100 : 0}%`,
+                    background: colors[i % colors.length],
+                  }}
+                />
+              </span>
+              <span className="reason-count">{r.count || 0}</span>
             </div>
           ))}
-          {reasons.every(r => r.count === 0) && (
-            <div className="exit-reason-empty">暂无出监记录</div>
-          )}
         </div>
       </div>
     </div>
