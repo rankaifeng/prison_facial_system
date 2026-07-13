@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin, Row, Col } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
@@ -87,10 +87,10 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
         return;
       }
     } else {
-      // if (!policeImage) {
-      //   message.warning('请先录入人脸');
-      //   return;
-      // }
+      if (!policeImage) {
+        message.warning('请先录入人脸');
+        return;
+      }
       handleSubmit();
     }
   };
@@ -180,57 +180,48 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
         </div>
       ) : (
         <Form form={form} layout="vertical" initialValues={{ returnDate: moment() }}>
-          <Form.Item
-            name="prisonerNo"
-            label="罪犯编号"
-            rules={[{ required: true, message: '请输入罪犯编号' }]}
-          >
-            <Input placeholder="请输入罪犯编号" />
-          </Form.Item>
-
-          <Form.Item
-            name="prisonerName"
-            label="罪犯姓名"
-            rules={[{ required: true, message: '请输入罪犯姓名' }]}
-          >
-            <Input placeholder="请输入罪犯姓名" />
-          </Form.Item>
-          <Form.Item
-            name="prisonArea"
-            label="监区"
-            rules={[{ required: true, message: '请输入监区' }]}
-          >
-            <Input placeholder="请输入监区" />
-          </Form.Item>
-          <Form.Item
-            name="returnDate"
-            label="回监日期"
-            rules={[{ required: true, message: '请选择回监日期' }]}
-          >
-            <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} placeholder="请选择回监日期" />
-          </Form.Item>
-
-
-
-          <Form.Item
-            name="entryStatus"
-            label="状态"
-            rules={[{ required: true, message: '请选择状态' }]}
-          >
-            <Select placeholder="请选择状态" options={[
-              { value: 'normal', label: '正常' },
-              { value: 'abnormal', label: '异常' },
-            ]} />
-          </Form.Item>
-
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="prisonerNo" label="罪犯编号" rules={[{ required: true, message: '请输入罪犯编号' }]}>
+                <Input placeholder="请输入罪犯编号" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="prisonerName" label="罪犯姓名" rules={[{ required: true, message: '请输入罪犯姓名' }]}>
+                <Input placeholder="请输入罪犯姓名" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请输入监区' }]}>
+                <Input placeholder="请输入监区" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="returnDate" label="回监日期" rules={[{ required: true, message: '请选择回监日期' }]}>
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} placeholder="请选择回监日期" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name="entryStatus" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
+                <Select placeholder="请选择状态" options={[
+                  { value: 'normal', label: '正常' },
+                  { value: 'abnormal', label: '异常' },
+                ]} />
+              </Form.Item>
+            </Col>
+          </Row>
           {entryStatus === 'abnormal' && (
-            <Form.Item
-              name="abnormalReason"
-              label="异常原因"
-              rules={[{ required: true, message: '请输入异常原因' }]}
-            >
-              <Input.TextArea placeholder="请输入异常原因" rows={3} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item name="abnormalReason" label="异常原因" rules={[{ required: true, message: '请输入异常原因' }]}>
+                  <Input.TextArea placeholder="请输入异常原因" style={{ height: 100, resize: 'none' }} />
+                </Form.Item>
+              </Col>
+            </Row>
           )}
         </Form>
       )}
