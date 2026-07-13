@@ -39,3 +39,12 @@ body {
   width: 100%;
   overflow: hidden;
 }
+
+/* 统一圆角 10px */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select .ant-select-selector,
+.ant-btn,
+.ant-picker {
+  border-radius: 5px !important;
+}

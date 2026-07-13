@@ -73,6 +73,18 @@
         filter: drop-shadow(0 0 12px @primary-glow);
       }
 
+      .header-logo {
+        display: flex;
+        align-items: center;
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+        animation: logoPulse 3s ease-in-out infinite;
+      }
+
+      @keyframes logoPulse {
+        0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5)); }
+        50% { filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.8)); }
+      }
+
       .header-title {
         margin: 0;
         font-size: 20px;
@@ -134,6 +146,7 @@
         border: 1px solid rgba(0, 240, 255, 0.5) !important;
         color: #00f0ff !important;
         font-weight: 500;
+        border-radius: 8px !important;
         box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
 
         &:hover {
@@ -224,7 +237,118 @@
   }
 }
 
+.dashboard-dark-menu {
+  background: transparent !important;
+  border: none !important;
+
+  .ant-dropdown-menu-item {
+    color: rgba(255, 255, 255, 0.85) !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .ant-dropdown-menu-item:hover,
+  .ant-dropdown-menu-item-active {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+  }
+
+  .ant-dropdown-menu-item .ant-dropdown-menu-item-icon {
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-dropdown-menu-item:hover .ant-dropdown-menu-item-icon {
+    color: #fff !important;
+  }
+}
+
+.dashboard-dark-modal {
+  .ant-modal-content {
+    background: rgba(14, 18, 35, 1) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    border-radius: 12px !important;
+  }
+
+  .ant-modal-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ant-modal-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .ant-modal-body {
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-modal-confirm-body .ant-modal-confirm-content {
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-modal-confirm-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .ant-modal-confirm-btns .ant-btn-default {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-modal-confirm-btns .ant-btn-primary {
+    background: #1677ff !important;
+    border-color: #1677ff !important;
+  }
+
+  .ant-modal-close {
+    color: rgba(255, 255, 255, 0.45) !important;
+  }
+
+  .ant-modal-close:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+}
+
 :global {
+  .ant-modal .ant-modal-content {
+    background: rgba(14, 18, 35, 1) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    border-radius: 12px !important;
+  }
+
+  .ant-modal .ant-modal-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ant-modal .ant-modal-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .ant-modal .ant-modal-body {
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-modal .ant-modal-footer .ant-btn-default {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+  }
+
+  .ant-modal .ant-modal-footer .ant-btn-primary {
+    background: #1677ff !important;
+    border-color: #1677ff !important;
+  }
+
+  .ant-modal .ant-modal-close {
+    color: rgba(255, 255, 255, 0.45) !important;
+  }
+
+  .ant-modal .ant-modal-close:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
   .ant-dropdown-menu {
     background: rgba(20, 25, 45, 0.95) !important;
     border: 1px solid rgba(0, 240, 255, 0.3) !important;
@@ -232,24 +356,30 @@
     padding: 8px !important;
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.15) !important;
 
-    .ant-dropdown-menu-item {
+    .ant-dropdown-menu-item,
+    .ant-dropdown-menu-title-content {
       color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .ant-dropdown-menu-item {
       border-radius: 4px !important;
       padding: 10px 16px !important;
       font-size: 13px !important;
       border: 1px solid transparent !important;
-
-      &:hover {
-        background: rgba(0, 240, 255, 0.15) !important;
-        color: #00f0ff !important;
-      }
+      transition: all 0.2s ease !important;
     }
 
+    .ant-dropdown-menu-item:hover,
+    .ant-dropdown-menu-item-active,
     .ant-dropdown-menu-item-selected,
-    .ant-dropdown-menu-item-active {
-      background: rgba(0, 240, 255, 0.2) !important;
-      border: 1px solid rgba(0, 240, 255, 0.4) !important;
-      color: #00f0ff !important;
+    .ant-dropdown-menu-submenu-title:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #fff !important;
+    }
+
+    .ant-dropdown-menu-item:hover .ant-dropdown-menu-item-title-content,
+    .ant-dropdown-menu-item:hover span {
+      color: #fff !important;
     }
 
     .ant-dropdown-menu-item-divider {

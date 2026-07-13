@@ -70,7 +70,7 @@ const MainLayout = () => {
             onClick={({ key }) => navigate(key)}
           >
             {showMenus.map(menu => (
-              <Menu.Item key={menu.key}>
+              <Menu.Item key={menu.key} icon={menu.icon}>
                 {menu.label}
               </Menu.Item>
             ))}

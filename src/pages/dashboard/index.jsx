@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu } from 'antd';
-import { SafetyOutlined, MenuOutlined, LogoutOutlined, LoginOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { SafetyOutlined, MenuOutlined, LogoutOutlined, LoginOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined, DashboardOutlined, DatabaseOutlined, FileTextOutlined, SwapOutlined, UserOutlined, TagsOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
@@ -323,17 +323,17 @@ const Dashboard = () => {
 
   const navMenu = {
     items: isAdmin ? [
-      { key: '/dashboard', label: '首页大屏' },
-      { key: '/prisoners', label: '档案库' },
-      { key: '/statistics', label: '出监记录' },
-      { key: '/return-records', label: '回监记录' },
-      { key: '/permission', label: '账号管理' },
-      { key: '/type-management', label: '出监原因管理' },
+      { key: '/dashboard', label: '首页大屏', icon: <DashboardOutlined /> },
+      { key: '/prisoners', label: '档案库', icon: <DatabaseOutlined /> },
+      { key: '/statistics', label: '出监记录', icon: <FileTextOutlined /> },
+      { key: '/return-records', label: '回监记录', icon: <SwapOutlined /> },
+      { key: '/permission', label: '账号管理', icon: <UserOutlined /> },
+      { key: '/type-management', label: '出监原因管理', icon: <TagsOutlined /> },
     ] : [
-      { key: '/dashboard', label: '首页大屏' },
-      { key: '/prisoners', label: '档案库' },
-      { key: '/statistics', label: '出监记录' },
-      { key: '/return-records', label: '回监记录' },
+      { key: '/dashboard', label: '首页大屏', icon: <DashboardOutlined /> },
+      { key: '/prisoners', label: '档案库', icon: <DatabaseOutlined /> },
+      { key: '/statistics', label: '出监记录', icon: <FileTextOutlined /> },
+      { key: '/return-records', label: '回监记录', icon: <SwapOutlined /> },
     ],
     onClick: ({ key }) => navigate(key),
   };
@@ -344,6 +344,7 @@ const Dashboard = () => {
       content: '确定要退出登录吗？',
       okText: '确认',
       cancelText: '取消',
+      className: 'dashboard-dark-modal',
       onOk: () => {
         cache.clearVal();
         navigate('/login');
@@ -355,7 +356,13 @@ const Dashboard = () => {
       <div className="dashboard-scan-beam"></div>
       <div className="dashboard-header">
         <div className="header-left">
-          <SafetyOutlined className="header-icon" />
+          <div className="header-logo">
+            <svg viewBox="0 0 32 32" width="32" height="32" fill="none">
+              <path d="M16 2L4 8v8c0 7.7 5.1 14.9 12 16.8C22.9 30.9 28 23.7 28 16V8L16 2z" fill="rgba(0,240,255,0.15)" stroke="#00f0ff" strokeWidth="1.5"/>
+              <path d="M16 6L7 10v6c0 5.8 3.8 11.2 9 12.6C21.2 27.2 25 21.8 25 16v-6L16 6z" fill="rgba(0,240,255,0.08)" stroke="rgba(0,240,255,0.4)" strokeWidth="1"/>
+              <path d="M12 16l3 3 5-6" stroke="#00f0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <Title level={3} className="header-title">罪犯进出AB门人脸识别系统</Title>
         </div>
         <div className="header-center" style={{visibility:'hidden'}}>
@@ -379,13 +386,23 @@ const Dashboard = () => {
           >
             <SyncOutlined />
           </span> */}
-          <Dropdown overlay={
-            <Menu onClick={navMenu.onClick}>
-              {navMenu.items.map(item => (
-                <Menu.Item key={item.key}>{item.label}</Menu.Item>
-              ))}
-            </Menu>
-          } trigger={['click']}>
+          <Dropdown
+            menu={{
+              items: navMenu.items.map(item => ({
+                key: item.key,
+                icon: item.icon,
+                label: item.label,
+              })),
+              onClick: navMenu.onClick,
+              className: 'dashboard-dark-menu',
+            }}
+            trigger={['click']}
+            dropdownRender={(menu) => (
+              <div style={{ background: 'rgba(14, 18, 35, 1)', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: 8, overflow: 'hidden' }}>
+                {menu}
+              </div>
+            )}
+          >
             <MenuOutlined className="nav-icon" />
           </Dropdown>
           <LogoutOutlined className="user-icon" onClick={handleLogout} />
