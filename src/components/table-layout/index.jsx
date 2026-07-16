@@ -69,7 +69,7 @@ const TableLayout = (props) => {
                 dataSource={dataSource}
                 loading={loading}
                 columns={columnsWithIndex}
-                scroll={{ x: 'max-content', y: 'calc(100vh - 340px)' }}
+                scroll={{ x: 'max-content', y: 'calc(100vh - 360px)' }}
                 pagination={customizedPagination}
             />
         </div>
