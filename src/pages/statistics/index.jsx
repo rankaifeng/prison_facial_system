@@ -9,6 +9,8 @@ import useQueryTable from '@/hooks/useQueryTable';
 import exportToExcel from '@/utils/export';
 import { exitType, recordExport } from '@/api/globApi';
 
+const NO_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><rect width="50" height="50" fill="#f0f0f0" rx="4"/><g transform="translate(25,22)"><circle r="8" fill="#bbb"/><path d="M-12,16 Q-12,8 0,8 Q12,8 12,16" fill="#bbb"/></g></svg>');
+
 const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
@@ -180,7 +182,7 @@ const Statistics = () => {
       key: 'police_face',
       width: 100,
       render: (val) => {
-        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        return val ? <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} /> : <img src={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4 }} />
       }
     },{
       title: '民警姓名',
@@ -194,7 +196,7 @@ const Statistics = () => {
       key: 'swat_face',
       width: 100,
       render: (val) => {
-        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        return val ? <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} /> : <img src={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4 }} />
       }
     },
     {
@@ -209,7 +211,7 @@ const Statistics = () => {
       key: 'armed_police_signature',
       width: 100,
       render: (val) => {
-        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        return val ? <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} /> : <img src={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4 }} />
       }
     },
     {
@@ -218,7 +220,7 @@ const Statistics = () => {
       key: 'armed_police_face',
       width: 100,
       render: (val) => {
-        return <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        return val ? <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} /> : <img src={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4 }} />
       }
     },
     {

@@ -19,7 +19,7 @@ const VideoPlayer = ({ itemData }) => {
     <>
       <div
         onClick={() => setModalOpen(true)}
-        style={{ cursor: 'pointer', textAlign: 'center', color: '#1890ff' }}
+        style={{ cursor: 'pointer', textAlign: 'center', color: '#3b7dd8' }}
       >
         <VideoCameraOutlined style={{ fontSize: 16 }} />
         <div style={{ fontSize: 12 }}>播放</div>

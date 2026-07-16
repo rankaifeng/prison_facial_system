@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
-import 'antd/dist/antd.min.css';
+import 'antd/dist/antd.less';
 import App from './App';
 import './styles/global.css';
 

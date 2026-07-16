@@ -5,7 +5,7 @@ const StatisticsChart = ({ data }) => {
   const exitCount = data?.total?.exit_count || 0;
   const reasons = data?.total?.reasons || [];
 
-  const colors = ['#00f0ff', '#1890ff', '#52c41a', '#faad14', '#722ed1'];
+  const colors = ['#00f0ff', '#3b7dd8', '#52c41a', '#faad14', '#722ed1'];
 
   return (
     <div className="statistics-chart">

@@ -110,7 +110,7 @@ const GenderRatio = ({ maleCount = 680, femaleCount = 210 }) => {
             <defs>
               <linearGradient id="maleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#00f0ff" />
-                <stop offset="50%" stopColor="#1890ff" />
+                <stop offset="50%" stopColor="#3b7dd8" />
                 <stop offset="100%" stopColor="#0030aa" />
               </linearGradient>
               <linearGradient id="femaleGradient" x1="0%" y1="0%" x2="100%" y2="100%">

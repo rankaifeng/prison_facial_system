@@ -116,7 +116,6 @@ const TypeManagement = () => {
         tableProps={tableProps}
         loading={loading}
         columns={columns}
-        hideIndex
         headerLayout={
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             新增出监原因

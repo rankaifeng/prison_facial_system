@@ -13,6 +13,8 @@ import { archive, record } from '@/api/globApi';
 import TableLayout from '@/components/table-layout';
 import VideoPlayer from '@/components/video-player';
 
+const NO_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><rect width="50" height="50" fill="#f0f0f0" rx="4"/><g transform="translate(25,22)"><circle r="8" fill="#bbb"/><path d="M-12,16 Q-12,8 0,8 Q12,8 12,16" fill="#bbb"/></g></svg>');
+
 const PrisonerDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ const PrisonerDetail = () => {
       key: 'police_face',
       width: 100,
       render: (val) => val ? (
-        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
         <Tag color="default">未录入</Tag>
       ),
@@ -74,7 +76,7 @@ const PrisonerDetail = () => {
       key: 'swat_face',
       width: 100,
       render: (val) => val ? (
-        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
         <Tag color="default">未录入</Tag>
       ),
@@ -89,7 +91,7 @@ const PrisonerDetail = () => {
       key: 'armed_police_signature',
       width: 100,
       render: (val) => val ? (
-        <Image src={val} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
+        <Image src={val} fallback={NO_IMG} style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover' }} />
       ) : (
         <Tag color="default">未录入</Tag>
       ),
@@ -290,7 +292,7 @@ const PrisonerDetail = () => {
           left: 0;
           right: 0;
           height: 100px;
-          background: linear-gradient(135deg, #1890ff 0%, #722ed1 50%, #eb2f96 100%);
+          background: linear-gradient(135deg, #3b7dd8 0%, #722ed1 50%, #eb2f96 100%);
           border-radius: 12px 12px 0 0;
         }
 
@@ -379,7 +381,7 @@ const PrisonerDetail = () => {
         }
 
         .age-icon {
-          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+          background: linear-gradient(135deg, #3b7dd8 0%, #40a9ff 100%);
           color: #fff;
         }
 
@@ -420,7 +422,7 @@ const PrisonerDetail = () => {
           color: #333;
           margin-bottom: 12px;
           padding-bottom: 8px;
-          border-bottom: 2px solid #1890ff;
+          border-bottom: 2px solid #3b7dd8;
           display: inline-block;
         }
 
@@ -452,7 +454,7 @@ const PrisonerDetail = () => {
         }
 
         .cell-value.highlight {
-          color: #1890ff;
+          color: #3b7dd8;
         }
 
         .info-list {

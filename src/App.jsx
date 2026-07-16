@@ -6,7 +6,7 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/lib/locale/zh_CN';
 
 export const ThemeContext = createContext({
-  themeColor: '#1890ff',
+  themeColor: '#3b7dd8',
   setThemeColor: () => {},
   layout: 'sider',
   setLayout: () => {},
@@ -15,7 +15,7 @@ export const ThemeContext = createContext({
 export const useTheme = () => useContext(ThemeContext);
 
 const AppContent = () => {
-  const [themeColor, setThemeColor] = useState('#1890ff');
+  const [themeColor, setThemeColor] = useState('#3b7dd8');
   const [layout, setLayout] = useState('sider');
   const element = useRoutes(routes);
 
@@ -26,6 +26,9 @@ const AppContent = () => {
           locale={zhCN}
           prefixCls="ant"
           theme={{
+            token: {
+              colorPrimary: themeColor,
+            },
             components: {
               Dropdown: {
                 colorBgElevated: 'rgba(20, 25, 45, 0.98)',
