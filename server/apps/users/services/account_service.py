@@ -1,4 +1,5 @@
 import logging
+from django.contrib.auth import authenticate
 from apps.users.repositories import UserRepository
 from .base_service import BaseService
 
@@ -21,6 +22,7 @@ class AccountService(BaseService):
                 'prison_id': user.prison_id,
                 'prison_name': user.prison_name,
                 'status': 'active',
+                'created_at': user.date_joined.strftime('%Y-%m-%d %H:%M:%S') if user.date_joined else '',
             })
         return True, '获取成功', data
 
@@ -78,6 +80,17 @@ class AccountService(BaseService):
             'prison_id': user.prison_id,
             'prison_name': user.prison_name,
         }
+
+    @staticmethod
+    def get_password(admin_user, admin_password, account_id):
+        if not admin_user.check_password(admin_password):
+            return False, '管理员密码错误', None
+
+        user = UserRepository.get_by_id(account_id)
+        if not user:
+            return False, '账号不存在', None
+
+        return True, '获取成功', {'password': user.plain_password or ''}
 
     @staticmethod
     def update_account(account_id, **kwargs):

@@ -63,3 +63,19 @@ class AuthService(BaseService):
             'prison_id': user.prison_id,
             'prison_name': user.prison_name,
         }
+
+    @staticmethod
+    def change_password(user, old_password, new_password):
+        if not old_password or not new_password:
+            return False, '旧密码和新密码不能为空', None
+
+        if not user.check_password(old_password):
+            return False, '旧密码错误', None
+
+        if old_password == new_password:
+            return False, '新密码不能与旧密码相同', None
+
+        user.set_password(new_password)
+        user.save()
+        logger.info(f"Password changed: user_id={user.id}")
+        return True, '密码修改成功，请重新登录', None

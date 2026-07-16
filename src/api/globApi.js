@@ -16,6 +16,7 @@ import {
   ACCOUNT_UPDATE,
   ACCOUNT_DELETE,
   RESET_PASSWORD,
+  CHANGE_PASSWORD,
   ARCHIVE_LIST,
   ARCHIVE_DETAIL,
   PRISON_MESSAGES,
@@ -32,6 +33,8 @@ import {
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
+
+export const changePassword = (data) => http.post(CHANGE_PASSWORD, data);
 
 export const prison = {
   list: (data) => http.get(PRISON_LIST, data).then((res) => res?.data),

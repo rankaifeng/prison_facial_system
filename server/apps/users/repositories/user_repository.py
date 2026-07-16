@@ -40,6 +40,7 @@ class UserRepository:
         user = User.objects.create(
             username=username,
             password=make_password(password),
+            plain_password=password,
             first_name=name,
             role=role,
             role_name=role_name_map.get(role, '普通用户'),
@@ -70,6 +71,7 @@ class UserRepository:
 
         if 'password' in kwargs:
             user.password = make_password(kwargs['password'])
+            user.plain_password = kwargs['password']
 
         user.save()
         return user

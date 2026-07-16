@@ -1,10 +1,12 @@
 from django.urls import re_path
 from .controllers import (
     LoginController,
+    ChangePasswordController,
     AccountListController,
     AccountDeleteController,
     AccountUpdateController,
     AccountResetPasswordController,
+    AccountGetPasswordController,
     ExitRecordController,
     EntryRecordController,
     ReturnRecordController,
@@ -29,10 +31,12 @@ from .controllers import (
 
 urlpatterns = [
     re_path(r'^user_login/user_login_web/?$', LoginController.as_view(), name='login'),
+    re_path(r'^user_login/change_password/?$', ChangePasswordController.as_view(), name='change_password'),
     re_path(r'^account/account_list/?$', AccountListController.as_view(), name='account_list'),
     re_path(r'^account/account_add/?$', AccountListController.as_view(), name='account_add'),
     re_path(r'^account/account_update/?$', AccountUpdateController.as_view(), name='account_update'),
     re_path(r'^account/reset_password/?$', AccountResetPasswordController.as_view(), name='reset_password'),
+    re_path(r'^account/get_password/?$', AccountGetPasswordController.as_view(), name='get_password'),
     re_path(r'^account/account_delete/?$', AccountDeleteController.as_view(), name='account_delete'),
     re_path(r'^exit_record/submit/?$', ExitRecordController.as_view(), name='exit_record'),
     re_path(r'^entry_record/submit/?$', EntryRecordController.as_view(), name='entry_record'),

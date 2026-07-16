@@ -156,6 +156,46 @@ class AccountUpdateController(APIView):
         })
 
 
+class AccountGetPasswordController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin':
+            return Response({
+                'code': 0,
+                'msg': '无权限访问',
+                'data': None
+            }, status=status.HTTP_200_OK)
+
+        admin_password = request.data.get('admin_password')
+        account_id = request.data.get('id')
+
+        if not admin_password or not account_id:
+            return Response({
+                'code': 0,
+                'msg': '参数不完整',
+                'data': None
+            }, status=status.HTTP_200_OK)
+
+        success, msg, data = AccountService.get_password(
+            request.user, admin_password, account_id
+        )
+
+        if not success:
+            return Response({
+                'code': 0,
+                'msg': msg,
+                'data': None
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'code': 1,
+            'msg': msg,
+            'data': data
+        })
+
+
 class AccountResetPasswordController(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
