@@ -76,7 +76,6 @@ const SearchHeader = (props) => {
         delete processedValues[key];
       }
     });
-    console.log('最终传递给 search 的值:', processedValues);
     // 直接调用搜索，不通过 Form 的 onFinish（避免表单值被重新使用）
     onSearch?.(processedValues, form);
   };

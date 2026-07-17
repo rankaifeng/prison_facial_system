@@ -86,10 +86,7 @@ const Statistics = () => {
     const fetchExitTypes = async () => {
       try {
         const res = await exitType.list();
-        console.log('exitType.list res:', res);
-        console.log('Array.isArray(res):', Array.isArray(res));
         if (res && Array.isArray(res)) {
-          console.log('Setting exitReasons');
           const options = res.map(item => ({
             value: item.type_name,
             label: item.type_name,
@@ -100,17 +97,12 @@ const Statistics = () => {
             }
             return item;
           }));
-        } else {
-          console.log('res is not array or is empty:', res);
         }
       } catch (error) {
-        console.error('获取出监原因列表失败', error);
       }
     };
     fetchExitTypes();
   }, []);
-
-  console.log('exitReasons state:', exitReasons);
 
   const handleExport = async () => {
     const formValues = form.getFieldsValue();

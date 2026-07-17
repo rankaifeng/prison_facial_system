@@ -80,7 +80,6 @@ const Dashboard = () => {
 
   // 处理出监弹窗步骤变化
   const handleExitModalStepChange = useCallback((step) => {
-    console.log('[前端] 出监弹窗步骤变化:', step);
     setExitModalStep(step);
     if (step === 0) {
       setPoliceFaceImage(null);
@@ -98,7 +97,6 @@ const Dashboard = () => {
 
   // 处理入监弹窗步骤变化
   const handleEnterModalStepChange = useCallback((step) => {
-    console.log('[前端] 入监弹窗步骤变化:', step);
     setEnterModalStep(step);
     if (step === 0) {
       setPoliceFaceImage(null);
@@ -107,10 +105,7 @@ const Dashboard = () => {
   }, []);
 
   const handleDoorEvent = useCallback((data) => {
-    console.log('[前端] 收到WebSocket消息:', data.type, data.code, 'user_id:', data.user_id);
-
     if (data.type === 'door' && data.UserID) {
-      console.log('[门禁] 识别到罪犯:', data.UserID);
       setActivePrisonerNo(data.UserID);
       setSelectModalOpen(true);
     } else if (data.type === 'face' && data.image_base64) {
@@ -128,20 +123,17 @@ const Dashboard = () => {
       }
 
       if (!op) {
-        console.log('[前端] 未选择操作类型，跳过图片分配');
         return;
       }
 
       if (op === 'exit') {
         const step = exitStepRef.current;
         if (step === 1) {
-          console.log('[智能事件] → 出监民警图片, 姓名:', faceName);
           setPoliceFaceImage(img);
           setPoliceFaceName(faceName);
           setSwatFaceImage(null);
           setSwatFaceName(null);
         } else if (step === 2) {
-          console.log('[智能事件] → 出监特警图片, 姓名:', faceName);
           setSwatFaceImage(img);
           setSwatFaceName(faceName);
           setPoliceFaceImage(null);
@@ -150,7 +142,6 @@ const Dashboard = () => {
       } else if (op === 'enter') {
         const step = enterStepRef.current;
         if (step === 1) {
-          console.log('[智能事件] → 入监民警图片, 姓名:', faceName);
           setPoliceFaceImage(img);
           setPoliceFaceName(faceName);
         }
@@ -238,7 +229,6 @@ const Dashboard = () => {
       const realtime = await realtimeStatistics.get();
       setRealtimeData(realtime || {});
     } catch (error) {
-      console.error('获取数据失败:', error);
     }
   };
 
@@ -287,7 +277,6 @@ const Dashboard = () => {
           }
         }
       } catch (e) {
-        console.error('查询同步状态失败:', e);
       }
     }, 1500);
   };

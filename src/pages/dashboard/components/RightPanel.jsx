@@ -27,7 +27,6 @@ const RightPanel = ({ onDataUpdate }) => {
       const data = Array.isArray(res) ? res : (res?.data || []);
       setMessages(data);
     } catch (error) {
-      console.error('获取监狱消息失败:', error);
     }
   };
 

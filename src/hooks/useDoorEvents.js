@@ -26,27 +26,22 @@ const useDoorEvents = ({ onEvent }) => {
 
     ws.onopen = () => {
       setConnected(true);
-      console.log('[WebSocket] 已连接大华事件服务');
     };
 
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log('[WebSocket] 收到事件:', data.type, data.code);
         onEvent?.(data);
       } catch (err) {
-        console.warn('[WebSocket] 解析消息失败:', e.data);
       }
     };
 
     ws.onclose = () => {
       setConnected(false);
-      console.log('[WebSocket] 连接断开，自动重连...');
       reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY);
     };
 
     ws.onerror = (err) => {
-      console.error('[WebSocket] 错误:', err);
       ws.close();
     };
   }, [onEvent]);

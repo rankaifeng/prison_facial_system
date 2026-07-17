@@ -43,7 +43,6 @@ const PrisonerDetail = () => {
       setExitRecords(records);
       setExitPagination(prev => ({ ...prev, total: records.length }));
     } catch (error) {
-      console.error('获取详情失败:', error);
     } finally {
       setLoading(false);
     }

@@ -142,7 +142,6 @@ const AccountManagement = () => {
       setModalVisible(false);
       refresh();
     } catch (error) {
-      console.error('表单验证失败', error);
     }
   };
 

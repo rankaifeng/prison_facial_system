@@ -102,13 +102,12 @@ const MainLayout = () => {
             mode="inline"
             selectedKeys={[selectedKey]}
             onClick={({ key }) => navigate(key)}
-          >
-            {showMenus.map(menu => (
-              <Menu.Item key={menu.key} icon={menu.icon}>
-                {menu.label}
-              </Menu.Item>
-            ))}
-          </Menu>
+            items={showMenus.map(menu => ({
+              key: menu.key,
+              icon: menu.icon,
+              label: menu.label,
+            }))}
+          />
         </Sider>
       )}
       <Layout

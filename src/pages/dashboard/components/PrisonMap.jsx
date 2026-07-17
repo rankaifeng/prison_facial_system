@@ -181,7 +181,7 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
           }
         });
       })
-      .catch(err => console.error('Failed to load map:', err));
+      .catch(err => {});
 
     const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);

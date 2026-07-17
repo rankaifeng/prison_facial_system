@@ -87,7 +87,6 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
             setExitReasons(res.map(item => ({ value: item.id, label: item.type_name })));
           }
         } catch (error) {
-          console.error('获取出监原因列表失败', error);
         }
       };
       fetchExitTypes();
@@ -123,14 +122,12 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
   // 自动填充民警/特警人脸图片和姓名
   useEffect(() => {
     if (policeFaceImage) {
-      console.log('[弹窗] 民警图片同步, 长度:', policeFaceImage.length);
       setPoliceImage(policeFaceImage);
     }
   }, [policeFaceImage]);
 
   useEffect(() => {
     if (swatFaceImage) {
-      console.log('[弹窗] 特警图片同步, 长度:', swatFaceImage.length);
       setSwatImage(swatFaceImage);
     }
   }, [swatFaceImage]);

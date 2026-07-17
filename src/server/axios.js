@@ -139,7 +139,6 @@ service.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error('Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -156,7 +155,6 @@ service.interceptors.response.use(
     },
     (error) => {
         let msg = '网络连接异常';
-        console.log("error", error);
 
         if (error.response) {
             const { status } = error.response;
