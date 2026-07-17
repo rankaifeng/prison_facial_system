@@ -129,7 +129,7 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
           series: [
             {
               name: '监狱',
-              type: 'scatter',
+              type: 'effectScatter',
               coordinateSystem: 'geo',
               data: finalCont.map(p => {
                 return {
@@ -142,6 +142,13 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
               symbolSize: (val) => {
                 const count = val[2];
                 return Math.max(15, Math.min(30, count / 20));
+              },
+              showEffectOn: 'render',
+              rippleEffect: {
+                brushType: 'stroke',
+                scale: 4,
+                period: 3,
+                number: 3,
               },
               itemStyle: {
                 color: {
@@ -176,7 +183,7 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
         chart.setOption(option);
 
         chart.on('click', (params) => {
-          if (params.seriesType === 'scatter' && params.name) {
+          if ((params.seriesType === 'scatter' || params.seriesType === 'effectScatter') && params.name) {
             navigate(`/statistics?prisonName=${encodeURIComponent(params.name)}`);
           }
         });

@@ -411,6 +411,16 @@
   100% { opacity: 0.015; }
 }
 
+@keyframes borderGlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.2); }
+}
+
 .dashboard-content {
   flex: 1;
   display: flex;
@@ -445,9 +455,11 @@
       background: @card-bg;
       border-radius: 0;
       padding: 16px;
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
       position: relative;
       overflow: hidden;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      animation: glowPulse 3s ease-in-out infinite;
 
       .corner-decor {
         position: absolute;
@@ -535,10 +547,12 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
       min-height: 0;
       position: relative;
       overflow: hidden;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      animation: glowPulse 3s ease-in-out infinite;
 
       .corner-decor {
         position: absolute;
@@ -616,8 +630,9 @@
   border-radius: 12px;
   padding: 16px;
   overflow: hidden;
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
+  animation: glowPulse 3s ease-in-out infinite;
 
   .chart-title {
     display: flex;
@@ -733,8 +748,9 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid rgba(0, 240, 255, 0.2);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
+    animation: glowPulse 3s ease-in-out infinite;
 
     .chart-header {
       display: flex;
@@ -862,8 +878,9 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid rgba(0, 240, 255, 0.2);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
+    animation: glowPulse 3s ease-in-out infinite;
 
     .chart-header {
       display: flex;
@@ -930,8 +947,9 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.02);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.1);
+  animation: glowPulse 3s ease-in-out infinite;
 
   .panel-header {
     flex-shrink: 0;
