@@ -326,8 +326,17 @@ class RecordService(BaseService):
         from datetime import date
         from apps.users.models import PrisonerArchive
 
-        today = date.today().strftime('%Y.%m.%d')
-        qs = PrisonerArchive.objects.filter(sentence_end=today, is_released=False)
+        today = date.today()
+        # 兼容多种日期格式：YYYY.MM.DD、YYYY-MM-DD、YYYY/MM/DD
+        today_formats = [
+            today.strftime('%Y.%m.%d'),
+            today.strftime('%Y-%m-%d'),
+            today.strftime('%Y/%m/%d'),
+        ]
+        qs = PrisonerArchive.objects.filter(
+            sentence_end__in=today_formats,
+            is_released=False
+        )
         if prison_area:
             qs = qs.filter(prison_area=prison_area)
 
