@@ -338,7 +338,15 @@ class RecordService(BaseService):
             is_released=False
         )
         if prison_area:
-            qs = qs.filter(prison_area=prison_area)
+            # prison_area 参数是 ID（"1"-"7"），PrisonerArchive.prison_area 字段存的是中文（"一监区"）
+            # 需要先把 ID 转成中文名再过滤，同时用 Q 兼容历史脏数据
+            from django.db.models import Q
+            from apps.users.dict import get_prison_area_name
+            area_name = get_prison_area_name(prison_area)
+            q = Q(prison_area=prison_area)
+            if area_name and area_name != prison_area:
+                q = q | Q(prison_area=area_name)
+            qs = qs.filter(q)
 
         total = qs.count()
         offset = (page - 1) * page_size

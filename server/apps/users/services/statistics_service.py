@@ -31,7 +31,8 @@ class StatisticsService(BaseService):
         # ========== 从今日出监记录表获取出监数据 ==========
         today_records = TodayExitRecord.objects.all()
         if prison_area:
-            today_records = today_records.filter(prison_area_name=prison_area)
+            # prison_area 参数是 ID（"1"-"7"），TodayExitRecord.prison_area 字段存的也是 ID
+            today_records = today_records.filter(prison_area=prison_area)
 
         # 按监区分组统计出监人数
         area_exit_stats = today_records.values('prison_area_name').annotate(
