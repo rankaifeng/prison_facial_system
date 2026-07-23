@@ -237,13 +237,57 @@ for i in $(seq 1 30); do
 done
 echo ""
 
-# 再等几秒让后端完成迁移
-echo "  等待后端完成数据库迁移..."
-sleep 10
-
-echo "  服务状态:"
-docker compose ps 2>/dev/null | sed 's/^/    /'
+# 等待 backend 起来（最多 60 秒），检测是否陷入 restart loop
+echo "  等待后端启动..."
+backend_ok=false
+for i in $(seq 1 60); do
+    status=$(docker inspect -f '{{.State.Status}}' prison-backend 2>/dev/null || echo "missing")
+    if [ "$status" = "running" ]; then
+        # 多等 5 秒确认不是刚启动就要崩
+        sleep 5
+        status2=$(docker inspect -f '{{.State.Status}}' prison-backend 2>/dev/null || echo "missing")
+        if [ "$status2" = "running" ]; then
+            backend_ok=true
+            echo "  后端已稳定运行"
+            break
+        fi
+        printf "\r  后端启动中... %d/60" "$i"
+        sleep 1
+    else
+        printf "\r  后端启动中... %d/60 (状态: %s)" "$i" "${status:-未知}"
+        sleep 1
+    fi
+done
 echo ""
+
+if [ "$backend_ok" != "true" ]; then
+    echo ""
+    echo "  !!! 警告：后端容器未能在 60 秒内稳定启动"
+    echo "  !!! 当前状态: $(docker inspect -f '{{.State.Status}}' prison-backend 2>/dev/null || echo '未知')"
+    echo "  !!! 可能原因与诊断步骤："
+    echo ""
+    echo "    1) 查看后端日志（最关键）："
+    echo "         docker logs --tail 200 prison-backend"
+    echo ""
+    echo "    2) 如果日志含 'Duplicate column name' 或 'already exists'，"
+    echo "       说明数据库字段已存在但 django_migrations 表没记录，"
+    echo "       entrypoint 会自动 --fake 跳过，但如果连续超过 20 个迁移失败需要手动处理。"
+    echo ""
+    echo "    3) 查看数据库已应用迁移："
+    echo "         docker exec -i prison-mysql mysql -uroot -p$MYSQL_PASSWORD prison_system \\"
+    echo "           -e \"SELECT app, name FROM django_migrations ORDER BY id;\""
+    echo ""
+    echo "    4) 手动 fake 失败的迁移（替换 <app> <migration>）："
+    echo "         docker exec prison-backend python manage.py migrate <app> <migration> --fake"
+    echo ""
+    echo "    5) 重启后端："
+    echo "         docker restart prison-backend prison-celery-beat"
+    echo ""
+    echo "  当前容器状态:"
+    docker compose ps 2>/dev/null | sed 's/^/    /' || true
+    echo ""
+    echo "  继续执行后续步骤（创建管理员可能失败，可稍后手动执行）..."
+fi
 
 # ════════════════════════════════════════════
 #  步骤 5: 创建管理员
