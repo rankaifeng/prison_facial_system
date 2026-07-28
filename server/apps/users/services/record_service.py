@@ -335,7 +335,6 @@ class RecordService(BaseService):
         ]
         qs = PrisonerArchive.objects.filter(
             sentence_end__in=today_formats,
-            is_released=False
         )
         if prison_area:
             # prison_area 参数是 ID（"1"-"7"），PrisonerArchive.prison_area 字段存的是中文（"一监区"）

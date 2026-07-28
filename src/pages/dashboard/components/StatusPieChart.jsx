@@ -212,7 +212,7 @@ const StatusPieChart = ({ data }) => {
       <div className="chart-wrapper" style={{ position: 'relative', zIndex: 1 }}>
         <div ref={chartRef} className="echarts-container" style={{ position: 'relative', zIndex: 1 }} />
       </div>
-      <div className="pie-legend">
+      {/* <div className="pie-legend">
         {legendData.map((item, i) => (
           <div key={i} className="pie-legend-item">
             <span className="legend-dot" style={{ background: colors[i % colors.length] }}></span>
@@ -220,7 +220,7 @@ const StatusPieChart = ({ data }) => {
             <span className="legend-count">{item.count || 0}</span>
           </div>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };
