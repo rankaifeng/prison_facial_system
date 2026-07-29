@@ -108,19 +108,19 @@ const Dashboard = () => {
     if (data.type === 'door' && data.UserID) {
       setActivePrisonerNo(data.UserID);
       setSelectModalOpen(true);
+    } else if (data.type === 'prisoner_face' && data.image_base64) {
+      // 罪犯终端抓拍（来自 10.2.48.224）
+      const img = 'data:image/jpeg;base64,' + data.image_base64;
+      setCapturedFaceImage(img);
+      if (data.archive_image_base64) {
+        setArchiveFaceImage('data:image/jpeg;base64,' + data.archive_image_base64);
+      }
     } else if (data.type === 'face' && data.image_base64) {
+      // 民警/特警抓拍（来自 10.2.48.223）
       const b64 = data.image_base64;
       const img = 'data:image/jpeg;base64,' + b64;
       const faceName = data.user_name || null;
       const op = activeOpRef.current;
-
-      // 存储终端抓拍图片
-      setCapturedFaceImage(img);
-
-      // 存储档案照片
-      if (data.archive_image_base64) {
-        setArchiveFaceImage('data:image/jpeg;base64,' + data.archive_image_base64);
-      }
 
       if (!op) {
         return;

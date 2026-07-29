@@ -200,7 +200,7 @@ class Command(BaseCommand):
     def _insert_faces(self, base_url, auth, prisoners):
         url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
 
-        # 增量比对：只同步照片URL有变化的
+        # 全量同步：每次都同步所有有照片的罪犯
         no_photo = 0
         need_sync = []  # [(prisoner_no, photo_url), ...]
         for p in prisoners:
@@ -214,15 +214,12 @@ class Command(BaseCommand):
             if not current_url:
                 no_photo += 1
                 continue
-            if current_url != p.get('last_synced_photo_url', ''):
-                need_sync.append((p['prisoner_no'], current_url))
+            need_sync.append((p['prisoner_no'], current_url))
 
-        already_synced = len(prisoners) - no_photo - len(need_sync)
-        flush_print(f'有照片: {len(prisoners) - no_photo} 人, 无照片: {no_photo} 人')
-        flush_print(f'需同步: {len(need_sync)} 人, 已同步跳过: {already_synced} 人')
+        flush_print(f'有照片: {len(need_sync)} 人, 无照片: {no_photo} 人')
 
         if not need_sync:
-            flush_print('所有照片已是最新，无需同步')
+            flush_print('无可同步照片')
             return
 
         # 下载并压缩需要同步的照片
@@ -263,7 +260,7 @@ class Command(BaseCommand):
             flush_print(f'测试用户: {test_pid}, base64大小: {len(test_b64)} bytes')
 
             # 测试1: insertMulti 单张
-            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}]}
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': []}]}
             import json
             flush_print(f'insertMulti 请求体大小: {len(json.dumps(test_payload))} bytes')
             try:
@@ -275,7 +272,7 @@ class Command(BaseCommand):
 
             # 测试2: insertSingle
             single_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
-            single_payload = {'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}
+            single_payload = {'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': []}
             try:
                 resp = requests.post(single_url, json=single_payload, auth=auth, timeout=(5, 30))
                 flush_print(f'insertSingle 响应: [HTTP {resp.status_code}] {repr(resp.text)}')
@@ -306,7 +303,7 @@ class Command(BaseCommand):
         # 根据诊断结果选择发送方式
         def _send_single(pid, b64_data):
             """发送单个人脸，返回 (ok, error_msg)"""
-            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': b64_data, 'PhotoURL': '', 'FaceData': ''}]}
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': []}]}
             try:
                 r = requests.post(url, json=single_payload, auth=auth, timeout=(5, 60))
                 if 'ok' in r.text.strip().lower():
@@ -325,7 +322,7 @@ class Command(BaseCommand):
         for i in range(0, len(final_list), batch_size):
             batch = final_list[i:i + batch_size]
             batch_num = i // batch_size + 1
-            face_list = [{'UserID': pid, 'PhotoData': b64, 'PhotoURL': '', 'FaceData': ''} for pid, b64, _ in batch]
+            face_list = [{'UserID': pid, 'PhotoData': [b64], 'PhotoURL': []} for pid, b64, _ in batch]
             payload = {'FaceList': face_list}
             payload_size = len(json.dumps(payload))
             batch_ok = False

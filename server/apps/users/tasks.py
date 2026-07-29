@@ -328,13 +328,9 @@ def _sync_to_dahua_direct(report_fn=None):
         if not current_url:
             no_photo += 1
             continue
-        # 比对：照片URL有变化才需要同步
-        if current_url != p.get('last_synced_photo_url', ''):
-            need_sync.append((p['prisoner_no'], current_url))
+        need_sync.append((p['prisoner_no'], current_url))
 
-    already_synced = len(prisoners) - no_photo - len(need_sync)
-    log(f'有照片: {len(prisoners) - no_photo} 人, 无照片: {no_photo} 人')
-    log(f'需同步: {len(need_sync)} 人, 已同步跳过: {already_synced} 人')
+    log(f'有照片: {len(need_sync)} 人, 无照片: {no_photo} 人')
 
     # 6. 插入人脸照片到大华（insertMulti 批量，每批最多10张，照片压缩到100KB以下）
     face_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertMulti"
@@ -389,9 +385,9 @@ def _sync_to_dahua_direct(report_fn=None):
     total = len(need_sync)
 
     if not need_sync:
-        log('所有照片已是最新，无需同步')
+        log('无可同步照片')
     else:
-        log(f'开始增量同步人脸照片，共 {total} 人...')
+        log(f'开始同步人脸照片，共 {total} 人...')
 
         # 下载并压缩需要同步的照片
         ready_list = []  # [(prisoner_no, photo_b64, photo_url), ...]
@@ -426,7 +422,7 @@ def _sync_to_dahua_direct(report_fn=None):
         if final_list:
             test_pid, test_b64, _ = final_list[0]
             log(f'诊断: 测试用户 {test_pid}, base64大小 {len(test_b64)} bytes')
-            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}]}
+            test_payload = {'FaceList': [{'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': []}]}
             log(f'诊断: insertMulti 请求体 {len(json_mod.dumps(test_payload))} bytes')
             try:
                 r = requests.post(face_url, json=test_payload, auth=auth, timeout=(5, 30))
@@ -436,14 +432,14 @@ def _sync_to_dahua_direct(report_fn=None):
             # 测试 insertSingle
             single_url = f"{base_url}/cgi-bin/AccessFace.cgi?action=insertSingle"
             try:
-                r = requests.post(single_url, json={'UserID': test_pid, 'PhotoData': test_b64, 'PhotoURL': '', 'FaceData': ''}, auth=auth, timeout=(5, 30))
+                r = requests.post(single_url, json={'UserID': test_pid, 'PhotoData': [test_b64], 'PhotoURL': []}, auth=auth, timeout=(5, 30))
                 log(f'诊断: insertSingle 响应 [HTTP {r.status_code}] {repr(r.text)}')
             except Exception as e:
                 log(f'诊断: insertSingle 异常 {e}')
 
         def _send_single(pid, b64_data):
             """发送单个人脸，返回 (ok, error_msg)"""
-            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': b64_data, 'PhotoURL': '', 'FaceData': ''}]}
+            single_payload = {'FaceList': [{'UserID': pid, 'PhotoData': [b64_data], 'PhotoURL': []}]}
             try:
                 r = requests.post(face_url, json=single_payload, auth=auth, timeout=(5, 60))
                 if 'ok' in r.text.strip().lower():
@@ -458,7 +454,7 @@ def _sync_to_dahua_direct(report_fn=None):
         for i in range(0, len(final_list), batch_size):
             batch = final_list[i:i + batch_size]
             batch_num = i // batch_size + 1
-            face_list = [{'UserID': pid, 'PhotoData': b64, 'PhotoURL': '', 'FaceData': ''} for pid, b64, _ in batch]
+            face_list = [{'UserID': pid, 'PhotoData': [b64], 'PhotoURL': []} for pid, b64, _ in batch]
             payload = {'FaceList': face_list}
             payload_size = len(json_mod.dumps(payload))
             batch_ok = False

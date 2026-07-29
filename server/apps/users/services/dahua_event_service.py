@@ -26,16 +26,20 @@ class DahuaEventService:
             return
         cls._running = True
 
-        # 罪犯人脸识别事件（192.168.100.108）
+        # 罪犯人脸识别事件（10.2.48.224）- door 事件，带 UserID
         t1 = threading.Thread(target=cls._run_door_event, daemon=True)
         t1.start()
 
-        # 民警/特警人脸抓拍事件（192.168.100.155）
-        t2 = threading.Thread(target=cls._run_smart_event, daemon=True)
+        # 罪犯人脸抓拍（10.2.48.224）- snapManager，带照片
+        t2 = threading.Thread(target=cls._run_prisoner_face_event, daemon=True)
         t2.start()
 
-        cls._threads = [t1, t2]
-        logger.info('大华事件订阅服务已启动（双设备）')
+        # 民警/特警人脸抓拍（10.2.48.223）- snapManager，带照片
+        t3 = threading.Thread(target=cls._run_police_face_event, daemon=True)
+        t3.start()
+
+        cls._threads = [t1, t2, t3]
+        logger.info('大华事件订阅服务已启动（门禁+罪犯抓拍+民警抓拍）')
 
     @classmethod
     def _fix_photo_url(cls, url):
@@ -285,18 +289,42 @@ class DahuaEventService:
         return buf[:length], buf[length:]
 
     @classmethod
-    def _run_smart_event(cls):
-        """民警/特警人脸抓拍智能事件订阅（192.168.100.155）"""
-        config = cls._load_config()
-        dahua = config.get('dahua', {})
-        smart = config.get('dahua_smart', {})
-        username = smart.get('userName', dahua.get('userName', ''))
-        password = smart.get('password', dahua.get('password', ''))
-        base_url = smart.get('base_url', '').rstrip('/')
+    def _select_front_portrait_url(cls, media_info):
+        """从 media_info 取照片 URL，与档案库列表/详情页逻辑一致：取第一项 xp"""
+        if not media_info:
+            return ''
+        for m in media_info:
+            xp = m.get('xp', '')
+            if xp:
+                return cls._fix_photo_url(xp)
+        return ''
 
+    @classmethod
+    def _lookup_archive_photo(cls, prisoner_no):
+        """根据罪犯编号查档案照片，返回 base64 或空串"""
+        if not prisoner_no:
+            return ''
+        try:
+            from apps.users.models import PrisonerArchive
+            archive = PrisonerArchive.objects.filter(prisoner_no=prisoner_no).first()
+            if not archive or not archive.media_info:
+                return ''
+            xp = cls._select_front_portrait_url(archive.media_info)
+            if not xp:
+                return ''
+            r = requests.get(xp, timeout=5)
+            if r.status_code == 200 and len(r.content) > 100:
+                return base64.b64encode(r.content).decode('ascii')
+        except Exception as e:
+            logger.warning(f'查询档案照片失败 prisoner_no={prisoner_no}: {e}')
+        return ''
 
+    @classmethod
+    def _run_snap_subscription(cls, base_url, username, password, event_type,
+                               log_prefix, lookup_archive):
+        """通用 snapManager.cgi 订阅：收到照片后广播为指定 event_type"""
         if not base_url:
-            print('[智能事件] 错误: base_url 未配置')
+            print(f'[{log_prefix}] 错误: base_url 未配置')
             return
 
         url = f'{base_url}/cgi-bin/snapManager.cgi'
@@ -311,13 +339,12 @@ class DahuaEventService:
         while cls._running:
             try:
                 resp = requests.get(url, params=params, auth=auth, stream=True, timeout=(10, 120))
-                print(f'[智能事件] 连接成功, status={resp.status_code}')
+                print(f'[{log_prefix}] 连接成功, status={resp.status_code}')
 
                 if resp.status_code != 200:
                     time.sleep(5)
                     continue
 
-                # 从 Content-Type 提取 boundary
                 content_type = resp.headers.get('Content-Type', '')
                 boundary_match = re.search(r'boundary=(.+)', content_type)
                 if not boundary_match:
@@ -331,33 +358,27 @@ class DahuaEventService:
                 event_user_name = ''
 
                 while cls._running:
-                    # 读一行
                     line, buf = cls._read_line(raw, buf)
                     if line is None:
                         break
 
                     line_str = line.decode('utf-8', errors='replace').strip()
-
-                    # 跳过 boundary 行和空行
                     if not line_str or boundary in line_str or line_str == '--':
                         continue
 
-                    # 这是 header 行，继续读完整个 header
                     header_lines = [line_str]
                     while True:
                         hline, buf = cls._read_line(raw, buf)
                         if hline is None:
                             break
                         hline_str = hline.decode('utf-8', errors='replace').strip()
-                        if not hline_str:  # 空行 = header 结束
+                        if not hline_str:
                             break
                         header_lines.append(hline_str)
 
                     header = '\n'.join(header_lines)
-
                     ct_match = re.search(r'Content-Type:\s*(.+)', header, re.IGNORECASE)
                     ct = ct_match.group(1).strip() if ct_match else 'unknown'
-
                     cl_match = re.search(r'Content-Length:\s*(\d+)', header, re.IGNORECASE)
                     cl = int(cl_match.group(1)) if cl_match else 0
 
@@ -365,46 +386,29 @@ class DahuaEventService:
                         continue
 
                     if 'image' in ct.lower():
-                        # 精确读取图片数据
                         body, buf = cls._read_bytes(raw, cl, buf)
                         image_b64 = base64.b64encode(body).decode('ascii')
-                        broadcast_data = {'type': 'face', 'code': 'SnapPic', 'image_base64': image_b64}
+                        broadcast_data = {'type': event_type, 'code': 'SnapPic', 'image_base64': image_b64}
                         if event_user_name:
                             broadcast_data['user_name'] = event_user_name
                         if event_user_id:
                             broadcast_data['user_id'] = event_user_id
-                            # 查询档案照片
-                            try:
-                                from apps.users.models import PrisonerArchive
-                                archive = PrisonerArchive.objects.filter(prisoner_no=event_user_id).first()
-                                if archive and archive.media_info:
-                                    for m in archive.media_info:
-                                        xp = m.get('xp', '')
-                                        if xp:
-                                            xp = cls._fix_photo_url(xp)
-                                            try:
-                                                r = requests.get(xp, timeout=5)
-                                                if r.status_code == 200 and len(r.content) > 100:
-                                                    broadcast_data['archive_image_base64'] = base64.b64encode(r.content).decode('ascii')
-                                                    break
-                                            except Exception:
-                                                pass
-                            except Exception as e:
-                                logger.warning(f'查询档案照片失败: {e}')
+                            if lookup_archive:
+                                archive_b64 = cls._lookup_archive_photo(event_user_id)
+                                if archive_b64:
+                                    broadcast_data['archive_image_base64'] = archive_b64
                         cls._broadcast(broadcast_data)
-                        # 重置，等待下一组事件
                         event_user_id = ''
                         event_user_name = ''
 
                     elif 'text' in ct.lower() or 'plain' in ct.lower():
-                        # 精确读取文本数据
                         body, buf = cls._read_bytes(raw, cl, buf)
                         body_text = body.decode('utf-8', errors='replace').strip()
 
                         if body_text == 'Heartbeat':
-                            print(f'[智能事件] 心跳')
+                            print(f'[{log_prefix}] 心跳')
                         else:
-                            print(f'[智能事件] 收到事件文本:')
+                            print(f'[{log_prefix}] 收到事件文本:')
                             for eline in body_text.split('\n'):
                                 eline = eline.strip()
                                 if eline:
@@ -415,9 +419,40 @@ class DahuaEventService:
                                     event_user_name = eline.split('=', 1)[1].strip()
                                 if '.CardName=' in eline:
                                     event_user_name = eline.split('=', 1)[1].strip()
-                            print(f'[智能事件] 解析结果: UserID={event_user_id}, Name={event_user_name}')
+                            print(f'[{log_prefix}] 解析结果: UserID={event_user_id}, Name={event_user_name}')
 
             except requests.RequestException as e:
                 time.sleep(5)
             except Exception as e:
                 time.sleep(5)
+
+    @classmethod
+    def _run_prisoner_face_event(cls):
+        """罪犯人脸抓拍订阅（10.2.48.224）- 拿终端抓拍照片 + 档案照片"""
+        config = cls._load_config()
+        dahua = config.get('dahua', {})
+        base_url = dahua.get('base_url', '').rstrip('/')
+        username = dahua.get('userName', '')
+        password = dahua.get('password', '')
+        cls._run_snap_subscription(
+            base_url, username, password,
+            event_type='prisoner_face',
+            log_prefix='罪犯抓拍',
+            lookup_archive=True,
+        )
+
+    @classmethod
+    def _run_police_face_event(cls):
+        """民警/特警人脸抓拍订阅（10.2.48.223）- 只拿抓拍照片，不查档案"""
+        config = cls._load_config()
+        dahua = config.get('dahua', {})
+        smart = config.get('dahua_smart', {})
+        base_url = smart.get('base_url', '').rstrip('/')
+        username = smart.get('userName', dahua.get('userName', ''))
+        password = smart.get('password', dahua.get('password', ''))
+        cls._run_snap_subscription(
+            base_url, username, password,
+            event_type='face',
+            log_prefix='民警抓拍',
+            lookup_archive=False,
+        )

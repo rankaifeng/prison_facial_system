@@ -63,6 +63,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
   const exitReason = Form.useWatch('exitReason', form);
   const hospitalType = Form.useWatch('hospital', form);
   const centerPrison = Form.useWatch('transferPrison', form);
+  const exitReasonName = exitReasons.find(r => r.value === exitReason)?.label;
 
   useEffect(() => {
     if (visible) {
@@ -194,7 +195,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       now.getSeconds().toString().padStart(2, '0');
 
     let hospitalName = null;
-    if (formValues.exitReason === 1) {
+    const reasonName = exitReasons.find(r => r.value === formValues.exitReason)?.label;
+    if (reasonName === '外出就医') {
       const ht = formValues.hospital;
       if (ht === '中心医院') {
         hospitalName = formValues.transferPrison === '其他' ? formValues.transferPrisonOther : formValues.transferPrison;
@@ -308,7 +310,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
                 <Select placeholder="请选择出监原因" options={exitReasons} />
               </Form.Item>
             </Col>
-            {exitReason === 1 && (
+            {exitReasonName === '外出就医' && (
               <Col span={12}>
                 <Form.Item name="hospital" label="医院类型" rules={[{ required: true, message: '请选择医院类型' }]}>
                   <Select placeholder="请选择医院类型" options={HOSPITALS_CENTER} />
@@ -316,7 +318,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
               </Col>
             )}
           </Row>
-          {exitReason === 1 && hospitalType === '中心医院' && (
+          {exitReasonName === '外出就医' && hospitalType === '中心医院' && (
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name="transferPrison" label="转诊监狱" rules={[{ required: true, message: '请选择转诊监狱' }]}>
@@ -332,7 +334,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
               )}
             </Row>
           )}
-          {exitReason === 1 && hospitalType === '社会医院' && (
+          {exitReasonName === '外出就医' && hospitalType === '社会医院' && (
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name="socialHospital" label="医院" rules={[{ required: true, message: '请选择医院' }]}>
