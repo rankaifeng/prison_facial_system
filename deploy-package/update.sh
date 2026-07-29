@@ -54,6 +54,49 @@ if [ -n "$SERVER_IP" ]; then
     fi
 fi
 
+# 如果老部署的 docker-compose.yml 没有 celery-worker 服务，补上（从 celery-beat 段复用密码）
+if ! grep -q "celery-worker:" "$INSTALL_DIR/docker-compose.yml"; then
+    INSTALL_DIR_PY="$INSTALL_DIR" python3 <<'PYEOF'
+import os, re
+path = os.path.join(os.environ['INSTALL_DIR_PY'], 'docker-compose.yml')
+content = open(path).read()
+m = re.search(r'celery-beat:.*?DB_PASSWORD=(\S+)', content, re.DOTALL)
+if not m:
+    print('  警告: 无法从 celery-beat 段提取密码，跳过 celery-worker 补丁')
+else:
+    pwd = m.group(1)
+    worker_block = f'''  celery-worker:
+    image: prison-backend:latest
+    container_name: prison-celery-worker
+    command: ["/app/celery-worker-entrypoint.sh"]
+    restart: always
+    network_mode: host
+    environment:
+      - DEBUG=False
+      - DB_HOST=127.0.0.1
+      - DB_PORT=3306
+      - DB_NAME=prison_system
+      - DB_USER=root
+      - DB_PASSWORD={pwd}
+      - REDIS_URL=redis://127.0.0.1:6379/0
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+'''
+    if '  frontend:' in content:
+        content = content.replace('  frontend:', worker_block + '  frontend:', 1)
+        open(path, 'w').write(content)
+        print('  已补上 celery-worker 服务到 docker-compose.yml')
+    else:
+        print('  警告: 找不到 frontend 定位点，跳过')
+PYEOF
+fi
+
 # ── 3. 停止旧的图片代理服务（已由 nginx 处理）──
 echo ""
 echo "[3/6] 清理旧的图片代理..."
@@ -79,11 +122,11 @@ OLD_BACKEND=$(docker images prison-backend:latest -q 2>/dev/null | head -1)
 OLD_FRONTEND=$(docker images prison-frontend:latest -q 2>/dev/null | head -1)
 
 # 停止并移除旧容器，确保用新镜像重建
-docker compose stop backend celery-beat frontend 2>&1 | sed 's/^/    /'
-docker compose rm -f backend celery-beat frontend 2>&1 | sed 's/^/    /'
+docker compose stop backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
+docker compose rm -f backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
 
 # 启动新容器
-docker compose up -d backend celery-beat frontend 2>&1 | sed 's/^/    /'
+docker compose up -d backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
 
 # 检查镜像是否更新
 NEW_BACKEND=$(docker images prison-backend:latest -q 2>/dev/null | head -1)
@@ -117,6 +160,25 @@ docker exec prison-backend python manage.py migrate users 0012_exit_entry_dateti
 # 确保数据库字段类型正确（幂等操作，已改过的不会报错）
 docker exec prison-backend python manage.py shell -c "from django.db import connection; c=connection.cursor(); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL'); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL'); print('done')" 2>&1 | sed 's/^/    /' || true
 echo "  数据库迁移完成"
+
+# 补注册每日统计重置任务（老部署可能没注册过，幂等）
+echo "  确保每日统计重置任务已注册..."
+docker exec prison-backend python manage.py shell -c "
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
+import json
+schedule, _ = CrontabSchedule.objects.get_or_create(
+    minute='0', hour='0', day_of_week='*', day_of_month='*', month_of_year='*'
+)
+_, created = PeriodicTask.objects.get_or_create(
+    name='每日统计重置',
+    defaults={
+        'crontab': schedule,
+        'task': 'apps.users.tasks.reset_daily_stats',
+        'args': json.dumps([]),
+    }
+)
+print('created' if created else 'exists')
+" 2>&1 | sed 's/^/    /'
 
 # ── 6. 同步人脸照片到大华平台 ──
 echo ""

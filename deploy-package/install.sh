@@ -159,6 +159,28 @@ services:
       redis:
         condition: service_started
 
+  celery-worker:
+    image: prison-backend:latest
+    container_name: prison-celery-worker
+    command: ["/app/celery-worker-entrypoint.sh"]
+    restart: always
+    network_mode: host
+    environment:
+      - DEBUG=False
+      - DB_HOST=127.0.0.1
+      - DB_PORT=3306
+      - DB_NAME=prison_system
+      - DB_USER=root
+      - DB_PASSWORD=$MYSQL_PASSWORD
+      - REDIS_URL=redis://127.0.0.1:6379/0
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   frontend:
     image: prison-frontend:latest
     container_name: prison-frontend
@@ -357,6 +379,24 @@ PeriodicTask.objects.get_or_create(
 )
 print('OK')
 " 2>/dev/null && echo "  定时任务创建成功（每天 00:05 同步）" || echo "  定时任务创建失败，可稍后在管理后台手动添加"
+
+echo "  正在创建每日统计重置定时任务..."
+docker exec prison-backend python manage.py shell -c "
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
+import json
+schedule, _ = CrontabSchedule.objects.get_or_create(
+    minute='0', hour='0', day_of_week='*', day_of_month='*', month_of_year='*'
+)
+PeriodicTask.objects.get_or_create(
+    name='每日统计重置',
+    defaults={
+        'crontab': schedule,
+        'task': 'apps.users.tasks.reset_daily_stats',
+        'args': json.dumps([]),
+    }
+)
+print('OK')
+" 2>/dev/null && echo "  统计重置任务创建成功（每天 00:00 清空今日出监表）" || echo "  统计重置任务创建失败，可稍后在管理后台手动添加"
 
 # ── 图片代理已由 nginx 处理，无需额外服务 ──
 # 停止旧的 proxy 服务（如果存在）
