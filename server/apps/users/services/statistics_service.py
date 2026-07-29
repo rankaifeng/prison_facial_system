@@ -15,7 +15,7 @@ class StatisticsService(BaseService):
         today = date.today()
 
         # ========== 从档案库表获取实时在监人数 ==========
-        archive_qs = PrisonerArchive.objects.filter(is_released=False)
+        archive_qs = PrisonerArchive.objects.all()
         total_in_prison = archive_qs.count()
 
         # 按监区分组统计在监人数（档案表的 prison_area 字段，值来自 XML 的 db 字段）

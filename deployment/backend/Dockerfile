@@ -28,7 +28,8 @@ COPY server/ .
 # 复制 entrypoint 脚本
 COPY server/deployment-entrypoint.sh /app/deployment-entrypoint.sh
 COPY server/celery-entrypoint.sh /app/celery-entrypoint.sh
-RUN chmod +x /app/deployment-entrypoint.sh /app/celery-entrypoint.sh
+COPY server/celery-worker-entrypoint.sh /app/celery-worker-entrypoint.sh
+RUN chmod +x /app/deployment-entrypoint.sh /app/celery-entrypoint.sh /app/celery-worker-entrypoint.sh
 
 # 收集静态文件
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
