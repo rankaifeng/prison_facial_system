@@ -720,3 +720,44 @@ def sync_prisoner_data_with_progress(self):
         logger.error(f'同步任务异常: {e}')
         self.update_state(state='FAILURE', meta={'message': str(e), 'percent': 0})
         raise
+
+
+@shared_task
+def sync_to_handheld_task():
+    """每日定时同步罪犯数据到一体机设备
+
+    通过 HTTP 调用 Daphne 的 /user_manage/handheld-sync/trigger/ 端点触发，
+    同步逻辑在 Daphne 进程跑（InMemory channel layer 同进程通信）。
+    Celery worker 不直接推 WS。
+    """
+    import requests
+    try:
+        resp = requests.post(
+            'http://127.0.0.1:8000/user_manage/handheld-sync/trigger/',
+            json={'full': False},
+            timeout=15,
+        )
+        logger.info('一体机同步已触发: %s %s', resp.status_code, resp.text[:200])
+    except Exception as e:
+        logger.error('触发一体机同步失败: %s', e)
+
+
+@shared_task
+def check_device_heartbeat():
+    """每分钟检查设备心跳，超时标离线；顺带把超时的 pending DeviceSyncLog 标 timeout"""
+    from django.utils import timezone
+    from apps.users.models import Device, DeviceSyncLog
+
+    threshold = timezone.now() - timedelta(seconds=180)
+    offline_count = Device.objects.filter(
+        is_online=True, last_seen_at__lt=threshold
+    ).update(is_online=False)
+    if offline_count:
+        logger.info('标记 %d 台设备离线（心跳超时）', offline_count)
+
+    stale_threshold = timezone.now() - timedelta(minutes=10)
+    stale_count = DeviceSyncLog.objects.filter(
+        status='pending', synced_at__lt=stale_threshold
+    ).update(status='timeout', error_msg='等待设备回执超时')
+    if stale_count:
+        logger.info('标记 %d 条 pending 同步日志为 timeout', stale_count)

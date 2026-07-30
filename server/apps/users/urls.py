@@ -27,6 +27,8 @@ from .controllers import (
     SyncStartController,
     SyncStatusController,
     SnapshotController,
+    FaceRecognitionController,
+    HandheldSyncController,
 )
 
 urlpatterns = [
@@ -58,4 +60,5 @@ urlpatterns = [
     re_path(r'^sync/start/?$', SyncStartController.as_view(), name='sync_start'),
     re_path(r'^sync/status/?$', SyncStatusController.as_view(), name='sync_status'),
     re_path(r'^snapshot/?$', SnapshotController.as_view(), name='snapshot'),
+    re_path(r'^handheld-sync/trigger/?$', HandheldSyncController.as_view(), name='handheld_sync_trigger'),
 ]

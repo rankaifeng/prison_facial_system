@@ -19,6 +19,8 @@ from .video_controller import VideoStreamUrlController, CameraListController, Vi
 from .archive_controller import ArchiveListController, ArchiveDetailController
 from .sync_controller import SyncStartController, SyncStatusController
 from .snapshot_controller import SnapshotController
+from .face_recognition_controller import FaceRecognitionController
+from .handheld_sync_controller import HandheldSyncController
 
 __all__ = [
     'LoginController',
@@ -48,4 +50,6 @@ __all__ = [
     'SyncStartController',
     'SyncStatusController',
     'SnapshotController',
+    'FaceRecognitionController',
+    'HandheldSyncController',
 ]

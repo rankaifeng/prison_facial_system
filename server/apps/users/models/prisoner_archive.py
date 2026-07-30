@@ -40,6 +40,10 @@ class PrisonerArchive(models.Model):
     last_synced_photo_url = models.CharField('上次同步到大华的照片URL', max_length=512, blank=True, default='',
         help_text='用于增量同步，比对照片是否变化')
 
+    last_synced_to_terminal_photo_url = models.CharField('上次同步到一体机的照片URL', max_length=512, blank=True, default='',
+        help_text='一体机增量同步用，与大华独立维护')
+    last_synced_to_terminal_at = models.DateTimeField('上次同步到一体机时间', null=True, blank=True)
+
     synced_at = models.DateTimeField('同步时间', auto_now=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
