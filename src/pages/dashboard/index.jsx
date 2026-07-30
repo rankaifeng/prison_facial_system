@@ -370,8 +370,8 @@ const Dashboard = () => {
         <div className="header-right">
           <Button className="exit-btn" icon={<LogoutOutlined />} onClick={() => setExitModalOpen(true)}>出监确认</Button>
           <Button className="exit-btn" icon={<LoginOutlined />} onClick={() => setReturnModalOpen(true)}>回监确认</Button>
-          <Button className="exit-btn" icon={<SyncOutlined />} onClick={handleHandheldSync} title="同步罪犯数据到一体机">同步一体机</Button>
-          <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
+          <Button className="exit-btn" icon={<SyncOutlined />} onClick={handleHandheldSync} title="同步罪犯数据到一体机">同步</Button>
+          {/* <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span> */}
           <span
             className="fullscreen-btn"
             onClick={toggleFullscreen}

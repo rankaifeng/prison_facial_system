@@ -137,7 +137,7 @@ const HandheldSyncModal = ({ visible, onCancel }) => {
 
   return (
     <Modal
-      title="同步罪犯到一体机"
+      title="同步罪犯到手持终端"
       visible={visible}
       onCancel={handleClose}
       destroyOnClose
@@ -238,7 +238,7 @@ const HandheldSyncModal = ({ visible, onCancel }) => {
           ) : (
             <>
               <ClockCircleOutlined />
-              <span className="status-text">点击"开始同步"下发档案库所有罪犯到一体机</span>
+              <span className="status-text">点击"开始同步"下发档案库所有罪犯到手持终端</span>
             </>
           )}
         </div>
