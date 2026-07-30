@@ -3,7 +3,7 @@ import asyncio
 import uuid
 from datetime import timezone as dt_timezone
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import database_sync_to_async
+from channels.db import database_sync_to_async
 
 # 存储 Daphne 事件循环引用，供后台线程调度广播
 _event_loop = None
