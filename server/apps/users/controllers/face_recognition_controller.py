@@ -45,13 +45,13 @@ class FaceRecognitionController(APIView):
 
         for log_entry in logs:
             try:
-                self._handle_one(log_entry, sn)
+                self._handle_one(log_entry, sn, request)
             except Exception as e:
                 print(f'[识别回调] 处理异常: {e}', flush=True)
 
         return Response({'Result': 0, 'Msg': ''})
 
-    def _handle_one(self, log_entry, sn):
+    def _handle_one(self, log_entry, sn, request):
         user_id = log_entry.get('user_id', '') or ''
         user_name = log_entry.get('user_name', '') or ''
         photo_b64 = log_entry.get('photo', '') or ''
@@ -60,6 +60,9 @@ class FaceRecognitionController(APIView):
         print(f'[识别回调] 处理 sn={sn} user_id={user_id} user_name={user_name} recog_time={recog_time} photo_len={len(photo_b64)}', flush=True)
 
         captured_url = self._save_photo(photo_b64, user_id, recog_time)
+        # 相对路径拼成完整 URL，前端浏览器才能访问
+        if captured_url:
+            captured_url = request.build_absolute_uri(captured_url)
 
         prisoner = None
         archive_photo_url = ''
@@ -163,7 +166,7 @@ class FaceRecognitionController(APIView):
             'type': 'prisoner_face',
             'source': 'handheld',
             'user_id': user_id,
-            'prisoner_no': prisoner.prisoner_no if prisoner else '',
+            'prisoner_no': prisoner.prisoner_no if prisoner else user_id,
             'prisoner_name': prisoner.prisoner_name if prisoner else '',
             'image_base64': captured_url,
             'archive_image_base64': archive_photo_url,
