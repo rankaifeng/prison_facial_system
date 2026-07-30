@@ -1,7 +1,7 @@
 import json
 import asyncio
 import uuid
-from datetime import timezone as dt_timezone
+from django.utils import timezone as dt_timezone
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
