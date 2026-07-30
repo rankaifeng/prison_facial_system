@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import logging
+import urllib.parse
 from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
@@ -80,15 +81,30 @@ class FaceRecognitionController(APIView):
         self._push_to_frontend(sn, user_id, prisoner, captured_url, archive_photo_url)
 
     def _save_photo(self, photo_b64, user_id, recog_time):
-        """base64 解码后存到 media/device_photos/，返回可访问 URL"""
+        """base64 解码后存到 media/device_photos/，返回可访问 URL
+
+        设备发来的 photo 是 URL 编码的 data URI：
+        data%3Aimage%2Fjpeg%3Bbase64%2C%2F9j%2F...
+        需要先 URL 解码，再去掉 data:image/jpeg;base64, 前缀，再 base64 解码。
+        """
         if not photo_b64:
             return ''
         try:
-            if ',' in photo_b64 and photo_b64.startswith('data:'):
+            # 1. URL 解码（设备会 urlencode 整个 data URI）
+            if '%' in photo_b64:
+                photo_b64 = urllib.parse.unquote(photo_b64)
+            # 2. 去掉 data:image/jpeg;base64, 前缀
+            if photo_b64.startswith('data:') and ',' in photo_b64:
                 photo_b64 = photo_b64.split(',', 1)[1]
+            # 3. 清理 base64 中的换行和空白
+            photo_b64 = photo_b64.replace('\n', '').replace('\r', '').replace(' ', '')
+            # 4. 补齐 padding
+            missing = len(photo_b64) % 4
+            if missing:
+                photo_b64 += '=' * (4 - missing)
             photo_bytes = base64.b64decode(photo_b64)
         except Exception as e:
-            logger.warning('base64 解码失败: %s', e)
+            print(f'[识别回调] base64 解码失败: {e}', flush=True)
             return ''
 
         safe_user = (user_id or 'unknown').replace('/', '_').replace('\\', '_')
@@ -101,7 +117,7 @@ class FaceRecognitionController(APIView):
             with open(save_path, 'wb') as f:
                 f.write(photo_bytes)
         except Exception as e:
-            logger.exception('保存现场照失败: %s', e)
+            print(f'[识别回调] 保存现场照失败: {e}', flush=True)
             return ''
 
         return f'/media/device_photos/{filename}'
