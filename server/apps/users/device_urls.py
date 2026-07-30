@@ -5,4 +5,5 @@ from .controllers import FaceRecognitionController
 urlpatterns = [
     re_path(r'^record/face/?$', FaceRecognitionController.as_view(), name='record_face'),
     re_path(r'^verify_user/?$', FaceRecognitionController.as_view(), name='verify_user'),
+    re_path(r'^stranger/?$', FaceRecognitionController.as_view(), name='stranger'),
 ]
