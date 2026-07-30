@@ -115,10 +115,10 @@ const Dashboard = () => {
       if (data.archive_image_base64) {
         setArchiveFaceImage(toImgSrc(data.archive_image_base64));
       }
-      // 一体机识别驱动自动开框（跳过操作选择）；大华订阅只设图，不动操作流程
+      // 一体机识别驱动开操作选择框（出监/回监），跟大华 door 事件一致
       if (data.source === 'handheld') {
         setActivePrisonerNo(data.prisoner_no || '');
-        setExitModalOpen(true);
+        setSelectModalOpen(true);
       }
     } else if (data.type === 'face' && data.image_base64) {
       // 民警/特警抓拍（来自 10.2.48.223）
