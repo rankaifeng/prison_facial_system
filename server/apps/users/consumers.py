@@ -38,12 +38,12 @@ class DeviceConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         client = self.scope.get('client')
         client_ip = f"{client[0]}:{client[1]}" if client else '?'
-        logger.info('[设备] WS 连接 来自 %s', client_ip)
+        print(f'[设备] WS 连接 来自 {client_ip}', flush=True)
         await self.accept()
 
     async def disconnect(self, close_code):
         device_no = getattr(self, 'device_no', None)
-        logger.info('[设备] WS 断开 device_no=%s code=%s', device_no, close_code)
+        print(f'[设备] WS 断开 device_no={device_no} code={close_code}', flush=True)
         if device_no:
             await self.channel_layer.group_discard(f'device_{device_no}', self.channel_name)
             await database_sync_to_async(self._mark_offline)(device_no)
@@ -52,10 +52,10 @@ class DeviceConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
         except json.JSONDecodeError:
-            logger.warning('[设备] 非 JSON 消息: %s', text_data[:200])
+            print(f'[设备] 非 JSON 消息: {text_data[:200]}', flush=True)
             return
         cmd = data.get('cmd', '')
-        logger.info('[设备] 收到 cmd=%s data=%s', cmd, str(data)[:300])
+        print(f'[设备] 收到 cmd={cmd} data={str(data)[:300]}', flush=True)
 
         if cmd in ('declare', 'register'):
             await self._handle_declare(data)
@@ -64,12 +64,12 @@ class DeviceConsumer(AsyncWebsocketConsumer):
         elif cmd == 'to_client':
             await self._handle_to_client(data)
         else:
-            logger.info('[设备] 未处理的 cmd=%s', cmd)
+            print(f'[设备] 未处理的 cmd={cmd}', flush=True)
 
     async def _handle_declare(self, data):
         device_no = data.get('sn') or data.get('device_no') or data.get('deviceNo') or ''
         if not device_no:
-            logger.warning('[设备] declare 缺少 sn/device_no: %s', data)
+            print(f'[设备] declare 缺少 sn/device_no: {data}', flush=True)
             return
         self.device_no = device_no
         await self.channel_layer.group_add(f'device_{device_no}', self.channel_name)
@@ -85,7 +85,7 @@ class DeviceConsumer(AsyncWebsocketConsumer):
             'msg': '声明成功',
         }
         await self.send(text_data=json.dumps(ack, ensure_ascii=False))
-        logger.info('[设备] declare_ack 已发送 sn=%s client_id=%s', device_no, client_id)
+        print(f'[设备] declare_ack 已发送 sn={device_no} client_id={client_id}', flush=True)
 
     async def _handle_heartbeat(self, data):
         device_no = getattr(self, 'device_no', None) or data.get('sn') or data.get('device_no') or ''
@@ -105,7 +105,7 @@ class DeviceConsumer(AsyncWebsocketConsumer):
             user_id = inner.get('user_id', '')
             code = inner.get('code', '')
             msg = inner.get('msg', '')
-            logger.info('[设备] addUserRet sn=%s user_id=%s code=%s msg=%s', device_no, user_id, code, msg)
+            print(f'[设备] addUserRet sn={device_no} user_id={user_id} code={code} msg={msg}', flush=True)
             await database_sync_to_async(self._record_sync_result)(
                 device_no, user_id, code, msg)
 

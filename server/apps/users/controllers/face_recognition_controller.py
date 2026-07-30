@@ -28,19 +28,19 @@ class FaceRecognitionController(APIView):
         try:
             data = json.loads(request.body)
         except Exception:
-            logger.warning('record/face JSON 解析失败')
+            print('[识别回调] JSON 解析失败', flush=True)
             return Response({'Result': 0, 'Msg': ''})
 
         sn = data.get('sn', '')
         logs = data.get('logs', []) or []
         client_ip = request.META.get('REMOTE_ADDR', '?')
-        logger.info('[识别回调] 收到 来自=%s sn=%s 记录数=%d', client_ip, sn, len(logs))
+        print(f'[识别回调] 收到 来自={client_ip} sn={sn} 记录数={len(logs)}', flush=True)
 
         for log_entry in logs:
             try:
                 self._handle_one(log_entry, sn)
             except Exception as e:
-                logger.exception('处理识别记录异常: %s', e)
+                print(f'[识别回调] 处理异常: {e}', flush=True)
 
         return Response({'Result': 0, 'Msg': ''})
 
@@ -49,8 +49,7 @@ class FaceRecognitionController(APIView):
         photo_b64 = log_entry.get('photo', '') or ''
         recog_time = log_entry.get('recog_time', '') or ''
 
-        logger.info('[识别回调] 处理 sn=%s user_id=%s recog_time=%s photo_len=%d',
-                    sn, user_id, recog_time, len(photo_b64))
+        print(f'[识别回调] 处理 sn={sn} user_id={user_id} recog_time={recog_time} photo_len={len(photo_b64)}', flush=True)
 
         captured_url = self._save_photo(photo_b64, user_id, recog_time)
 
@@ -60,10 +59,9 @@ class FaceRecognitionController(APIView):
             try:
                 prisoner = PrisonerArchive.objects.get(prisoner_no=user_id)
                 archive_photo_url = self._get_archive_photo_url(prisoner)
-                logger.info('[识别回调] 命中档案 user_id=%s prisoner=%s archive_url=%s',
-                            user_id, prisoner.prisoner_name, archive_photo_url)
+                print(f'[识别回调] 命中档案 user_id={user_id} prisoner={prisoner.prisoner_name} archive_url={archive_photo_url}', flush=True)
             except PrisonerArchive.DoesNotExist:
-                logger.warning('[识别回调] 未命中档案 user_id=%s', user_id)
+                print(f'[识别回调] 未命中档案 user_id={user_id}', flush=True)
 
         recognized_at = self._parse_time(recog_time)
         FaceRecognitionRecord.objects.create(
@@ -136,7 +134,7 @@ class FaceRecognitionController(APIView):
         from asgiref.sync import async_to_sync
         channel_layer = get_channel_layer()
         if not channel_layer:
-            logger.warning('[识别回调] channel_layer 不可用，无法推前端')
+            print('[识别回调] channel_layer 不可用，无法推前端', flush=True)
             return
         payload = {
             'type': 'prisoner_face',
@@ -153,7 +151,6 @@ class FaceRecognitionController(APIView):
                 'door_events',
                 {'type': 'door_event', 'data': payload}
             )
-            logger.info('[识别回调] 已推前端 user_id=%s prisoner_no=%s captured_url=%s',
-                        user_id, payload['prisoner_no'], captured_url)
+            print(f'[识别回调] 已推前端 user_id={user_id} prisoner_no={payload["prisoner_no"]} captured_url={captured_url}', flush=True)
         except Exception as e:
-            logger.exception('推送识别事件到前端失败: %s', e)
+            print(f'[识别回调] 推前端失败: {e}', flush=True)
