@@ -41,7 +41,7 @@ const PRISON_AREA_NAME_TO_ID = {
   '五监区': '5', '六监区': '6', '七监区': '7',
 };
 
-const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, policeFaceName, swatFaceName, capturedFaceImage, archiveFaceImage, onStepChange }) => {
+const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, swatFaceImage, policeFaceName, swatFaceName, capturedFaceImage, archiveFaceImage, onStepChange, onArchivePhoto }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [policeImage, setPoliceImage] = useState(null);
@@ -94,26 +94,35 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
 
       // 根据编号查询罪犯信息并回显
       if (prisonerNo) {
-        setLoadingPrisoner(true);
-        archive.detail({ prisoner_no: prisonerNo }).then(res => {
-          if (res?.code === 1 && res?.data) {
-            const d = res.data;
-            form.setFieldsValue({
-              prisonerNo: d.bh || prisonerNo,
-              prisonerName: d.xm || '',
-              prisonArea: PRISON_AREA_NAME_TO_ID[d.db] || d.db || '',
-            });
-          } else {
-            message.error(res?.msg || '未找到该罪犯');
-          }
-        }).catch(() => {
-          message.error('查询罪犯信息失败');
-        }).finally(() => {
-          setLoadingPrisoner(false);
-        });
+        lookupPrisoner(prisonerNo);
       }
     }
   }, [visible, prisonerNo, form, onStepChange]);
+
+  const lookupPrisoner = (no) => {
+    if (!no) return;
+    setLoadingPrisoner(true);
+    archive.detail({ prisoner_no: no }).then(res => {
+      if (res?.code === 1 && res?.data) {
+        const d = res.data;
+        form.setFieldsValue({
+          prisonerNo: d.bh || no,
+          prisonerName: d.xm || '',
+          prisonArea: PRISON_AREA_NAME_TO_ID[d.db] || d.db || '',
+        });
+        // 未知人脸手动查询时回填档案照片
+        if (d.mtxx && d.mtxx.length > 0 && d.mtxx[0].xp) {
+          onArchivePhoto?.(d.mtxx[0].xp);
+        }
+      } else {
+        message.error(res?.msg || '未找到该罪犯');
+      }
+    }).catch(() => {
+      message.error('查询罪犯信息失败');
+    }).finally(() => {
+      setLoadingPrisoner(false);
+    });
+  };
 
   // 通知父组件当前步骤
   useEffect(() => {
@@ -283,7 +292,7 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="prisonerNo" label="罪犯编号" rules={[{ required: true, message: '请输入罪犯编号' }]}>
-                <Input placeholder="请输入罪犯编号" />
+                <Input.Search placeholder="请输入罪犯编号" enterButton="查询" loading={loadingPrisoner} onSearch={(v) => lookupPrisoner(v)} />
               </Form.Item>
             </Col>
             <Col span={12}>

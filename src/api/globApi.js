@@ -30,6 +30,7 @@ import {
   SYNC_START,
   SYNC_STATUS,
   SNAPSHOT,
+  HANDHELD_SYNC_TRIGGER,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -113,4 +114,8 @@ export const sync = {
 
 export const snapshot = {
   capture: (data) => http.get(SNAPSHOT, data),
+};
+
+export const deviceSync = {
+  trigger: (data) => http.post(HANDHELD_SYNC_TRIGGER, data),
 };

@@ -131,7 +131,8 @@ class FaceRecognitionController(APIView):
         if not channel_layer:
             return
         payload = {
-            'event_type': 'prisoner_face',
+            'type': 'prisoner_face',
+            'source': 'handheld',
             'user_id': user_id,
             'prisoner_no': prisoner.prisoner_no if prisoner else '',
             'prisoner_name': prisoner.prisoner_name if prisoner else '',

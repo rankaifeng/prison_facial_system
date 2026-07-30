@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu } from 'antd';
+import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu, message } from 'antd';
 import { SafetyOutlined, MenuOutlined, LogoutOutlined, LoginOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined, DashboardOutlined, DatabaseOutlined, FileTextOutlined, SwapOutlined, UserOutlined, TagsOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
@@ -12,7 +12,7 @@ import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
 import OperationSelectModal from './components/OperationSelectModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
-import { realtimeStatistics, sync, prisonMessages } from '@/api/globApi';
+import { realtimeStatistics, sync, prisonMessages, deviceSync } from '@/api/globApi';
 import jinghuiImg from '@/imgs/jinghui.png';
 import useDoorEvents from '@/hooks/useDoorEvents';
 import cache from '@/utils/cache';
@@ -109,11 +109,16 @@ const Dashboard = () => {
       setActivePrisonerNo(data.UserID);
       setSelectModalOpen(true);
     } else if (data.type === 'prisoner_face' && data.image_base64) {
-      // 罪犯终端抓拍（来自 10.2.48.224）
-      const img = 'data:image/jpeg;base64,' + data.image_base64;
-      setCapturedFaceImage(img);
+      // 罪犯终端抓拍：一体机识别回调（URL）或大华订阅（base64）
+      const toImgSrc = (v) => (!v ? null : (v.startsWith('http') || v.startsWith('/')) ? v : 'data:image/jpeg;base64,' + v);
+      setCapturedFaceImage(toImgSrc(data.image_base64));
       if (data.archive_image_base64) {
-        setArchiveFaceImage('data:image/jpeg;base64,' + data.archive_image_base64);
+        setArchiveFaceImage(toImgSrc(data.archive_image_base64));
+      }
+      // 一体机识别驱动自动开框（跳过操作选择）；大华订阅只设图，不动操作流程
+      if (data.source === 'handheld') {
+        setActivePrisonerNo(data.prisoner_no || '');
+        setExitModalOpen(true);
       }
     } else if (data.type === 'face' && data.image_base64) {
       // 民警/特警抓拍（来自 10.2.48.223）
@@ -341,6 +346,15 @@ const Dashboard = () => {
       },
     });
   };
+
+  const handleHandheldSync = useCallback(() => {
+    deviceSync.trigger({ full: false }).then(() => {
+      message.success('已触发同步到一体机，后台执行中');
+    }).catch(() => {
+      message.error('触发同步失败');
+    });
+  }, []);
+
   return (
     <div className="dashboard">
       <div className="dashboard-scan-beam"></div>
@@ -358,6 +372,7 @@ const Dashboard = () => {
         <div className="header-right">
           <Button className="exit-btn" icon={<LogoutOutlined />} onClick={() => setExitModalOpen(true)}>出监确认</Button>
           <Button className="exit-btn" icon={<LoginOutlined />} onClick={() => setReturnModalOpen(true)}>回监确认</Button>
+          <Button className="exit-btn" icon={<SyncOutlined />} onClick={handleHandheldSync} title="同步罪犯数据到一体机">同步一体机</Button>
           <span className="current-time">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' })}</span>
           <span
             className="fullscreen-btn"
@@ -454,6 +469,7 @@ const Dashboard = () => {
         capturedFaceImage={capturedFaceImage}
         archiveFaceImage={archiveFaceImage}
         onStepChange={handleExitModalStepChange}
+        onArchivePhoto={(url) => setArchiveFaceImage(url)}
       />
       <EnterConfirmModal
         visible={enterModalOpen}
