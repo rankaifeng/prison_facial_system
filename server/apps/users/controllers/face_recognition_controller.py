@@ -26,74 +26,38 @@ class FaceRecognitionController(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        path = request.path
-        client_ip = request.META.get('REMOTE_ADDR', '?')
-        raw = request.body
-        print(f'[识别回调] POST {path} 来自={client_ip} body_len={len(raw)}', flush=True)
-        print(f'[识别回调] 原始 body: {raw[:500]}', flush=True)
+        """设备识别记录上报 - POST /api/v1/record/face
+
+        格式跟 test/ws_test_server.py 一致：
+        {"sn":"SC9823","logs":[{"user_id":"xxx","user_name":"xxx","recog_time":"xxx","photo":"<base64>"}]}
+        始终返回 Result=0，设备收到后才会删除本地记录。
+        """
         try:
-            data = json.loads(raw)
+            data = json.loads(request.body)
         except Exception:
             print('[识别回调] JSON 解析失败', flush=True)
             return Response({'Result': 0, 'Msg': ''})
 
         sn = data.get('sn', '')
+        logs = data.get('logs', []) or []
+        client_ip = request.META.get('REMOTE_ADDR', '?')
+        print(f'[识别回调] 收到 来自={client_ip} sn={sn} 记录数={len(logs)}', flush=True)
 
-        # record/face 格式：logs 数组，每条含照片
-        if 'logs' in data:
-            logs = data.get('logs', []) or []
-            print(f'[识别回调] record/face 格式 sn={sn} 记录数={len(logs)}', flush=True)
-            for log_entry in logs:
-                try:
-                    self._handle_one(log_entry, sn)
-                except Exception as e:
-                    print(f'[识别回调] 处理异常: {e}', flush=True)
-        else:
-            # verify_user / stranger 格式：扁平 JSON
-            self._handle_verify_user(data, path)
+        for log_entry in logs:
+            try:
+                self._handle_one(log_entry, sn)
+            except Exception as e:
+                print(f'[识别回调] 处理异常: {e}', flush=True)
 
         return Response({'Result': 0, 'Msg': ''})
 
-    def _handle_verify_user(self, data, path):
-        """处理 verify_user（识别结果，无照片）和 stranger（陌生人照片）"""
-        sn = data.get('sn', '')
-        user_id = data.get('user_id', '') or ''
-        user_name = data.get('user_name', '') or ''
-        recog_time = data.get('recog_time', '') or ''
-        photo_b64 = data.get('photo', '') or ''
-
-        print(f'[识别回调] {path} sn={sn} user_id={user_id} user_name={user_name} recog_time={recog_time} photo_len={len(photo_b64)}', flush=True)
-
-        captured_url = self._save_photo(photo_b64, user_id or 'stranger', recog_time) if photo_b64 else ''
-
-        prisoner = None
-        archive_photo_url = ''
-        if user_id:
-            try:
-                prisoner = PrisonerArchive.objects.get(prisoner_no=user_id)
-                archive_photo_url = self._get_archive_photo_url(prisoner)
-                print(f'[识别回调] 命中档案 user_id={user_id} prisoner={prisoner.prisoner_name} archive_url={archive_photo_url}', flush=True)
-            except PrisonerArchive.DoesNotExist:
-                print(f'[识别回调] 未命中档案 user_id={user_id}', flush=True)
-
-        recognized_at = self._parse_time(recog_time)
-        FaceRecognitionRecord.objects.create(
-            device_no=sn,
-            user_id=user_id,
-            prisoner=prisoner,
-            captured_photo_url=captured_url,
-            recognized_at=recognized_at,
-            raw_data=data,
-        )
-
-        self._push_to_frontend(sn, user_id, prisoner, captured_url, archive_photo_url)
-
     def _handle_one(self, log_entry, sn):
         user_id = log_entry.get('user_id', '') or ''
+        user_name = log_entry.get('user_name', '') or ''
         photo_b64 = log_entry.get('photo', '') or ''
         recog_time = log_entry.get('recog_time', '') or ''
 
-        print(f'[识别回调] 处理 sn={sn} user_id={user_id} recog_time={recog_time} photo_len={len(photo_b64)}', flush=True)
+        print(f'[识别回调] 处理 sn={sn} user_id={user_id} user_name={user_name} recog_time={recog_time} photo_len={len(photo_b64)}', flush=True)
 
         captured_url = self._save_photo(photo_b64, user_id, recog_time)
 
