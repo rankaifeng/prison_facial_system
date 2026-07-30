@@ -398,6 +398,35 @@ PeriodicTask.objects.get_or_create(
 print('OK')
 " 2>/dev/null && echo "  统计重置任务创建成功（每天 00:00 清空今日出监表）" || echo "  统计重置任务创建失败，可稍后在管理后台手动添加"
 
+echo "  正在创建一体机同步定时任务..."
+docker exec prison-backend python manage.py shell -c "
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
+import json
+schedule1, _ = CrontabSchedule.objects.get_or_create(
+    minute='10', hour='0', day_of_week='*', day_of_month='*', month_of_year='*'
+)
+PeriodicTask.objects.get_or_create(
+    name='每日同步到一体机',
+    defaults={
+        'crontab': schedule1,
+        'task': 'apps.users.tasks.sync_to_handheld_task',
+        'args': json.dumps([]),
+    }
+)
+schedule2, _ = CrontabSchedule.objects.get_or_create(
+    minute='*', hour='*', day_of_week='*', day_of_month='*', month_of_year='*'
+)
+PeriodicTask.objects.get_or_create(
+    name='一体机心跳检查',
+    defaults={
+        'crontab': schedule2,
+        'task': 'apps.users.tasks.check_device_heartbeat',
+        'args': json.dumps([]),
+    }
+)
+print('OK')
+" 2>/dev/null && echo "  一体机定时任务创建成功（00:10 同步 + 每分钟心跳检查）" || echo "  一体机定时任务创建失败，可稍后在管理后台手动添加"
+
 # ── 图片代理已由 nginx 处理，无需额外服务 ──
 # 停止旧的 proxy 服务（如果存在）
 if systemctl is-active --quiet prison-proxy 2>/dev/null; then
