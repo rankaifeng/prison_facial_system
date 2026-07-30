@@ -1,0 +1,18 @@
+{
+  "user_id": "TEST001",
+  "recog_type": "face",
+  "recog_time": "2026-07-30 10:58:36",
+  "gender": -1,
+  "user_name": "测试用户",
+  "body_temperature": "",
+  "confidence": "93.85289",
+  "card_number": "",
+  "user_type": 0,
+  "alcohol_result": "null",
+  "password": "",
+  "reflectivity": 86,
+  "room_temperature": 0,
+  "pass_status": 0,
+  "photo_length": 104635,
+  "panoramic_length": 0
+}

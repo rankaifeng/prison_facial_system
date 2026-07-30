@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu, message } from 'antd';
+import { Typography, Dropdown, ConfigProvider, Modal, Button, Menu } from 'antd';
 import { SafetyOutlined, MenuOutlined, LogoutOutlined, LoginOutlined, FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, CheckCircleOutlined, LoadingOutlined, CloseCircleOutlined, ClockCircleOutlined, DashboardOutlined, DatabaseOutlined, FileTextOutlined, SwapOutlined, UserOutlined, TagsOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import LeftPanel from './components/LeftPanel';
@@ -11,8 +11,9 @@ import ExitConfirmModal from './components/ExitConfirmModal';
 import ReturnConfirmModal from './components/ReturnConfirmModal';
 import EnterConfirmModal from './components/EnterConfirmModal';
 import OperationSelectModal from './components/OperationSelectModal';
+import HandheldSyncModal from './components/HandheldSyncModal';
 import ExitReasonBarChart from './components/ExitReasonBarChart';
-import { realtimeStatistics, sync, prisonMessages, deviceSync } from '@/api/globApi';
+import { realtimeStatistics, sync, prisonMessages } from '@/api/globApi';
 import jinghuiImg from '@/imgs/jinghui.png';
 import useDoorEvents from '@/hooks/useDoorEvents';
 import cache from '@/utils/cache';
@@ -50,6 +51,7 @@ const Dashboard = () => {
   const [enterModalStep, setEnterModalStep] = useState(0);
   const [selectModalOpen, setSelectModalOpen] = useState(false);
   const [activeOperation, setActiveOperation] = useState(null);
+  const [handheldSyncOpen, setHandheldSyncOpen] = useState(false);
   const exitStepRef = useRef(0);
   const enterStepRef = useRef(0);
   const activeOpRef = useRef(null);
@@ -348,11 +350,7 @@ const Dashboard = () => {
   };
 
   const handleHandheldSync = useCallback(() => {
-    deviceSync.trigger({ full: false }).then(() => {
-      message.success('已触发同步到一体机，后台执行中');
-    }).catch(() => {
-      message.error('触发同步失败');
-    });
+    setHandheldSyncOpen(true);
   }, []);
 
   return (
@@ -490,6 +488,10 @@ const Dashboard = () => {
         archiveFaceImage={archiveFaceImage}
         policeFaceImage={policeFaceImage}
         policeFaceName={policeFaceName}
+      />
+      <HandheldSyncModal
+        visible={handheldSyncOpen}
+        onCancel={() => setHandheldSyncOpen(false)}
       />
 
       {/* 同步进度弹窗 */}

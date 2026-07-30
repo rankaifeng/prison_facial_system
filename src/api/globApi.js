@@ -31,6 +31,7 @@ import {
   SYNC_STATUS,
   SNAPSHOT,
   HANDHELD_SYNC_TRIGGER,
+  HANDHELD_SYNC_PROGRESS,
 } from "./apis";
 
 export const userLogin = (data) => http.post(USER_LOGIN, data);
@@ -118,4 +119,5 @@ export const snapshot = {
 
 export const deviceSync = {
   trigger: (data) => http.post(HANDHELD_SYNC_TRIGGER, data),
+  progress: () => http.get(HANDHELD_SYNC_PROGRESS).then((res) => res?.data),
 };

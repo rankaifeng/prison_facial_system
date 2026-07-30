@@ -29,6 +29,7 @@ from .controllers import (
     SnapshotController,
     FaceRecognitionController,
     HandheldSyncController,
+    HandheldSyncProgressController,
 )
 
 urlpatterns = [
@@ -61,4 +62,5 @@ urlpatterns = [
     re_path(r'^sync/status/?$', SyncStatusController.as_view(), name='sync_status'),
     re_path(r'^snapshot/?$', SnapshotController.as_view(), name='snapshot'),
     re_path(r'^handheld-sync/trigger/?$', HandheldSyncController.as_view(), name='handheld_sync_trigger'),
+    re_path(r'^handheld-sync/progress/?$', HandheldSyncProgressController.as_view(), name='handheld_sync_progress'),
 ]

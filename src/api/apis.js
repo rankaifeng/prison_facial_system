@@ -30,3 +30,4 @@ export const SYNC_START = '/user_manage/sync/start';
 export const SYNC_STATUS = '/user_manage/sync/status';
 export const SNAPSHOT = '/user_manage/snapshot';
 export const HANDHELD_SYNC_TRIGGER = '/user_manage/handheld-sync/trigger';
+export const HANDHELD_SYNC_PROGRESS = '/user_manage/handheld-sync/progress';

@@ -20,7 +20,7 @@ from .archive_controller import ArchiveListController, ArchiveDetailController
 from .sync_controller import SyncStartController, SyncStatusController
 from .snapshot_controller import SnapshotController
 from .face_recognition_controller import FaceRecognitionController
-from .handheld_sync_controller import HandheldSyncController
+from .handheld_sync_controller import HandheldSyncController, HandheldSyncProgressController
 
 __all__ = [
     'LoginController',
@@ -52,4 +52,5 @@ __all__ = [
     'SnapshotController',
     'FaceRecognitionController',
     'HandheldSyncController',
+    'HandheldSyncProgressController',
 ]

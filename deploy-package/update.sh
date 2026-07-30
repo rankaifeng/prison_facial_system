@@ -180,17 +180,18 @@ _, created = PeriodicTask.objects.get_or_create(
 print('created' if created else 'exists')
 " 2>&1 | sed 's/^/    /'
 
-# 幂等补注册一体机相关定时任务（首次部署已注册的不会重复）
+# 幂等补注册一体机心跳检查任务；移除旧的每日同步任务（已改为首页手动触发）
 echo "  检查一体机定时任务..."
 docker exec prison-backend python manage.py shell -c "
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 import json
-s1, _ = CrontabSchedule.objects.get_or_create(minute='10', hour='0', day_of_week='*', day_of_month='*', month_of_year='*')
-PeriodicTask.objects.get_or_create(name='每日同步到一体机', defaults={'crontab': s1, 'task': 'apps.users.tasks.sync_to_handheld_task', 'args': json.dumps([])})
 s2, _ = CrontabSchedule.objects.get_or_create(minute='*', hour='*', day_of_week='*', day_of_month='*', month_of_year='*')
 PeriodicTask.objects.get_or_create(name='一体机心跳检查', defaults={'crontab': s2, 'task': 'apps.users.tasks.check_device_heartbeat', 'args': json.dumps([])})
+# 移除旧的每日定时同步任务（改为首页手动触发）
+deleted, _ = PeriodicTask.objects.filter(name='每日同步到一体机').delete()
+print(f'deleted_daily_sync={deleted}')
 print('OK')
-" 2>/dev/null && echo "  一体机定时任务已确认（00:10 同步 + 每分钟心跳）" || echo "  一体机定时任务注册失败，可稍后在管理后台手动添加"
+" 2>/dev/null && echo "  一体机心跳检查已确认；旧每日同步任务已清理（如有）" || echo "  一体机定时任务注册失败，可稍后在管理后台手动添加"
 
 # ── 6. 同步人脸照片到大华平台 ──
 echo ""
