@@ -33,6 +33,8 @@ class FaceRecognitionController(APIView):
 
         sn = data.get('sn', '')
         logs = data.get('logs', []) or []
+        client_ip = request.META.get('REMOTE_ADDR', '?')
+        logger.info('[识别回调] 收到 来自=%s sn=%s 记录数=%d', client_ip, sn, len(logs))
 
         for log_entry in logs:
             try:
@@ -47,6 +49,9 @@ class FaceRecognitionController(APIView):
         photo_b64 = log_entry.get('photo', '') or ''
         recog_time = log_entry.get('recog_time', '') or ''
 
+        logger.info('[识别回调] 处理 sn=%s user_id=%s recog_time=%s photo_len=%d',
+                    sn, user_id, recog_time, len(photo_b64))
+
         captured_url = self._save_photo(photo_b64, user_id, recog_time)
 
         prisoner = None
@@ -55,8 +60,10 @@ class FaceRecognitionController(APIView):
             try:
                 prisoner = PrisonerArchive.objects.get(prisoner_no=user_id)
                 archive_photo_url = self._get_archive_photo_url(prisoner)
+                logger.info('[识别回调] 命中档案 user_id=%s prisoner=%s archive_url=%s',
+                            user_id, prisoner.prisoner_name, archive_photo_url)
             except PrisonerArchive.DoesNotExist:
-                pass
+                logger.warning('[识别回调] 未命中档案 user_id=%s', user_id)
 
         recognized_at = self._parse_time(recog_time)
         FaceRecognitionRecord.objects.create(
@@ -129,6 +136,7 @@ class FaceRecognitionController(APIView):
         from asgiref.sync import async_to_sync
         channel_layer = get_channel_layer()
         if not channel_layer:
+            logger.warning('[识别回调] channel_layer 不可用，无法推前端')
             return
         payload = {
             'type': 'prisoner_face',
@@ -145,5 +153,7 @@ class FaceRecognitionController(APIView):
                 'door_events',
                 {'type': 'door_event', 'data': payload}
             )
+            logger.info('[识别回调] 已推前端 user_id=%s prisoner_no=%s captured_url=%s',
+                        user_id, payload['prisoner_no'], captured_url)
         except Exception as e:
             logger.exception('推送识别事件到前端失败: %s', e)
