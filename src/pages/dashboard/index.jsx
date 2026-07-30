@@ -469,7 +469,6 @@ const Dashboard = () => {
         capturedFaceImage={capturedFaceImage}
         archiveFaceImage={archiveFaceImage}
         onStepChange={handleExitModalStepChange}
-        onArchivePhoto={(url) => setArchiveFaceImage(url)}
       />
       <EnterConfirmModal
         visible={enterModalOpen}
