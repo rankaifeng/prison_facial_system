@@ -25,16 +25,20 @@ class FaceRecognitionController(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        path = request.path
+        client_ip = request.META.get('REMOTE_ADDR', '?')
+        raw = request.body
+        print(f'[识别回调] POST {path} 来自={client_ip} body_len={len(raw)}', flush=True)
+        print(f'[识别回调] 原始 body: {raw[:500]}', flush=True)
         try:
-            data = json.loads(request.body)
+            data = json.loads(raw)
         except Exception:
             print('[识别回调] JSON 解析失败', flush=True)
             return Response({'Result': 0, 'Msg': ''})
 
         sn = data.get('sn', '')
         logs = data.get('logs', []) or []
-        client_ip = request.META.get('REMOTE_ADDR', '?')
-        print(f'[识别回调] 收到 来自={client_ip} sn={sn} 记录数={len(logs)}', flush=True)
+        print(f'[识别回调] 解析 sn={sn} 记录数={len(logs)}', flush=True)
 
         for log_entry in logs:
             try:
