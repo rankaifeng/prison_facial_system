@@ -1,14 +1,76 @@
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
+
+HISTORY_REASON_FIELDS = [
+    ('刑满释放', 'exit_reason_1'),
+    ('外出就医', 'exit_reason_2'),
+    ('外出教育', 'exit_reason_3'),
+    ('离监探亲', 'exit_reason_4'),
+    ('押回重审', 'exit_reason_5'),
+]
+
+
+def _build_history_reason_counts(reason_stats):
+    reason_stats = reason_stats or {}
+    return {field: reason_stats.get(reason, 0) for reason, field in HISTORY_REASON_FIELDS}
 
 
 class StatisticsService(BaseService):
 
     @staticmethod
+    def check_and_reset_daily_stats():
+        """
+        检测是否需要重置当日统计（本地开发环境没有 Celery Beat 时用）。
+        每次请求统计时调用，如果当日 DailyStatistics 不存在则自动执行重置。
+        生产环境 Celery Beat 凌晨已执行过，当日数据存在，跳过。
+        """
+        from apps.users.models import DailyStatistics, HistoryStatistics, TodayExitRecord
+
+        today = date.today()
+        if DailyStatistics.objects.filter(date=today).exists():
+            return  # 当日数据已存在，无需重置
+
+        yesterday = today - timedelta(days=1)
+
+        # 清空今日出监记录
+        deleted_count, _ = TodayExitRecord.objects.all().delete()
+        if deleted_count:
+            logger.info(f'[auto-reset] 已清空今日出监记录: {deleted_count} 条')
+
+        # 将昨日统计同步到历史记录
+        daily_stats = DailyStatistics.objects.filter(date=yesterday)
+        for stat in daily_stats:
+            HistoryStatistics.objects.create(
+                prison_area=stat.prison_area,
+                prison_area_name=stat.prison_area_name,
+                date=yesterday,
+                exit_count=stat.exit_count,
+                **_build_history_reason_counts(stat.reason_stats),
+                entry_count=stat.entry_count,
+            )
+            # 创建今日统计（计数归零，在押人数保留）
+            DailyStatistics.objects.get_or_create(
+                prison_area=stat.prison_area,
+                date=today,
+                defaults={
+                    'prison_area_name': stat.prison_area_name,
+                    'exit_count': 0,
+                    'entry_count': 0,
+                    'in_prison_count': stat.in_prison_count,
+                    'work_count': 0,
+                    'reason_stats': {},
+                }
+            )
+
+        if daily_stats:
+            logger.info(f'[auto-reset] 昨日数据已同步，今日统计已重置 ({len(daily_stats)} 个监区)')
+
+    @staticmethod
     def get_realtime_statistics(prison_area=None):
+        StatisticsService.check_and_reset_daily_stats()
         from apps.users.models import PrisonerArchive, ExitType, ExitEntryRecord, TodayExitRecord
         from django.db.models import Count
 
@@ -153,6 +215,7 @@ class StatisticsService(BaseService):
 
     @staticmethod
     def get_work_statistics(prison_area=None):
+        StatisticsService.check_and_reset_daily_stats()
         today = date.today()
         queryset = StatisticsRepository.get_daily_stats(prison_area, today)
 
