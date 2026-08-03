@@ -5,7 +5,7 @@ import './SignatureCanvas.less';
 
 const SignatureCanvas = ({ onSave, onClear }) => {
   const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [hasSignature, setHasSignature] = useState(false);
 
   useEffect(() => {
@@ -28,14 +28,6 @@ const SignatureCanvas = ({ onSave, onClear }) => {
   const getPosition = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-
-    if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
-      };
-    }
-
     return {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
@@ -50,28 +42,39 @@ const SignatureCanvas = ({ onSave, onClear }) => {
 
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
-    setIsDrawing(true);
+    isDrawingRef.current = true;
     setHasSignature(true);
   };
 
   const draw = (e) => {
-    if (!isDrawing) return;
+    if (!isDrawingRef.current) return;
     e.preventDefault();
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const pos = getPosition(e);
+    const rect = canvas.getBoundingClientRect();
 
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
+    // PointerEvent.getCoalescedEvents() 返回两次事件间的所有中间点，
+    // 合并为一次 stroke() 绘制，避免触屏逐点绘制造成的延迟
+    const coalesced = e.getCoalescedEvents?.();
+    if (coalesced && coalesced.length > 0) {
+      for (const pt of coalesced) {
+        ctx.lineTo(pt.clientX - rect.left, pt.clientY - rect.top);
+      }
+      ctx.stroke();
+    } else {
+      const pos = getPosition(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
   };
 
   const stopDrawing = () => {
-    if (isDrawing) {
+    if (isDrawingRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       ctx.closePath();
-      setIsDrawing(false);
+      isDrawingRef.current = false;
     }
   };
 
@@ -98,13 +101,10 @@ const SignatureCanvas = ({ onSave, onClear }) => {
       <canvas
         ref={canvasRef}
         className="canvas-area"
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={stopDrawing}
+        onPointerDown={startDrawing}
+        onPointerMove={draw}
+        onPointerUp={stopDrawing}
+        onPointerLeave={stopDrawing}
       />
       <div className="canvas-actions">
         <Button
