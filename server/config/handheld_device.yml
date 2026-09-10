@@ -1,0 +1,5 @@
+device:
+  ip: "10.10.55.25"       # 手持终端IP，设备到货后修改
+  port: 8081
+  password: "12345678"          # 设备密码，到货后修改
+  callback_url: "http://218.89.143.234:8080/api/v1/handheld-callback/"  # 识别回调地址

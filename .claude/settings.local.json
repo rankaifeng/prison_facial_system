@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/user_manage/user_login/user_login_web -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(pip3 show *)",
+      "Bash(pip3 install *)",
+      "Bash(curl -s \"http://localhost:8000/prison_manage/exit_type/exit_type_list\" -H \"Authorization: Bearer $\\(python3 manage.py shell -c \"from apps.users.config import create_token; from django.contrib.auth import get_user_model; User = get_user_model\\(\\); user = User.objects.first\\(\\); print\\(create_token\\(user\\)\\)\"\\)\")",
+      "Bash(curl -s http://localhost:8000/user_manage/exit_type/list)",
+      "Bash(curl -s http://localhost:8000/user_manage/user_login/user_login_web -d 'username=admin&password=admin123')",
+      "Bash(curl -s http://localhost:8000/user_manage/user_login/user_login_web -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=admin&password=admin123')",
+      "Bash(kill 68064 26337)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(pkill -f \"manage.py runserver\")",
+      "Bash(npm install *)",
+      "Bash(sqlite3 db.sqlite3 \"SELECT prison_area, prison_area_name, COUNT\\(*\\) as cnt FROM users_exitentryrecord WHERE type='exit' AND exit_date >= '2026-01-01' GROUP BY prison_area, prison_area_name;\")",
+      "Bash(brew services *)",
+      "Bash(curl -s http://127.0.0.1:8000/)",
+      "Bash(curl *)",
+      "Bash(docker build *)",
+      "Bash(npm run *)",
+      "Bash(python manage.py check)",
+      "Bash(python server/manage.py check)",
+      "Bash(pkill -9 -f ffmpeg)",
+      "Bash(rm -rf /tmp/hls_streams/*)",
+      "Bash(mkdir -p /tmp/hls_streams/test_hls)",
+      "Bash(timeout 5 ffmpeg -loglevel error -rtsp_transport tcp -i \"rtsp://admin:root123a@192.168.100.150:554/Streaming/tracks/1601?starttime=20260601T151944Z&endtime=20260601T152734Z\" -c copy -t 3 -y /tmp/test_quick.mp4)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+node_modules
+server/media/videos/
+server/media/faces/
+deploy-package/
+deploy-package*.zip
+*.tar
+.git.backup-17g/

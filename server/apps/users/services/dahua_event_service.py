@@ -1,0 +1,493 @@
+import asyncio
+import base64
+import hashlib
+import json
+import logging
+import re
+import threading
+import time
+import requests
+import yaml
+import os
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+
+class DahuaEventService:
+    """大华门禁事件订阅服务 - 后端启动时自动连接两台设备"""
+
+    _threads = []
+    _running = False
+
+    @classmethod
+    def start(cls):
+        if cls._running:
+            return
+        cls._running = True
+
+        # 罪犯人脸识别事件（10.2.48.224）- door 事件，带 UserID
+        t1 = threading.Thread(target=cls._run_door_event, daemon=True)
+        t1.start()
+
+        # 罪犯人脸抓拍（10.2.48.224）- snapManager，带照片
+        t2 = threading.Thread(target=cls._run_prisoner_face_event, daemon=True)
+        t2.start()
+
+        # 民警/特警人脸抓拍（10.2.48.223）- snapManager，带照片
+        t3 = threading.Thread(target=cls._run_police_face_event, daemon=True)
+        t3.start()
+
+        cls._threads = [t1, t2, t3]
+        logger.info('大华事件订阅服务已启动（门禁+罪犯抓拍+民警抓拍）')
+
+    @classmethod
+    def _fix_photo_url(cls, url):
+        """修正照片URL，兼容旧数据中的错误地址"""
+        if not url:
+            return url
+        url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+        url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+        return url
+
+    @classmethod
+    def _load_config(cls):
+        config_path = os.path.join(settings.BASE_DIR, 'config', 'cameras.yml')
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        return config
+
+    @classmethod
+    def _parse_event(cls, raw_text):
+        """解析单个事件文本，提取 Code、action 和 JSON data"""
+        raw_text = raw_text.strip()
+        if not raw_text or raw_text == 'Heartbeat':
+            return None
+
+        # 跳过 Content-Type / Content-Length 等 HTTP 头
+        lines = []
+        skip_headers = True
+        for line in raw_text.split('\n'):
+            stripped = line.strip()
+            if skip_headers:
+                if stripped.lower().startswith('content-') or not stripped:
+                    continue
+                skip_headers = False
+            lines.append(line)
+
+        text = '\n'.join(lines).strip()
+        if not text or text == 'Heartbeat':
+            return None
+
+        # 提取 Code、action
+        header_match = re.match(r'Code=(?P<code>\w+);action=(?P<action>\w+);index=\d+;data=', text)
+        if not header_match:
+            return None
+
+        code = header_match.group('code')
+        action = header_match.group('action')
+
+        # 提取 JSON 部分：从第一个 { 开始，用括号计数找到匹配的 }
+        json_start = text.index('{')
+        depth = 0
+        json_end = -1
+        for i in range(json_start, len(text)):
+            if text[i] == '{':
+                depth += 1
+            elif text[i] == '}':
+                depth -= 1
+                if depth == 0:
+                    json_end = i + 1
+                    break
+
+        if json_end == -1:
+            return None
+
+        data_str = text[json_start:json_end]
+
+        try:
+            data = json.loads(data_str)
+        except json.JSONDecodeError:
+            logger.warning(f'JSON解析失败: {data_str[:200]}')
+            return None
+
+        return {
+            'code': code,
+            'action': action,
+            **data,
+        }
+
+    @classmethod
+    def _parse_kv_event(cls, text):
+        """解析大华智能事件的 key-value 格式元数据。
+
+        格式示例:
+            Events[0].Code=AccessControl
+            Events[0].Data.UserID=2
+            Events[0].Data.Similarity=99
+        """
+        kv = {}
+        for line in text.split('\n'):
+            line = line.strip()
+            if '=' in line:
+                key, val = line.split('=', 1)
+                kv[key.strip()] = val.strip()
+
+        if not kv:
+            return None
+
+        code = kv.get('Events[0].Code', '')
+        if not code:
+            return None
+
+        event = {
+            'code': code,
+            'action': kv.get('Events[0].Action', 'Pulse'),
+        }
+
+        # 提取 Events[0].Data.* 字段
+        for k, v in kv.items():
+            prefix = 'Events[0].Data.'
+            if k.startswith(prefix):
+                field = k[len(prefix):]
+                try:
+                    v = int(v)
+                except ValueError:
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        pass
+                event[field] = v
+
+        return event
+
+    @classmethod
+    def _parse_section(cls, header_part, body):
+        """解析单个 section（header + body），返回事件 dict 或 None。"""
+        # 解析 headers
+        content_type = ''
+        for line in header_part.split('\n'):
+            line = line.strip()
+            if line.lower().startswith('content-type:'):
+                content_type = line.split(':', 1)[1].strip().lower()
+
+        if 'image' in content_type or 'octet' in content_type:
+            image_data = body.encode('latin-1') if isinstance(body, str) else body
+            if image_data:
+                print(f'[解析] 图片: {len(image_data)} bytes')
+                return {'_image_data': image_data}
+        else:
+            text = body.strip()
+            if text and text != 'Heartbeat':
+                event = cls._parse_event(text)
+                if not event:
+                    event = cls._parse_kv_event(text)
+                if event:
+                    print(f'[解析] 元数据: code={event.get("code")}')
+                    return event
+        return None
+
+    @classmethod
+    def _broadcast(cls, event_data):
+        """通过 Django Channels 广播事件到 WebSocket 客户端"""
+        try:
+            from apps.users.consumers import get_event_loop
+            from channels.layers import get_channel_layer
+
+            channel_layer = get_channel_layer()
+            if not channel_layer:
+                print('[广播] channel_layer 为 None')
+                return
+
+            loop = get_event_loop()
+            if loop and loop.is_running():
+                # 打印广播数据摘要（不打印完整的 base64）
+                safe_data = {}
+                for k, v in event_data.items():
+                    if isinstance(v, str) and len(v) > 100:
+                        safe_data[k] = f'{v[:50]}...({len(v)} chars)'
+                    else:
+                        safe_data[k] = v
+                print(f'[广播] 发送数据: {safe_data}')
+
+                future = asyncio.run_coroutine_threadsafe(
+                    channel_layer.group_send(
+                        'door_events',
+                        {
+                            'type': 'door_event',
+                            'data': event_data,
+                        }
+                    ),
+                    loop
+                )
+                future.result(timeout=2)
+                code = event_data.get('code', 'unknown')
+                event_type = event_data.get('type', 'unknown')
+                print(f'[广播] 已发送: type={event_type} code={code}')
+            else:
+                print('[广播] 事件循环未就绪，无 WebSocket 客户端连接')
+        except Exception as e:
+            print(f'[广播] 失败: {e}')
+            logger.error(f'广播事件失败: {e}')
+
+    @classmethod
+    def _run_door_event(cls):
+        """罪犯人脸识别事件订阅（192.168.100.108）"""
+        config = cls._load_config()
+        dahua = config.get('dahua', {})
+        username = dahua.get('userName', '')
+        password = dahua.get('password', '')
+        base_url = dahua.get('base_url', '').rstrip('/')
+
+        if not base_url:
+            logger.error('大华 base_url 未配置')
+            return
+
+        url = f'{base_url}/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=5'
+        auth = requests.auth.HTTPDigestAuth(username, password) if username else None
+
+        while cls._running:
+            try:
+                resp = requests.get(url, auth=auth, stream=True, timeout=(10, None))
+                logger.info(f'[门禁事件] 连接成功, status={resp.status_code}')
+
+                buffer = ''
+                for chunk in resp.iter_content(chunk_size=1024):
+                    if not cls._running:
+                        break
+                    if not chunk:
+                        continue
+
+                    buffer += chunk.decode('utf-8', errors='ignore')
+
+                    while '--myboundary' in buffer:
+                        parts = buffer.split('--myboundary', 1)
+                        part = parts[0]
+                        buffer = parts[1] if len(parts) > 1 else ''
+
+                        event = cls._parse_event(part)
+                        if event:
+                            event['type'] = 'door'
+                            cls._broadcast(event)
+
+            except requests.RequestException as e:
+                logger.error(f'[门禁事件] 连接断开: {e}, 5秒后重连...')
+                time.sleep(5)
+
+    @classmethod
+    def _read_line(cls, raw, buf):
+        """从流中读取一行，返回 (行内容, 剩余buffer)"""
+        while b'\n' not in buf:
+            chunk = raw.read(512)
+            if not chunk:
+                return None, buf
+            buf += chunk
+        line, buf = buf.split(b'\n', 1)
+        return line.rstrip(b'\r'), buf
+
+    @classmethod
+    def _read_bytes(cls, raw, length, buf):
+        """从流中精确读取指定字节数"""
+        while len(buf) < length:
+            need = length - len(buf)
+            chunk = raw.read(min(need, 65536))
+            if not chunk:
+                break
+            buf += chunk
+        return buf[:length], buf[length:]
+
+    @classmethod
+    def _select_front_portrait_url(cls, media_info):
+        """从 media_info 取照片 URL，与档案库列表/详情页逻辑一致：取第一项 xp"""
+        if not media_info:
+            return ''
+        for m in media_info:
+            xp = m.get('xp', '')
+            if xp:
+                return cls._fix_photo_url(xp)
+        return ''
+
+    @classmethod
+    def _lookup_archive_photo(cls, prisoner_no):
+        """根据罪犯编号查档案照片，返回 base64 或空串"""
+        if not prisoner_no:
+            print('[档案照片] prisoner_no 为空，跳过')
+            return ''
+        try:
+            from apps.users.models import PrisonerArchive
+            archive = PrisonerArchive.objects.filter(prisoner_no=prisoner_no).first()
+            if not archive:
+                print(f'[档案照片] 未找到档案: prisoner_no={prisoner_no}')
+                return ''
+            if not archive.media_info:
+                print(f'[档案照片] 档案无 media_info: prisoner_no={prisoner_no}')
+                return ''
+            xp = cls._select_front_portrait_url(archive.media_info)
+            if not xp:
+                print(f'[档案照片] media_info 中无 xp 字段: prisoner_no={prisoner_no}, media_info={str(archive.media_info)[:200]}')
+                return ''
+            print(f'[档案照片] 下载照片: {xp}')
+            r = requests.get(xp, timeout=5)
+            print(f'[档案照片] 下载结果: status={r.status_code}, 大小={len(r.content)} bytes')
+            if r.status_code == 200 and len(r.content) > 100:
+                b64 = base64.b64encode(r.content).decode('ascii')
+                print(f'[档案照片] base64 编码完成, 长度={len(b64)}')
+                return b64
+            else:
+                print(f'[档案照片] 下载失败或内容太小: status={r.status_code}, size={len(r.content)}')
+        except Exception as e:
+            print(f'[档案照片] 异常: prisoner_no={prisoner_no}, error={e}')
+            logger.warning(f'查询档案照片失败 prisoner_no={prisoner_no}: {e}')
+        return ''
+
+    @classmethod
+    def _run_snap_subscription(cls, base_url, username, password, event_type,
+                               log_prefix, lookup_archive):
+        """通用 snapManager.cgi 订阅：收到照片后广播为指定 event_type"""
+        if not base_url:
+            print(f'[{log_prefix}] 错误: base_url 未配置')
+            return
+
+        url = f'{base_url}/cgi-bin/snapManager.cgi'
+        params = {
+            'action': 'attachFileProc',
+            'Flags[0]': 'Event',
+            'Events': '[AccessControl]',
+            'heartbeat': 5,
+        }
+        auth = requests.auth.HTTPDigestAuth(username, password) if username else None
+
+        while cls._running:
+            try:
+                resp = requests.get(url, params=params, auth=auth, stream=True, timeout=(10, 120))
+                print(f'[{log_prefix}] 连接成功, status={resp.status_code}')
+
+                if resp.status_code != 200:
+                    time.sleep(5)
+                    continue
+
+                content_type = resp.headers.get('Content-Type', '')
+                boundary_match = re.search(r'boundary=(.+)', content_type)
+                if not boundary_match:
+                    time.sleep(5)
+                    continue
+                boundary = boundary_match.group(1).strip()
+
+                raw = resp.raw
+                buf = b''
+                event_user_id = ''
+                event_user_name = ''
+
+                while cls._running:
+                    line, buf = cls._read_line(raw, buf)
+                    if line is None:
+                        break
+
+                    line_str = line.decode('utf-8', errors='replace').strip()
+                    if not line_str or boundary in line_str or line_str == '--':
+                        continue
+
+                    header_lines = [line_str]
+                    while True:
+                        hline, buf = cls._read_line(raw, buf)
+                        if hline is None:
+                            break
+                        hline_str = hline.decode('utf-8', errors='replace').strip()
+                        if not hline_str:
+                            break
+                        header_lines.append(hline_str)
+
+                    header = '\n'.join(header_lines)
+                    ct_match = re.search(r'Content-Type:\s*(.+)', header, re.IGNORECASE)
+                    ct = ct_match.group(1).strip() if ct_match else 'unknown'
+                    cl_match = re.search(r'Content-Length:\s*(\d+)', header, re.IGNORECASE)
+                    cl = int(cl_match.group(1)) if cl_match else 0
+
+                    if cl == 0:
+                        continue
+
+                    if 'image' in ct.lower():
+                        body, buf = cls._read_bytes(raw, cl, buf)
+                        image_b64 = base64.b64encode(body).decode('ascii')
+                        print(f'[{log_prefix}] 收到图片: Content-Type={ct}, 大小={len(body)} bytes')
+                        broadcast_data = {'type': event_type, 'code': 'SnapPic', 'image_base64': image_b64}
+                        print(f'[{log_prefix}] 构建广播数据: type={event_type}, image_base64长度={len(image_b64)}')
+                        if event_user_name:
+                            broadcast_data['user_name'] = event_user_name
+                        if event_user_id:
+                            broadcast_data['user_id'] = event_user_id
+                            print(f'[{log_prefix}] UserID={event_user_id}, lookup_archive={lookup_archive}')
+                            if lookup_archive:
+                                archive_b64 = cls._lookup_archive_photo(event_user_id)
+                                if archive_b64:
+                                    broadcast_data['archive_image_base64'] = archive_b64
+                                    print(f'[{log_prefix}] 档案照片获取成功, 长度={len(archive_b64)}')
+                                else:
+                                    print(f'[{log_prefix}] 档案照片获取失败或为空')
+                        print(f'[{log_prefix}] 广播数据字段: {list(broadcast_data.keys())}')
+                        cls._broadcast(broadcast_data)
+                        print(f'[{log_prefix}] 广播完成: UserID={event_user_id}, 有抓拍图片={bool(image_b64)}, 有档案图片={"archive_image_base64" in broadcast_data}')
+                        event_user_id = ''
+                        event_user_name = ''
+
+                    elif 'text' in ct.lower() or 'plain' in ct.lower():
+                        body, buf = cls._read_bytes(raw, cl, buf)
+                        body_text = body.decode('utf-8', errors='replace').strip()
+
+                        if body_text == 'Heartbeat':
+                            print(f'[{log_prefix}] 心跳')
+                        else:
+                            print(f'[{log_prefix}] 收到事件文本:')
+                            for eline in body_text.split('\n'):
+                                eline = eline.strip()
+                                if eline:
+                                    print(f'  {eline}')
+                                if '.UserID=' in eline:
+                                    event_user_id = eline.split('=', 1)[1].strip()
+                                if '.Name=' in eline:
+                                    event_user_name = eline.split('=', 1)[1].strip()
+                                if '.CardName=' in eline:
+                                    event_user_name = eline.split('=', 1)[1].strip()
+                            print(f'[{log_prefix}] 解析结果: UserID={event_user_id}, Name={event_user_name}, 等待图片...')
+
+            except requests.RequestException as e:
+                print(f'[{log_prefix}] 连接异常: {e}, 5秒后重连...')
+                logger.error(f'[{log_prefix}] 连接异常: {e}')
+                time.sleep(5)
+            except Exception as e:
+                print(f'[{log_prefix}] 未知异常: {e}, 5秒后重连...')
+                logger.error(f'[{log_prefix}] 未知异常: {e}', exc_info=True)
+                time.sleep(5)
+
+    @classmethod
+    def _run_prisoner_face_event(cls):
+        """罪犯人脸抓拍订阅（10.2.48.224）- 拿终端抓拍照片 + 档案照片"""
+        config = cls._load_config()
+        dahua = config.get('dahua', {})
+        base_url = dahua.get('base_url', '').rstrip('/')
+        username = dahua.get('userName', '')
+        password = dahua.get('password', '')
+        cls._run_snap_subscription(
+            base_url, username, password,
+            event_type='prisoner_face',
+            log_prefix='罪犯抓拍',
+            lookup_archive=True,
+        )
+
+    @classmethod
+    def _run_police_face_event(cls):
+        """民警/特警人脸抓拍订阅（10.2.48.223）- 只拿抓拍照片，不查档案"""
+        config = cls._load_config()
+        dahua = config.get('dahua', {})
+        smart = config.get('dahua_smart', {})
+        base_url = smart.get('base_url', '').rstrip('/')
+        username = smart.get('userName', dahua.get('userName', ''))
+        password = smart.get('password', dahua.get('password', ''))
+        cls._run_snap_subscription(
+            base_url, username, password,
+            event_type='face',
+            log_prefix='民警抓拍',
+            lookup_archive=False,
+        )

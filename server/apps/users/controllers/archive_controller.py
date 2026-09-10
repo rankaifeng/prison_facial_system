@@ -1,0 +1,126 @@
+from urllib.parse import urlparse
+from datetime import date, datetime
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from apps.users.config import JWTAuthentication
+from apps.users.models import PrisonerArchive
+
+PHOTO_EXPIRED_YEARS = 5
+
+
+def _compute_photo_expired(entry_date_str):
+    """根据入监日期计算照片是否过期：入监距今 >= 5 年则提醒"""
+    if not entry_date_str:
+        return False
+    entry_date_str = str(entry_date_str).strip()
+    for fmt in ('%Y.%m.%d', '%Y-%m-%d', '%Y/%m/%d',
+                '%Y.%m.%d %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y/%m/%d %H:%M:%S'):
+        try:
+            entry_date = datetime.strptime(entry_date_str, fmt).date()
+            break
+        except ValueError:
+            continue
+    else:
+        return False
+    today = date.today()
+    try:
+        cutoff = today.replace(year=today.year - PHOTO_EXPIRED_YEARS)
+    except ValueError:
+        cutoff = today.replace(year=today.year - PHOTO_EXPIRED_YEARS, day=28)
+    return entry_date <= cutoff
+
+
+def _normalize_photo_url(url):
+    """返回完整照片URL，兼容旧数据中的错误地址"""
+    if not url:
+        return url
+    url = url.replace('http://10.2.48.86/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.48.86:80/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.48.86:8080/', 'http://10.2.50.16/')
+    url = url.replace('http://10.2.50.16:8080/', 'http://10.2.50.16/')
+    return url
+
+
+def _normalize_media_info(media_info):
+    """处理媒体信息中的照片URL"""
+    if not media_info:
+        return media_info
+    for item in media_info:
+        if 'xp' in item:
+            item['xp'] = _normalize_photo_url(item['xp'])
+    return media_info
+
+
+class ArchiveListController(APIView):
+    """罪犯档案列表 - GET 分页查询，返回公安接口原始字段名"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prisoner_no = request.query_params.get('prisoner_no', '').strip()
+        prisoner_name = request.query_params.get('prisoner_name', '').strip()
+        prison_area = request.query_params.get('prison_area', '').strip()
+        crime = request.query_params.get('crime', '').strip()
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', request.query_params.get('limit', 10)))
+
+        qs = PrisonerArchive.objects.all()
+
+        if prisoner_no:
+            qs = qs.filter(prisoner_no__icontains=prisoner_no)
+        if prisoner_name:
+            qs = qs.filter(prisoner_name__icontains=prisoner_name)
+        if prison_area:
+            qs = qs.filter(prison_area__icontains=prison_area)
+        if crime:
+            qs = qs.filter(crime__icontains=crime)
+
+        total = qs.count()
+        start = (page - 1) * page_size
+        records = qs[start:start + page_size]
+
+        data = []
+        for r in records:
+            item = r.basic_info.copy() if r.basic_info else {}
+            item['mtxx'] = _normalize_media_info(r.media_info) or []
+            item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
+            item['photo_expired'] = _compute_photo_expired(r.entry_date or item.get('rjrq', ''))
+            data.append(item)
+
+        return Response({
+            'code': 1,
+            'msg': 'success',
+            'data': data,
+            'num': total,
+        })
+
+
+class ArchiveDetailController(APIView):
+    """罪犯档案详情 - GET 根据编号查询完整信息"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prisoner_no = request.query_params.get('prisoner_no', '').strip()
+        if not prisoner_no:
+            return Response({'code': 0, 'msg': '缺少罪犯编号', 'data': None})
+
+        try:
+            r = PrisonerArchive.objects.get(prisoner_no=prisoner_no)
+        except PrisonerArchive.DoesNotExist:
+            return Response({'code': 0, 'msg': '未找到该罪犯档案', 'data': None})
+
+        item = r.basic_info.copy() if r.basic_info else {}
+        item['mtxx'] = _normalize_media_info(r.media_info) or []
+        item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
+        # 显式返回常用字段（basic_info 中可能没有）
+        item['sentence_end'] = r.sentence_end or item.get('zr', '')
+        item['crime'] = r.crime or item.get('zm', '')
+        item['prison_area'] = r.prison_area or item.get('db', '')
+
+        return Response({
+            'code': 1,
+            'msg': 'success',
+            'data': item,
+        })

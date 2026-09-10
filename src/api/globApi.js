@@ -1,0 +1,125 @@
+import http from "../server/axios";
+import {
+  USER_LOGIN,
+  PRISON_LIST,
+  PRISONER_LIST,
+  PRISONER_DETAIL,
+  EXIT_RECORD,
+  ENTRY_RECORD,
+  RECORD_LIST,
+  RECORD_EXPORT,
+  REALTIME_STATISTICS,
+  WORK_STATISTICS,
+  MESSAGE_LIST,
+  ACCOUNT_LIST,
+  ACCOUNT_ADD,
+  ACCOUNT_UPDATE,
+  ACCOUNT_DELETE,
+  RESET_PASSWORD,
+  CHANGE_PASSWORD,
+  ARCHIVE_LIST,
+  ARCHIVE_DETAIL,
+  PRISON_MESSAGES,
+  EXIT_TYPE_LIST,
+  EXIT_TYPE_ADD,
+  EXIT_TYPE_UPDATE,
+  EXIT_TYPE_DELETE,
+  RETURN_RECORD,
+  VIDEO_STREAM_URL,
+  CAMERA_LIST,
+  SYNC_START,
+  SYNC_STATUS,
+  SNAPSHOT,
+  HANDHELD_SYNC_TRIGGER,
+  HANDHELD_SYNC_PROGRESS,
+  HANDHELD_SYNC_CANCEL,
+} from "./apis";
+
+export const userLogin = (data) => http.post(USER_LOGIN, data);
+
+export const changePassword = (data) => http.post(CHANGE_PASSWORD, data);
+
+export const prison = {
+  list: (data) => http.get(PRISON_LIST, data).then((res) => res?.data),
+};
+
+export const prisoner = {
+  list: (data) => http.get(PRISONER_LIST, data).then((res) => res?.data),
+  detail: (data) => http.get(PRISONER_DETAIL, data),
+};
+
+export const exitRecord = {
+  submit: (data) => http.post(EXIT_RECORD, data),
+};
+
+export const entryRecord = {
+  submit: (data) => http.post(ENTRY_RECORD, data),
+};
+
+export const returnRecord = {
+  submit: (data) => http.post(RETURN_RECORD, data),
+};
+
+export const record = {
+  list: (data) => http.get(RECORD_LIST, data).then((res) => res?.data),
+};
+
+export const recordExport = {
+  get: (data) => http.get(RECORD_EXPORT, data).then((res) => res?.data),
+};
+
+export const realtimeStatistics = {
+  get: (data) => http.get(REALTIME_STATISTICS, data).then((res) => res?.data),
+};
+
+export const workStatistics = {
+  list: (data) => http.get(WORK_STATISTICS, data).then((res) => res?.data),
+};
+
+export const message = {
+  list: (data) => http.get(MESSAGE_LIST, data).then((res) => res?.data),
+};
+
+export const account = {
+  list: (data) => http.get(ACCOUNT_LIST, data).then((res) => res?.data),
+  add: (data) => http.post(ACCOUNT_ADD, data),
+  update: (data) => http.post(ACCOUNT_UPDATE, data),
+  delete: (data) => http.post(ACCOUNT_DELETE, data),
+  resetPwd: (data) => http.post(RESET_PASSWORD, data),
+};
+
+export const archive = {
+  list: (data) => http.get(ARCHIVE_LIST, data).then((res) => res?.data),
+  detail: (data) => http.get(ARCHIVE_DETAIL, data),
+};
+
+export const exitType = {
+  list: (data) => http.get(EXIT_TYPE_LIST, data).then((res) => res?.data),
+  add: (data) => http.post(EXIT_TYPE_ADD, data),
+  update: (data) => http.post(EXIT_TYPE_UPDATE, data),
+  delete: (data) => http.post(EXIT_TYPE_DELETE, data),
+};
+
+export const prisonMessages = {
+  list: (data) => http.get(PRISON_MESSAGES, data).then((res) => res?.data),
+};
+
+export const video = {
+  getStreamUrl: (data, timeout) => http.get(VIDEO_STREAM_URL, data, timeout).then((res) => res?.data),
+  getCameraList: (data) => http.get(CAMERA_LIST, data).then((res) => res?.data),
+};
+
+export const sync = {
+  start: () => http.post(SYNC_START, {}),
+  status: (task_id) => http.get(SYNC_STATUS, { task_id }),
+};
+
+export const snapshot = {
+  capture: (data) => http.get(SNAPSHOT, data),
+};
+
+export const deviceSync = {
+  trigger: (data) => http.post(HANDHELD_SYNC_TRIGGER, data),
+  progress: () => http.get(HANDHELD_SYNC_PROGRESS).then((res) => res?.data),
+  cancel: () => http.post(HANDHELD_SYNC_CANCEL),
+};

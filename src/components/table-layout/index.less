@@ -1,0 +1,249 @@
+// 公安内部系统表格样式
+@header-bg: #eaf1fb;
+@header-text: #1a3a5c;
+@header-border: #b8cde6;
+@row-even: #ffffff;
+@row-odd: #f5f8fc;
+@row-hover: #e8f0fb;
+@row-selected: #d6e8f7;
+@border-color: #d0d9e6;
+@accent-blue: #3b7dd8;
+
+.table-layout {
+  background: #fff;
+  border-radius: 2px;
+  padding: 16px;
+  border: 1px solid @border-color;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b7dd8, #5b9bd5, #3b7dd8);
+    z-index: 1;
+  }
+}
+
+.table-header {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-layout .ant-table-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-layout .ant-spin-nested-loading,
+.table-layout .ant-spin-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-layout .ant-table {
+  flex: 1;
+  background: transparent;
+  border-radius: 0;
+}
+
+.table-layout .ant-table-thead > tr > th {
+  background: @header-bg;
+  color: @header-text;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-bottom: 2px solid @header-border;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  letter-spacing: 0.5px;
+}
+
+.table-layout .ant-table-thead > tr > th::before {
+  display: none !important;
+}
+
+.table-layout .ant-table-tbody > tr > td {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #1a1a1a;
+  border-bottom: 1px solid @border-color;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+// 斑马纹
+.table-layout .ant-table-tbody > tr:nth-child(even) > td {
+  background: @row-even;
+}
+
+.table-layout .ant-table-tbody > tr:nth-child(odd) > td {
+  background: @row-odd;
+}
+
+.table-layout .ant-table-tbody > tr:hover > td {
+  background: @row-hover !important;
+}
+
+.table-layout .ant-table-tbody > tr.ant-table-row-selected > td {
+  background: @row-selected !important;
+}
+
+.table-layout .ant-table-bordered .ant-table-tbody > tr > td {
+  border-bottom: 1px solid @border-color;
+}
+
+.table-layout .ant-table-bordered .ant-table-thead > tr > th {
+  border-bottom: 2px solid @header-border;
+}
+
+.table-layout .ant-table-body {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+// 去掉 Ant Design 默认的表格圆角和多余边框
+.table-layout .ant-table {
+  border-radius: 0;
+}
+
+.table-layout .ant-table-container {
+  border-radius: 0 !important;
+}
+
+.table-layout .ant-table-thead > tr:first-child > th:first-child {
+  border-top-left-radius: 0;
+}
+
+.table-layout .ant-table-thead > tr:first-child > th:last-child {
+  border-top-right-radius: 0;
+}
+
+// 序号单元格
+.index-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #666;
+  background: #edf1f7;
+  transition: all 0.15s;
+  vertical-align: middle;
+}
+
+.index-cell.index-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #f0c000 100%);
+  color: #5a4400;
+  box-shadow: 0 1px 3px rgba(255, 215, 0, 0.3);
+}
+
+.index-cell.index-2 {
+  background: linear-gradient(135deg, #c0c8d4 0%, #a8b4c4 100%);
+  color: #3a3a3a;
+  box-shadow: 0 1px 3px rgba(192, 200, 212, 0.3);
+}
+
+.index-cell.index-3 {
+  background: linear-gradient(135deg, #d4a76a 0%, #c49455 100%);
+  color: #4a3200;
+  box-shadow: 0 1px 3px rgba(212, 167, 106, 0.3);
+}
+
+.index-cell.index-4,
+.index-cell.index-5 {
+  background: #edf1f7;
+  color: #555;
+}
+
+// 分页器
+.table-layout .ant-pagination {
+  margin: 10px 0 0 0;
+  padding: 0 4px;
+}
+
+.table-layout .ant-pagination .ant-pagination-total-text {
+  color: #666;
+  font-size: 13px;
+}
+
+.table-layout .ant-pagination .ant-pagination-item {
+  min-width: 28px;
+  height: 28px;
+  line-height: 26px;
+  border: 1px solid @border-color;
+  border-radius: 2px;
+  font-size: 13px;
+}
+
+.table-layout .ant-pagination .ant-pagination-item:hover {
+  border-color: @accent-blue;
+}
+
+.table-layout .ant-pagination .ant-pagination-item a {
+  color: #333;
+}
+
+.table-layout .ant-pagination .ant-pagination-prev,
+.table-layout .ant-pagination .ant-pagination-next {
+  min-width: 28px !important;
+  height: 28px !important;
+  line-height: 26px !important;
+  border: none !important;
+  border-radius: 2px !important;
+}
+
+.table-layout .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.table-layout .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  border-radius: 2px !important;
+  color: #555;
+}
+
+.table-layout .ant-pagination .ant-pagination-item-active {
+  background: @accent-blue;
+  border-color: @accent-blue;
+}
+
+.table-layout .ant-pagination .ant-pagination-item-active a {
+  color: #fff;
+}
+
+.table-layout .ant-pagination .ant-pagination-item-active:hover a {
+  color: #fff;
+}
+
+.table-layout .ant-pagination .ant-pagination-options-size-changer.ant-select .ant-select-selector {
+  height: 28px;
+  border-radius: 2px;
+  border-color: @border-color;
+}
+
+.table-layout .ant-pagination .ant-pagination-options-size-changer.ant-select .ant-select-selector .ant-select-selection-item {
+  line-height: 26px;
+}
+
+// 操作按钮列样式
+.table-layout .ant-table .ant-btn-link {
+  color: @accent-blue;
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.table-layout .ant-table .ant-btn-link:hover {
+  color: #5b9bd5;
+}
