@@ -1,13 +1,15 @@
 @primary-glow: #00f0ff;
 @secondary-glow: #0080ff;
-@card-bg: rgba(20, 25, 45, 0.85);
+@card-bg: rgba(10, 28, 58, 0.82);
 @border-glow: rgba(0, 240, 255, 0.3);
 
 .dashboard {
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0d1117 100%);
+  background:
+    radial-gradient(ellipse at 50% 32%, rgba(28, 78, 148, 0.28) 0%, transparent 58%),
+    linear-gradient(135deg, #04102a 0%, #08204a 50%, #040e22 100%);
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
@@ -36,7 +38,7 @@
     align-items: center;
     height: 65px;
     padding: 0 24px;
-    background: linear-gradient(90deg, rgba(5, 10, 25, 0.99) 0%, rgba(15, 25, 50, 0.97) 30%, rgba(15, 25, 50, 0.97) 70%, rgba(5, 10, 25, 0.99) 100%);
+    background: linear-gradient(90deg, rgba(4, 12, 30, 0.99) 0%, rgba(12, 32, 68, 0.97) 30%, rgba(12, 32, 68, 0.97) 70%, rgba(4, 12, 30, 0.99) 100%);
     position: relative;
     overflow: hidden;
 
@@ -265,7 +267,7 @@
 
 .dashboard-dark-modal {
   .ant-modal-content {
-    background: rgba(14, 18, 35, 1) !important;
+    background: rgba(8, 22, 48, 1) !important;
     border: 1px solid rgba(0, 240, 255, 0.2) !important;
     border-radius: 12px !important;
   }
@@ -313,7 +315,7 @@
 
 :global {
   .ant-modal .ant-modal-content {
-    background: rgba(14, 18, 35, 1) !important;
+    background: rgba(8, 22, 48, 1) !important;
     border: 1px solid rgba(0, 240, 255, 0.2) !important;
     border-radius: 12px !important;
   }
@@ -351,7 +353,7 @@
   }
 
   .ant-dropdown-menu {
-    background: rgba(20, 25, 45, 0.95) !important;
+    background: rgba(8, 22, 48, 0.96) !important;
     border: 1px solid rgba(0, 240, 255, 0.3) !important;
     border-radius: 8px !important;
     padding: 8px !important;
@@ -467,7 +469,7 @@
         height: 20px;
         border-color: rgba(0, 240, 255, 0.6);
         border-style: solid;
-        z-index: 1;
+        z-index: 3;
         pointer-events: none;
 
         &.top-left { top: 0; left: 0; border-width: 2px 0 0 2px; }
@@ -478,17 +480,16 @@
 
       .grid-overlay {
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background:
-          linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(0deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-        animation: gridRotate 8s ease-in-out infinite;
+        top: 0; left: 0; right: 0;
+        height: 64px;
+        background: linear-gradient(180deg, rgba(4, 14, 34, 0.92) 0%, rgba(4, 14, 34, 0.45) 60%, transparent 100%);
         pointer-events: none;
-        z-index: 0;
+        z-index: 1;
       }
 
       .section-title {
+        position: relative;
+        z-index: 2;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -534,10 +535,6 @@
         }
       }
 
-      .map-wrapper {
-        flex: 1;
-        min-height: 0;
-      }
     }
 
     .chart-section {

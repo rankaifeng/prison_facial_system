@@ -1,52 +1,91 @@
-.map-wrapper {
-  width: 100%;
-  height: 100%;
-  background: rgba(20, 25, 45, 0.5);
-  border-radius: 0;
-  border: none;
-  overflow: hidden;
-  padding: 15px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 40px rgba(0, 240, 255, 0.02);
-}
-
-.map-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  max-height: 100%;
-  overflow: hidden;
-  border-radius: 0;
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  background: rgba(20, 25, 45, 0.5);
-}
-
-.map-bg {
+.prison-map {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('../../../imgs/map.png');
-  background-size: contain;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.prison-map-stage {
+  position: absolute;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.map-dots {
+.prison-area-marker {
   position: absolute;
-  inset: 0;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  user-select: none;
 }
 
-.map-dot {
+.leader-line {
   position: absolute;
-  width: 14px;
-  height: 14px;
-  background: radial-gradient(circle, #00f0ff 0%, rgba(0, 240, 255, 0.4) 70%, transparent 100%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 8px #00f0ff, 0 0 16px #00f0ff;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.35), #00f0ff);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.7);
+  pointer-events: none;
+}
+
+.area-card {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 112px;
+  padding: 4px 10px 5px;
+  background: rgba(8, 18, 38, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.55);
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25), inset 0 0 12px rgba(0, 240, 255, 0.08);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.prison-area-marker:hover .area-card {
+  border-color: #00f0ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.6), inset 0 0 14px rgba(0, 240, 255, 0.15);
+  transform: translateY(-50%) scale(1.06);
+  z-index: 3;
+}
+
+.area-name {
+  color: #00f0ff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+}
+
+.area-stats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 10px;
+  line-height: 16px;
+  color: #cfeeff;
+  white-space: nowrap;
+}
+
+.stat-item b {
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.num-amber {
+  color: #ffc94d;
+}
+
+.num-green {
+  color: #4ade80;
+}
+
+.num-red {
+  color: #ff6b6b;
 }

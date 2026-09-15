@@ -352,7 +352,7 @@ const Dashboard = () => {
             }}
             trigger={['click']}
             dropdownRender={(menu) => (
-              <div style={{ background: 'rgba(14, 18, 35, 1)', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: 8, overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(8, 22, 48, 1)', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: 8, overflow: 'hidden' }}>
                 {menu}
               </div>
             )}
