@@ -1,15 +1,23 @@
+/* 容器查询基准：内部所有尺寸用 cqw，随板块宽度等比缩放 */
 .prison-map {
   position: absolute;
   inset: 0;
   overflow: hidden;
   z-index: 0;
+  container-type: inline-size;
 }
 
-.prison-map-stage {
+.map-image {
   position: absolute;
+  inset: 0;
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.map-markers {
+  position: absolute;
+  inset: 0;
 }
 
 .prison-area-marker {
@@ -20,26 +28,40 @@
   user-select: none;
 }
 
+.anchor-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0.93cqw;
+  height: 0.93cqw;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 0.74cqw #00f0ff, 0 0 1.49cqw rgba(0, 240, 255, 0.6);
+  pointer-events: none;
+}
+
 .leader-line {
   position: absolute;
-  right: 0;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(0, 240, 255, 0.35), #00f0ff);
-  box-shadow: 0 0 6px rgba(0, 240, 255, 0.7);
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(0deg, rgba(0, 240, 255, 0.35), #00f0ff);
+  box-shadow: 0 0 0.56cqw rgba(0, 240, 255, 0.7);
   pointer-events: none;
 }
 
 .area-card {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  min-width: 112px;
-  padding: 4px 10px 5px;
+  left: 0;
+  transform: translateX(-50%);
+  min-width: 10.43cqw;
+  padding: 0.37cqw 0.93cqw 0.47cqw;
   background: rgba(8, 18, 38, 0.85);
   border: 1px solid rgba(0, 240, 255, 0.55);
-  border-radius: 4px;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25), inset 0 0 12px rgba(0, 240, 255, 0.08);
+  border-radius: 0.37cqw;
+  box-shadow: 0 0 1.12cqw rgba(0, 240, 255, 0.25), inset 0 0 1.12cqw rgba(0, 240, 255, 0.08);
   backdrop-filter: blur(3px);
   cursor: pointer;
   text-align: center;
@@ -48,27 +70,27 @@
 
 .prison-area-marker:hover .area-card {
   border-color: #00f0ff;
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.6), inset 0 0 14px rgba(0, 240, 255, 0.15);
-  transform: translateY(-50%) scale(1.06);
+  box-shadow: 0 0 1.68cqw rgba(0, 240, 255, 0.6), inset 0 0 1.3cqw rgba(0, 240, 255, 0.15);
+  transform: translateX(-50%) scale(1.06);
   z-index: 3;
 }
 
 .area-name {
   color: #00f0ff;
-  font-size: 12px;
+  font-size: 1.12cqw;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 1.68cqw;
   letter-spacing: 1px;
   white-space: nowrap;
-  text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+  text-shadow: 0 0 0.74cqw rgba(0, 240, 255, 0.8);
 }
 
 .area-stats {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  font-size: 10px;
-  line-height: 16px;
+  gap: 0.93cqw;
+  font-size: 0.93cqw;
+  line-height: 1.49cqw;
   color: #cfeeff;
   white-space: nowrap;
 }
