@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlparse
 from datetime import date, datetime
 from rest_framework.views import APIView
@@ -7,6 +8,19 @@ from apps.users.config import JWTAuthentication
 from apps.users.models import PrisonerArchive
 
 PHOTO_EXPIRED_YEARS = 5
+
+
+def _parse_sentence_end(raw):
+    """解析刑期止日，兼容 2026-08-05 / 2026.08.05 / 2026/08/05 / 2026年08月05日"""
+    if not raw or not isinstance(raw, str):
+        return None
+    match = re.match(r'(\d{4})[-./年](\d{1,2})[-./月](\d{1,2})', raw.strip())
+    if not match:
+        return None
+    try:
+        return date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    except ValueError:
+        return None
 
 
 def _compute_photo_expired(entry_date_str):
@@ -57,11 +71,22 @@ class ArchiveListController(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _parse_date(value):
+        if not value:
+            return None
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+
     def get(self, request):
         prisoner_no = request.query_params.get('prisoner_no', '').strip()
         prisoner_name = request.query_params.get('prisoner_name', '').strip()
         prison_area = request.query_params.get('prison_area', '').strip()
         crime = request.query_params.get('crime', '').strip()
+        release_start = request.query_params.get('release_start', '').strip()
+        release_end = request.query_params.get('release_end', '').strip()
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', request.query_params.get('limit', 10)))
 
@@ -75,6 +100,25 @@ class ArchiveListController(APIView):
             qs = qs.filter(prison_area__icontains=prison_area)
         if crime:
             qs = qs.filter(crime__icontains=crime)
+
+        # 按刑期止日（刑满释放日期）范围筛选；字段为多种格式的字符串，在 Python 层解析
+        start_date = self._parse_date(release_start)
+        end_date = self._parse_date(release_end)
+        if start_date or end_date:
+            matched_ids = []
+            for r in qs:
+                # 优先独立列；解析失败时回退 basic_info 原始 zr（兼容历史坏数据）
+                d = _parse_sentence_end(r.sentence_end)
+                if d is None and r.basic_info:
+                    d = _parse_sentence_end(r.basic_info.get('zr'))
+                if d is None:
+                    continue
+                if start_date and d < start_date:
+                    continue
+                if end_date and d > end_date:
+                    continue
+                matched_ids.append(r.pk)
+            qs = qs.filter(pk__in=matched_ids)
 
         total = qs.count()
         start = (page - 1) * page_size

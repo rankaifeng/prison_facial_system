@@ -191,6 +191,29 @@ services:
     networks:
       - prison-network
 
+  celery-worker:
+    image: prison-backend:latest
+    container_name: prison-celery-worker
+    command: ["/app/celery-worker-entrypoint.sh"]
+    restart: always
+    environment:
+      - DEBUG=False
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=prison_system
+      - DB_USER=root
+      - DB_PASSWORD=$MYSQL_PASSWORD
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - prison-network
+
   frontend:
     image: prison-frontend:latest
     container_name: prison-frontend

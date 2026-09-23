@@ -1,11 +1,14 @@
 import React, { useMemo, useEffect } from 'react';
-import { Button, message, Tag } from 'antd';
+import { Button, message, Tag, DatePicker } from 'antd';
 import { EyeOutlined, ExportOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
+
+const { RangePicker } = DatePicker;
 
 const PRISON_AREAS = [
   { value: '一监区', label: '一监区' },
@@ -38,11 +41,25 @@ const PrisonerList = () => {
     rowKey: 'bh',
     defaultPageSize: savedPageSize,
     defaultCurrentPage: savedPage,
+    transformParams: (base) => {
+      const range = base.sentence_range;
+      if (Array.isArray(range) && range.length === 2 && range[0] && range[1]) {
+        base.release_start = range[0].format('YYYY-MM-DD');
+        base.release_end = range[1].format('YYYY-MM-DD');
+      }
+      delete base.sentence_range;
+      return base;
+    },
   });
 
   // 恢复搜索条件（页码已通过 defaultCurrentPage 恢复）
   useEffect(() => {
     if (savedSearch) {
+      if (Array.isArray(savedSearch.sentence_range)) {
+        savedSearch.sentence_range = savedSearch.sentence_range.map(v =>
+          typeof v === 'string' ? moment(v) : v
+        );
+      }
       form.setFieldsValue(savedSearch);
       search.submit();
     }
@@ -80,6 +97,7 @@ const PrisonerList = () => {
     { title: '民族', dataIndex: 'mz', key: 'mz', width: 80 },
     { title: '罪名', dataIndex: 'zm', key: 'zm', width: 120, ellipsis: true },
     { title: '原判刑期', dataIndex: 'ypxq', key: 'ypxq', width: 120, ellipsis: true },
+    { title: '刑期止日', dataIndex: 'zr', key: 'zr', width: 120 },
     { title: '监区', dataIndex: 'db', key: 'db', width: 80 },
     { title: '监室号', dataIndex: 'jsh', key: 'jsh', width: 80 },
     { title: '入监日期', dataIndex: 'rjrq', key: 'rjrq', width: 120 },
@@ -136,6 +154,18 @@ const PrisonerList = () => {
       name: 'crime',
       type: 'input',
       props: { placeholder: '请输入罪名' }
+    },
+    {
+      label: '刑满日期',
+      name: 'sentence_range',
+      type: 'custom',
+      render: () => (
+        <RangePicker
+          style={{ width: 240 }}
+          format="YYYY-MM-DD"
+          placeholder={['开始日期', '结束日期']}
+        />
+      )
     },
   ], []);
 
