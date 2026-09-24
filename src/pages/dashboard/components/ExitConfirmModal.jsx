@@ -51,6 +51,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
   const [armedPoliceSignature, setArmedPoliceSignature] = useState(null);
   const [armedPoliceImage, setArmedPoliceImage] = useState(null);
   const [captureLoading, setCaptureLoading] = useState(false);
+  const [policeCaptureLoading, setPoliceCaptureLoading] = useState(false);
+  const [swatCaptureLoading, setSwatCaptureLoading] = useState(false);
   const [exitReasons, setExitReasons] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [startTime, setStartTime] = useState(null);
@@ -394,6 +396,15 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           )}
         </div>
         {policeName && <div style={{ marginTop: 12, fontSize: 16, color: '#fff', fontWeight: 600 }}>{policeName}</div>}
+        <Button
+          icon={<CameraOutlined />}
+          loading={policeCaptureLoading}
+          onClick={handlePoliceCapture}
+          style={{ marginTop: 16 }}
+          type="primary"
+        >
+          手动拍照
+        </Button>
       </div>
     </div>
   );
@@ -419,6 +430,15 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           )}
         </div>
         {swatName && <div style={{ marginTop: 12, fontSize: 16, color: '#fff', fontWeight: 600 }}>{swatName}</div>}
+        <Button
+          icon={<CameraOutlined />}
+          loading={swatCaptureLoading}
+          onClick={handleSwatCapture}
+          style={{ marginTop: 16 }}
+          type="primary"
+        >
+          手动拍照
+        </Button>
       </div>
     </div>
   );
@@ -437,6 +457,40 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
       message.error('拍照请求失败');
     } finally {
       setCaptureLoading(false);
+    }
+  };
+
+  const handlePoliceCapture = async () => {
+    setPoliceCaptureLoading(true);
+    try {
+      const res = await snapshot.capture({ channel: 1 });
+      if (res?.code === 1 && res?.data?.image_base64) {
+        setPoliceImage('data:image/jpeg;base64,' + res.data.image_base64);
+        message.success('拍照成功');
+      } else {
+        message.error(res?.msg || '拍照失败');
+      }
+    } catch (e) {
+      message.error('拍照请求失败');
+    } finally {
+      setPoliceCaptureLoading(false);
+    }
+  };
+
+  const handleSwatCapture = async () => {
+    setSwatCaptureLoading(true);
+    try {
+      const res = await snapshot.capture({ channel: 1 });
+      if (res?.code === 1 && res?.data?.image_base64) {
+        setSwatImage('data:image/jpeg;base64,' + res.data.image_base64);
+        message.success('拍照成功');
+      } else {
+        message.error(res?.msg || '拍照失败');
+      }
+    } catch (e) {
+      message.error('拍照请求失败');
+    } finally {
+      setSwatCaptureLoading(false);
     }
   };
 

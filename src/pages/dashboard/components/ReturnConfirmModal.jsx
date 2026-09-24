@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, DatePicker, message, Spin, Row, Col } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { UserOutlined, CameraOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
-import { returnRecord, archive } from '@/api/globApi';
+import { returnRecord, archive, snapshot } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 moment.locale('zh-cn');
@@ -17,7 +17,25 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
   const [startTime, setStartTime] = useState(null);
   const [loadingPrisoner, setLoadingPrisoner] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [policeCaptureLoading, setPoliceCaptureLoading] = useState(false);
   const policeInputRef = useRef(null);
+
+  const handlePoliceCapture = async () => {
+    setPoliceCaptureLoading(true);
+    try {
+      const res = await snapshot.capture({ channel: 1 });
+      if (res?.code === 1 && res?.data?.image_base64) {
+        setPoliceImage('data:image/jpeg;base64,' + res.data.image_base64);
+        message.success('拍照成功');
+      } else {
+        message.error(res?.msg || '拍照失败');
+      }
+    } catch (e) {
+      message.error('拍照请求失败');
+    } finally {
+      setPoliceCaptureLoading(false);
+    }
+  };
 
   // 自动填充民警人脸图片和姓名
   useEffect(() => {
@@ -256,6 +274,15 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
           )}
         </div>
         {policeName && <div style={{ marginTop: 12, fontSize: 16, color: '#fff', fontWeight: 600 }}>{policeName}</div>}
+        <Button
+          icon={<CameraOutlined />}
+          loading={policeCaptureLoading}
+          onClick={handlePoliceCapture}
+          style={{ marginTop: 16 }}
+          type="primary"
+        >
+          手动拍照
+        </Button>
       </div>
     </div>
   );
