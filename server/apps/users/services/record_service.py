@@ -1,7 +1,6 @@
 import logging
 import base64
 import uuid
-import threading
 from django.db import transaction
 from apps.users.repositories import RecordRepository
 from .base_service import BaseService
@@ -9,13 +8,14 @@ from .base_service import BaseService
 logger = logging.getLogger(__name__)
 
 
-def _run_video_generation_async(record_id):
-    """在新线程中异步执行视频生成，不阻塞主线程"""
+def _enqueue_video_generation(record_id):
+    """提交视频生成任务到 Celery 视频队列（worker 串行录制）"""
     from apps.users.tasks import generate_exit_video
     try:
-        generate_exit_video(record_id)
-    except Exception as e:
-        logger.error(f"视频生成线程异常: record_id={record_id}, error={e}")
+        generate_exit_video.delay(record_id)
+    except Exception:
+        logger.error(f"视频任务入队失败，记录已保存但视频需稍后补生成: record_id={record_id}",
+                     exc_info=True)
 
 
 class RecordService(BaseService):
@@ -149,7 +149,7 @@ class RecordService(BaseService):
             logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}")
 
             # 异步生成视频（新线程，不阻塞主请求）
-            threading.Thread(target=_run_video_generation_async, args=(record.id,)).start()
+            transaction.on_commit(lambda: _enqueue_video_generation(record.id))
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -197,7 +197,7 @@ class RecordService(BaseService):
             logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
 
             # 异步生成视频（新线程，不阻塞主请求）
-            threading.Thread(target=_run_video_generation_async, args=(record.id,)).start()
+            transaction.on_commit(lambda: _enqueue_video_generation(record.id))
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 
@@ -247,7 +247,7 @@ class RecordService(BaseService):
             logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 
             # 异步生成视频（新线程，不阻塞主请求）
-            threading.Thread(target=_run_video_generation_async, args=(record.id,)).start()
+            transaction.on_commit(lambda: _enqueue_video_generation(record.id))
 
             return True, '提交成功', {'id': record.id, 'status': record.status}
 

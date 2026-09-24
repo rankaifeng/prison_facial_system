@@ -22,12 +22,18 @@ def _build_history_reason_counts(reason_stats):
     return {field: reason_stats.get(reason, 0) for reason, field in HISTORY_REASON_FIELDS}
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def generate_exit_video(self, record_id):
-    """
-    异步生成出监/回监记录的录像
-    失败时自动重试（最多3次，间隔60秒递增）
-    """
+def _acquire_video_lock(record_id, timeout=3600):
+    """获取记录级视频锁，防止同一记录被并发执行；拿不到返回 None"""
+    import redis
+    from django.conf import settings
+    client = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+    lock = client.lock(f'prison:video_lock:{record_id}', timeout=timeout)
+    if lock.acquire(blocking=False):
+        return lock
+    return None
+
+
+def _generate_exit_video_impl(self, record_id):
     import os
     from apps.users.models import ExitEntryRecord
     from apps.users.controllers.video_controller import (
@@ -100,7 +106,7 @@ def generate_exit_video(self, record_id):
 
     # 构建 RTSP URL（紧凑格式优先）
     rtsp_urls = _build_rtsp_urls(rtsp_base, record.start_time, record.end_time)
-    max_wait = duration + 30
+    max_wait = max(duration * 2 + 60, 120)
 
     last_error = None
     for i, rtsp_url in enumerate(rtsp_urls):
@@ -138,6 +144,25 @@ def generate_exit_video(self, record_id):
 
     logger.error(f"记录 {record_id} 视频生成全部失败（已重试{self.max_retries}次）: {last_error}")
     return f"失败: {last_error}"
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def generate_exit_video(self, record_id):
+    """
+    异步生成出监/回监记录的录像
+    失败时自动重试（最多3次，间隔60秒递增）
+    """
+    lock = _acquire_video_lock(record_id)
+    if lock is None:
+        logger.info(f"记录 {record_id} 已有视频生成任务在执行，跳过重复入队")
+        return f"任务已在执行中: {record_id}"
+    try:
+        return _generate_exit_video_impl(self, record_id)
+    finally:
+        try:
+            lock.release()
+        except Exception:
+            logger.warning(f"记录 {record_id} 释放视频锁异常", exc_info=True)
 
 
 @shared_task

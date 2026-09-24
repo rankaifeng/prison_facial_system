@@ -104,11 +104,11 @@ OLD_BACKEND=$(docker images prison-backend:latest -q 2>/dev/null | head -1)
 OLD_FRONTEND=$(docker images prison-frontend:latest -q 2>/dev/null | head -1)
 
 # 停止并移除旧容器，确保用新镜像重建
-docker compose stop backend celery-beat frontend 2>&1 | sed 's/^/    /'
-docker compose rm -f backend celery-beat frontend 2>&1 | sed 's/^/    /'
+docker compose stop backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
+docker compose rm -f backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
 
 # 启动新容器
-docker compose up -d backend celery-beat frontend 2>&1 | sed 's/^/    /'
+docker compose up -d backend celery-beat celery-worker frontend 2>&1 | sed 's/^/    /'
 
 # 检查镜像是否更新
 NEW_BACKEND=$(docker images prison-backend:latest -q 2>/dev/null | head -1)

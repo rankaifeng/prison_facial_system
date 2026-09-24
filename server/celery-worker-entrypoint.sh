@@ -11,5 +11,20 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
-echo "=== 启动 Celery Worker 任务执行器 ==="
-exec celery -A config worker -l info --without-gossip --without-mingle --without-heartbeat
+echo "=== 启动视频队列 Worker（video，并发1，串行录制）==="
+celery -A config worker -l info \
+    -Q video --concurrency=1 \
+    -n video@%h \
+    --without-gossip --without-mingle --without-heartbeat &
+VIDEO_PID=$!
+
+echo "=== 启动默认队列 Worker（celery，并发2）==="
+celery -A config worker -l info \
+    -Q celery --concurrency=2 \
+    -n default@%h \
+    --without-gossip --without-mingle --without-heartbeat &
+DEFAULT_PID=$!
+
+trap 'kill "$VIDEO_PID" "$DEFAULT_PID" 2>/dev/null || true' TERM INT
+
+wait

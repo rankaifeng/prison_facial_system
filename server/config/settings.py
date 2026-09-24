@@ -94,6 +94,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Shanghai'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+# 视频生成任务走独立队列，worker 并发1串行录制，避免并发回放打满 NVR 会话
+CELERY_TASK_ROUTES = {
+    'apps.users.tasks.generate_exit_video': {'queue': 'video'},
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
