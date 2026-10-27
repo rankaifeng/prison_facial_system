@@ -4,6 +4,9 @@ from .prison_area import (
     get_prison_area_id,
     get_all_prison_areas,
     get_prison_area_dict,
+    split_prison_ids,
+    get_prison_area_names,
+    expand_prison_area_values,
 )
 
 __all__ = [
@@ -12,4 +15,7 @@ __all__ = [
     'get_prison_area_id',
     'get_all_prison_areas',
     'get_prison_area_dict',
+    'split_prison_ids',
+    'get_prison_area_names',
+    'expand_prison_area_values',
 ]

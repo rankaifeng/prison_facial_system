@@ -101,8 +101,16 @@ class StatisticsService(BaseService):
 
         today = date.today()
 
+        # prison_area 支持多监区（逗号分隔的 ID），展开为 ID+名称列表用于过滤
+        area_filter_values = None
+        if prison_area:
+            from apps.users.dict import expand_prison_area_values
+            area_filter_values = expand_prison_area_values(prison_area)
+
         # ========== 从档案库表获取实时在监人数（排除已释放） ==========
         archive_qs = PrisonerArchive.objects.filter(is_released=False)
+        if area_filter_values:
+            archive_qs = archive_qs.filter(prison_area__in=area_filter_values)
         total_in_prison = archive_qs.count()
 
         # 按监区分组统计在监人数（档案表的 prison_area 字段，值来自 XML 的 db 字段）
@@ -117,9 +125,9 @@ class StatisticsService(BaseService):
 
         # ========== 从今日出监记录表获取出监数据 ==========
         today_records = TodayExitRecord.objects.all()
-        if prison_area:
-            # prison_area 参数是 ID（"1"-"7"），TodayExitRecord.prison_area 字段存的也是 ID
-            today_records = today_records.filter(prison_area=prison_area)
+        if area_filter_values:
+            # prison_area 参数支持多值（"1,2"），TodayExitRecord.prison_area 字段存的是 ID
+            today_records = today_records.filter(prison_area__in=area_filter_values)
 
         # 按监区分组统计出监人数
         area_exit_stats = today_records.values('prison_area_name').annotate(

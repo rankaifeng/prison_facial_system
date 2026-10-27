@@ -48,3 +48,38 @@ def get_all_prison_areas():
 def get_prison_area_dict():
     """获取监区字典 {id: name}"""
     return {area['id']: area['name'] for area in PRISON_AREAS}
+
+
+def split_prison_ids(value):
+    """
+    把监区值拆成列表，兼容单值（"1"）和多值（"1,2"），非数字原样保留
+    """
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(v).strip() for v in value if str(v).strip()]
+    return [p.strip() for p in str(value).split(',') if p.strip()]
+
+
+def get_prison_area_names(prison_ids):
+    """根据 ID 列表获取逗号分隔的监区名称"""
+    names = []
+    for pid in split_prison_ids(prison_ids):
+        name = get_prison_area_name(pid)
+        if name and name not in names:
+            names.append(name)
+    return ','.join(names)
+
+
+def expand_prison_area_values(value):
+    """
+    把监区值（单ID、多ID逗号串、名称）展开为 ID+名称的去重列表，用于 __in 查询
+    """
+    values = []
+    for v in split_prison_ids(value):
+        if v not in values:
+            values.append(v)
+        name = get_prison_area_name(v)
+        if name and name != v and name not in values:
+            values.append(name)
+    return values

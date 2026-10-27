@@ -13,11 +13,9 @@ class StatisticsRepository:
         queryset = DailyStatistics.objects.filter(date=target_date)
         if prison_area:
             from django.db.models import Q
-            from apps.users.dict import get_prison_area_name
-            area_name = get_prison_area_name(prison_area)
-            q = Q(prison_area=prison_area)
-            if area_name and area_name != prison_area:
-                q = q | Q(prison_area=area_name)
+            from apps.users.dict import expand_prison_area_values
+            values = expand_prison_area_values(prison_area)
+            q = Q(prison_area__in=values) | Q(prison_area_name__in=values)
             queryset = queryset.filter(q)
 
         return queryset
@@ -61,7 +59,12 @@ class StatisticsRepository:
         if end_date:
             queryset = queryset.filter(date__lte=end_date)
         if prison_area:
-            queryset = queryset.filter(prison_area=prison_area)
+            from django.db.models import Q
+            from apps.users.dict import expand_prison_area_values
+            values = expand_prison_area_values(prison_area)
+            queryset = queryset.filter(
+                Q(prison_area__in=values) | Q(prison_area_name__in=values)
+            )
 
         return queryset.order_by('-date')
 

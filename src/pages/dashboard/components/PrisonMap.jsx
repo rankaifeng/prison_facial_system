@@ -39,11 +39,15 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
   };
 
   const currentPrisonName = getStoredPrisonName();
+  // 支持多监区（逗号分隔），如 "一监区,二监区"
+  const currentPrisonNames = currentPrisonName
+    ? currentPrisonName.split(',').map(n => n.trim()).filter(Boolean)
+    : [];
 
-  // 非管理员只显示登录的监区，匹配不到时回退一监区
+  // 非管理员只显示登录的监区（支持多选），匹配不到时回退一监区
   const displayAreas = isAdmin
     ? AREA_POSITIONS
-    : AREA_POSITIONS.filter(item => item.name === currentPrisonName);
+    : AREA_POSITIONS.filter(item => currentPrisonNames.includes(item.name));
   const areas = displayAreas.length > 0 ? displayAreas : [AREA_POSITIONS[0]];
 
   const markers = areas.map((item) => {

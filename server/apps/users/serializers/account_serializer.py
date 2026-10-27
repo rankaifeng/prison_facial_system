@@ -15,3 +15,6 @@ class AccountCreateSerializer(serializers.Serializer):
     role = serializers.CharField(max_length=32, required=False, label='角色')
     prison_id = serializers.CharField(max_length=32, required=False, label='所属监狱ID')
     prison_name = serializers.CharField(max_length=128, required=False, label='所属监狱名称')
+    prison_ids = serializers.ListField(
+        child=serializers.CharField(max_length=32), required=False, label='所属监狱ID列表'
+    )

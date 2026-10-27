@@ -232,7 +232,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedPrisonName = cache.getVal('prisonName');
-    setUserName(storedPrisonName || '管理员');
+    setUserName(storedPrisonName ? String(storedPrisonName).split(',').join('、') : '管理员');
     setIsAdmin(!storedPrisonName);
   }, []);
 

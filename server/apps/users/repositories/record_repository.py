@@ -54,11 +54,9 @@ class RecordRepository:
                 )
         if prison_area:
             from django.db.models import Q
-            from apps.users.dict import get_prison_area_name
-            area_name = get_prison_area_name(prison_area)
-            q = Q(prison_area=prison_area) | Q(prison_area_name=prison_area)
-            if area_name:
-                q = q | Q(prison_area=area_name) | Q(prison_area_name=area_name)
+            from apps.users.dict import expand_prison_area_values
+            values = expand_prison_area_values(prison_area)
+            q = Q(prison_area__in=values) | Q(prison_area_name__in=values)
             queryset = queryset.filter(q)
         if prisoner_name:
             queryset = queryset.filter(prisoner_name__icontains=prisoner_name)
@@ -109,11 +107,9 @@ class RecordRepository:
         )
         if prison_area:
             from django.db.models import Q
-            from apps.users.dict import get_prison_area_name
-            area_name = get_prison_area_name(prison_area)
-            q = Q(prison_area=prison_area) | Q(prison_area_name=prison_area)
-            if area_name:
-                q = q | Q(prison_area=area_name) | Q(prison_area_name=area_name)
+            from apps.users.dict import expand_prison_area_values
+            values = expand_prison_area_values(prison_area)
+            q = Q(prison_area__in=values) | Q(prison_area_name__in=values)
             queryset = queryset.filter(q)
         return queryset.order_by('-created_at')
 

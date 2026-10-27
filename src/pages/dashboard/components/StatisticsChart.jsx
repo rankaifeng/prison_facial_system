@@ -93,8 +93,20 @@ const StatisticsChart = ({ data }) => {
     areaMap[area.prison_area_name] = area.exit_count || 0;
   });
 
-  // 确保所有监区都显示，没有数据的显示 0
-  const allAreas = ALL_PRISON_AREAS.map(name => ({
+  // 非管理员（登录时存了监区名，支持多监区逗号分隔）只显示自己的监区；管理员显示全部
+  const storedPrisonName = (() => {
+    try {
+      return localStorage.getItem('prisonName') || '';
+    } catch {
+      return '';
+    }
+  })();
+  const visibleAreaNames = storedPrisonName
+    ? storedPrisonName.split(',').map(n => n.trim()).filter(n => AREA_CONFIG[n])
+    : ALL_PRISON_AREAS;
+
+  // 确保可见监区都显示，没有数据的显示 0
+  const allAreas = visibleAreaNames.map(name => ({
     prison_area_name: name,
     exit_count: areaMap[name] || 0
   })).sort((a, b) => b.exit_count - a.exit_count);

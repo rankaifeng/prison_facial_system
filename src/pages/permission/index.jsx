@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button, message, Modal, Form, Input, Select, Popconfirm, Space } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
 import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
@@ -83,37 +83,53 @@ const AccountManagement = () => {
         </Space>
       ),
     },
-    { title: '所属监区', dataIndex: 'prison_name', key: 'prison_name' },
+    {
+      title: '所属监区',
+      dataIndex: 'prison_name',
+      key: 'prison_name',
+      render: (text) => (text ? String(text).split(',').join('、') : '-'),
+    },
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170 },
     {
       title: '操作',
-      width: 120,
+      width: 150,
       render: (_, record) => {
         const isAdmin = record.role === 'admin' || record.role_name === '管理员';
         return (
-          <Popconfirm
-            title={`确定要删除账号"${record.username}"吗？`}
-            onConfirm={async () => {
-              try {
-                await http.post('/user_manage/account/account_delete', { id: record.id });
-                message.success('删除成功');
-                refresh();
-              } catch (error) {
-                message.error('删除失败');
-              }
-            }}
-            okText="确认"
-            cancelText="取消"
-          >
+          <Space size={4}>
             <Button
               type="link"
-              danger
-              icon={<DeleteOutlined />}
-              disabled={isAdmin}
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              style={{ padding: 0, fontSize: 12 }}
             >
-              删除
+              编辑
             </Button>
-          </Popconfirm>
+            <Popconfirm
+              title={`确定要删除账号"${record.username}"吗？`}
+              onConfirm={async () => {
+                try {
+                  await http.post('/user_manage/account/account_delete', { id: record.id });
+                  message.success('删除成功');
+                  refresh();
+                } catch (error) {
+                  message.error('删除失败');
+                }
+              }}
+              okText="确认"
+              cancelText="取消"
+            >
+              <Button
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                disabled={isAdmin}
+              >
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
         );
       },
     },
@@ -134,14 +150,40 @@ const AccountManagement = () => {
     setModalVisible(true);
   };
 
+  const handleEdit = (record) => {
+    setEditingRecord(record);
+    form.resetFields();
+    form.setFieldsValue({
+      username: record.username,
+      prison_ids: record.prison_id
+        ? String(record.prison_id).split(',').filter(Boolean).map(Number)
+        : [],
+    });
+    setModalVisible(true);
+  };
+
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      await http.post('/user_manage/account/account_add', values);
-      message.success('新增成功');
+      if (editingRecord) {
+        const params = {
+          id: editingRecord.id,
+          username: values.username,
+          prison_ids: values.prison_ids,
+        };
+        if (values.password) {
+          params.password = values.password;
+        }
+        await http.post('/user_manage/account/account_update', params);
+        message.success('编辑成功');
+      } else {
+        await http.post('/user_manage/account/account_add', values);
+        message.success('新增成功');
+      }
       setModalVisible(false);
       refresh();
     } catch (error) {
+      // 表单校验失败或 HTTP 错误（拦截器已统一提示）
     }
   };
 
@@ -177,7 +219,7 @@ const AccountManagement = () => {
             label="账号"
             rules={[{ required: true, message: '请输入账号' }]}
           >
-            <Input placeholder="请输入账号" disabled={!!editingRecord} />
+            <Input placeholder="请输入账号" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -187,11 +229,17 @@ const AccountManagement = () => {
             <Input.Password placeholder={editingRecord ? '不修改请留空' : '请输入密码'} />
           </Form.Item>
           <Form.Item
-            name="prison_id"
-            label="所属监区"
+            name="prison_ids"
+            label="所属监区（可多选）"
             rules={[{ required: true, message: '请选择监区' }]}
           >
-            <Select placeholder="请选择监区" options={prisonAreas} fieldNames={{ label: 'name', value: 'id' }} />
+            <Select
+              mode="multiple"
+              placeholder="请选择监区"
+              options={prisonAreas}
+              fieldNames={{ label: 'name', value: 'id' }}
+              maxTagCount="responsive"
+            />
           </Form.Item>
         </Form>
       </Modal>

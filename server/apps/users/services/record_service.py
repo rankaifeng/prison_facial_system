@@ -10,12 +10,19 @@ logger = logging.getLogger(__name__)
 
 def _enqueue_video_generation(record_id):
     """提交视频生成任务到 Celery 视频队列（worker 串行录制）"""
-    from apps.users.tasks import generate_exit_video
-    try:
-        generate_exit_video.delay(record_id)
-    except Exception:
-        logger.error(f"视频任务入队失败，记录已保存但视频需稍后补生成: record_id={record_id}",
-                     exc_info=True)
+    import threading
+
+    def _do_enqueue():
+        try:
+            from apps.users.tasks import generate_exit_video
+            # retry=False：broker（Redis）不可达时立即失败，不长时间重试
+            generate_exit_video.apply_async((record_id,), retry=False, retry_policy=None)
+        except Exception:
+            logger.error(f"视频任务入队失败，记录已保存但视频需稍后补生成: record_id={record_id}",
+                         exc_info=True)
+
+    # 守护线程入队：Redis 未启动时 celery 重连可能阻塞十几秒，不能卡住 HTTP 响应
+    threading.Thread(target=_do_enqueue, daemon=True).start()
 
 
 class RecordService(BaseService):
@@ -335,7 +342,8 @@ class RecordService(BaseService):
         # 从档案库查询所有罪犯
         qs = PrisonerArchive.objects.all()
         if prison_area:
-            qs = qs.filter(prison_area=prison_area)
+            from apps.users.dict import expand_prison_area_values
+            qs = qs.filter(prison_area__in=expand_prison_area_values(prison_area))
 
         # 筛选今天刑满释放的人 - 支持多种日期格式
         archive_records = []
