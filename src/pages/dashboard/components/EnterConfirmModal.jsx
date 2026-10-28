@@ -5,14 +5,20 @@ import { entryRecord, archive } from '@/api/globApi';
 import './ExitConfirmModal.less';
 
 const PRISON_AREAS = [
-  { value: '一监区', label: '一监区' },
-  { value: '二监区', label: '二监区' },
-  { value: '三监区', label: '三监区' },
-  { value: '四监区', label: '四监区' },
-  { value: '五监区', label: '五监区' },
-  { value: '六监区', label: '六监区' },
-  { value: '七监区', label: '七监区' },
+  { value: '1', label: '一监区' },
+  { value: '2', label: '二监区' },
+  { value: '3', label: '三监区' },
+  { value: '4', label: '四监区' },
+  { value: '5', label: '五监区' },
+  { value: '6', label: '六监区' },
+  { value: '7', label: '七监区' },
 ];
+
+// 与出监弹窗保持一致，统一提交监区 ID
+const PRISON_AREA_NAME_TO_ID = {
+  '一监区': '1', '二监区': '2', '三监区': '3', '四监区': '4',
+  '五监区': '5', '六监区': '6', '七监区': '7',
+};
 
 const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage, policeFaceName, capturedFaceImage, archiveFaceImage, onStepChange }) => {
   const [form] = Form.useForm();
@@ -61,7 +67,7 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
             form.setFieldsValue({
               prisonerNo: d.bh || prisonerNo,
               prisonerName: d.xm || '',
-              prisonArea: d.db || '',
+              prisonArea: PRISON_AREA_NAME_TO_ID[d.db] || d.db || '',
             });
           } else {
             message.error(res?.msg || '未找到该罪犯');
@@ -122,13 +128,13 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
       const formData = new FormData();
       formData.append('prisoner_no', formValues.prisonerNo);
       formData.append('prisoner_name', formValues.prisonerName);
-      formData.append('prison_area', formValues.prisonArea);
-      formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD HH:mm') : null);
-      formData.append('police_face', policeImage);
+      formData.append('prison_area', PRISON_AREA_NAME_TO_ID[formValues.prisonArea] || formValues.prisonArea);
+      formData.append('entry_date', formValues.enterDate ? formValues.enterDate.format('YYYY-MM-DD HH:mm') : '');
+      formData.append('police_face', policeImage || '');
       formData.append('police_name', policeName || '');
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
-      formData.append('start_time', startTime);
+      formData.append('start_time', startTime || '');
       formData.append('end_time', end);
 
       if (submitting) return;
@@ -197,8 +203,8 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
             <Input placeholder="请输入罪犯姓名" />
           </Form.Item>
 
-          <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请输入监区' }]}>
-            <Input placeholder="请输入监区" />
+          <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请选择监区' }]}>
+            <Select placeholder="请选择监区" options={PRISON_AREAS} />
           </Form.Item>
 
           <Form.Item

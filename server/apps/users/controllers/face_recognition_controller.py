@@ -147,7 +147,9 @@ class FaceRecognitionController(APIView):
                 return dt
             for fmt in ('%Y-%m-%d %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%Y%m%d%H%M%S'):
                 try:
-                    return datetime.strptime(recog_time, fmt).replace(tzinfo=timezone.utc)
+                    # 设备上传的是本地时间（Asia/Shanghai），不能误标为 UTC
+                    from django.utils import timezone as dj_tz
+                    return dj_tz.make_aware(datetime.strptime(recog_time, fmt))
                 except ValueError:
                     continue
         except Exception:

@@ -275,6 +275,10 @@ class DahuaEventService:
             except requests.RequestException as e:
                 logger.error(f'[门禁事件] 连接断开: {e}, 5秒后重连...')
                 time.sleep(5)
+            except Exception as e:
+                # 解析等未知异常不能让订阅线程死亡，否则门禁事件静默断流
+                logger.error(f'[门禁事件] 处理异常: {e}, 5秒后重连...', exc_info=True)
+                time.sleep(5)
 
     @classmethod
     def _read_line(cls, raw, buf):

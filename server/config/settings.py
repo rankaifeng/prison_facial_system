@@ -7,7 +7,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key')
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+if not DEBUG and SECRET_KEY == 'django-insecure-dev-key':
+    raise RuntimeError('生产环境(DEBUG=False)必须通过环境变量 SECRET_KEY 设置密钥')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*' if DEBUG else 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'daphne',
@@ -136,4 +138,4 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'config.exception_handler.custom_exception_handler',
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # 内网环境，允许所有来源
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # 内网环境；生产建议前端同源部署走 Nginx，不开全放行

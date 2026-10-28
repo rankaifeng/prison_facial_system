@@ -1,5 +1,8 @@
 import logging
 from datetime import date, datetime, timedelta
+from django.db import transaction
+from django.db.models import Sum
+from apps.users.repositories import StatisticsRepository
 from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
@@ -36,22 +39,29 @@ class StatisticsService(BaseService):
 
         yesterday = today - timedelta(days=1)
 
-        # 清空今日出监记录
-        deleted_count, _ = TodayExitRecord.objects.all().delete()
-        if deleted_count:
-            logger.info(f'[auto-reset] 已清空今日出监记录: {deleted_count} 条')
+        # 事务保证原子性；HistoryStatistics 幂等防止并发/重跑导致历史数据翻倍
+        with transaction.atomic():
+            if DailyStatistics.objects.filter(date=today).exists():
+                return
 
-        # 将昨日统计同步到历史记录
-        daily_stats = DailyStatistics.objects.filter(date=yesterday)
-        for stat in daily_stats:
-            HistoryStatistics.objects.create(
-                prison_area=stat.prison_area,
-                prison_area_name=stat.prison_area_name,
-                date=yesterday,
-                exit_count=stat.exit_count,
-                **_build_history_reason_counts(stat.reason_stats),
-                entry_count=stat.entry_count,
-            )
+            # 清空今日出监记录
+            deleted_count, _ = TodayExitRecord.objects.all().delete()
+            if deleted_count:
+                logger.info(f'[auto-reset] 已清空今日出监记录: {deleted_count} 条')
+
+            # 将昨日统计同步到历史记录
+            daily_stats = DailyStatistics.objects.filter(date=yesterday)
+            for stat in daily_stats:
+                HistoryStatistics.objects.get_or_create(
+                    prison_area=stat.prison_area,
+                    date=yesterday,
+                    defaults={
+                        'prison_area_name': stat.prison_area_name,
+                        'exit_count': stat.exit_count,
+                        **_build_history_reason_counts(stat.reason_stats),
+                        'entry_count': stat.entry_count,
+                    }
+                )
             # 创建今日统计（计数归零，在押人数保留）
             DailyStatistics.objects.get_or_create(
                 prison_area=stat.prison_area,

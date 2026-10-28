@@ -1,5 +1,6 @@
 import json
 import mimetypes
+import re
 import subprocess
 import logging
 import os
@@ -17,7 +18,11 @@ from apps.users.config import JWTAuthentication
 
 def serve_media(request, path):
     """自定义 media 文件服务（不依赖 Django static()，兼容 Daphne/Channels）"""
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    # 防路径穿越：解析后必须仍在 MEDIA_ROOT 内
+    media_root = os.path.realpath(settings.MEDIA_ROOT)
+    file_path = os.path.realpath(os.path.join(settings.MEDIA_ROOT, path))
+    if not file_path.startswith(media_root + os.sep):
+        raise Http404
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         raise Http404
     content_type, _ = mimetypes.guess_type(file_path)
@@ -77,9 +82,10 @@ def _calc_duration_seconds(start_time, end_time):
 
 def _get_video_cache_path(start_time, end_time, camera_index, record_id=None):
     """根据时间范围和摄像头索引生成缓存文件路径"""
-    # 清理时间字符串，生成唯一文件名
-    start_clean = start_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
-    end_clean = end_time.replace(':', '').replace('-', '').replace('T', '_').replace('Z', '')
+    # 清理时间字符串，生成唯一文件名（剔除 . / 等字符防路径穿越，其余与旧格式兼容）
+    _clean = lambda s: re.sub(r'[^0-9A-Za-z_]', '', str(s).replace(':', '').replace('-', '').replace('T', '_').replace('Z', ''))
+    start_clean = _clean(start_time)
+    end_clean = _clean(end_time)
     # 加入 record_id 确保每个记录有唯一文件，避免并发冲突
     if record_id:
         return VIDEOS_ROOT / f"cam{camera_index}_{start_clean}_{end_clean}_r{record_id}.mp4"
@@ -300,7 +306,7 @@ class VideoTaskStatusController(APIView):
             return Response({'code': 0, 'msg': '缺少 task_id', 'data': None})
 
         from celery.result import AsyncResult
-        from prison_backend.celery import app as celery_app
+        from config.celery import app as celery_app
 
         result = AsyncResult(task_id, app=celery_app)
 

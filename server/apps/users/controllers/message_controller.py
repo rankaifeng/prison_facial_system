@@ -11,13 +11,26 @@ class PrisonMessagesController(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('limit', 20))
+        try:
+            page = max(1, int(request.query_params.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = max(1, int(request.query_params.get('limit', 20)))
+        except (TypeError, ValueError):
+            page_size = 20
 
-        # 非管理员只能看本监区的消息
+        # 非管理员只能看本监区的消息（多监区为逗号分隔）；未配置监区则无数据
         prison_area = None
         if request.user.role != 'admin':
             prison_area = request.user.prison_id
+            if not prison_area:
+                return Response({
+                    'code': 1,
+                    'msg': '获取成功',
+                    'data': [],
+                    'num': 0,
+                })
 
         success, message, result = RecordService.get_prison_messages(page, page_size, prison_area)
 

@@ -473,7 +473,7 @@ class RecordService(BaseService):
                 'armed_police_face': build_url(record.armed_police_face),
                 'armed_police_name': record.armed_police_name or '',
                 'hospital_name': record.hospital_name if record.reason == '外出就医' else '',
-                'video': 'https://www.w3schools.com/html/mov_bbb.mp4',
+                'video': build_url(record.video_url),
                 'status': record.status,
                 'created_at': created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else '',
             })

@@ -13,6 +13,12 @@ class RealtimeStatisticsController(APIView):
         prison_area = None
         if request.user.role != 'admin':
             prison_area = request.user.prison_id
+            if not prison_area:
+                return Response({
+                    'code': 0,
+                    'msg': '该账号未配置监区，请联系管理员',
+                    'data': None
+                })
 
         success, message, data = StatisticsService.get_realtime_statistics(prison_area)
 
@@ -31,6 +37,12 @@ class WorkStatisticsController(APIView):
         prison_area = None
         if request.user.role != 'admin':
             prison_area = request.user.prison_id
+            if not prison_area:
+                return Response({
+                    'code': 0,
+                    'msg': '该账号未配置监区，请联系管理员',
+                    'data': None
+                })
 
         success, message, data = StatisticsService.get_work_statistics(prison_area)
 

@@ -145,6 +145,7 @@ services:
     network_mode: host
     environment:
       - DEBUG=False
+      - SECRET_KEY=$SECRET_KEY
       - DB_HOST=127.0.0.1
       - DB_PORT=3306
       - DB_NAME=prison_system
@@ -167,6 +168,7 @@ services:
     network_mode: host
     environment:
       - DEBUG=False
+      - SECRET_KEY=$SECRET_KEY
       - DB_HOST=127.0.0.1
       - DB_PORT=3306
       - DB_NAME=prison_system

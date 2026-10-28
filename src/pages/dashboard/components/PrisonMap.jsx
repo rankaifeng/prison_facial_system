@@ -44,11 +44,10 @@ const PrisonMap = ({ realtimeData, isAdmin }) => {
     ? currentPrisonName.split(',').map(n => n.trim()).filter(Boolean)
     : [];
 
-  // 非管理员只显示登录的监区（支持多选），匹配不到时回退一监区
-  const displayAreas = isAdmin
+  // 非管理员只显示登录的监区（支持多选）；匹配不到时不回退其他监区，避免张冠李戴
+  const areas = isAdmin
     ? AREA_POSITIONS
     : AREA_POSITIONS.filter(item => currentPrisonNames.includes(item.name));
-  const areas = displayAreas.length > 0 ? displayAreas : [AREA_POSITIONS[0]];
 
   const markers = areas.map((item) => {
     const area = (byArea || []).find(a => a.prison_area_name === item.name);

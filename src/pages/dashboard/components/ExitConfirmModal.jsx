@@ -217,16 +217,16 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
     formData.append('prisoner_no', formValues.prisonerNo);
     formData.append('prisoner_name', formValues.prisonerName);
     formData.append('prison_area', formValues.prisonArea);
-    formData.append('exit_date', formValues.exitDate ? formValues.exitDate.format('YYYY-MM-DD HH:mm') : null);
+    formData.append('exit_date', formValues.exitDate ? formValues.exitDate.format('YYYY-MM-DD HH:mm') : '');
     formData.append('reason', formValues.exitReason);
-    formData.append('police_face', policeImage);
-    formData.append('swat_face', swatImage);
+    formData.append('police_face', policeImage || '');
+    formData.append('swat_face', swatImage || '');
     formData.append('police_name', policeName || '');
     formData.append('swat_name', swatName || '');
-    formData.append('armed_police_signature', armedPoliceSignature);
+    formData.append('armed_police_signature', armedPoliceSignature || '');
     formData.append('armed_police_face', armedPoliceImage || '');
     formData.append('hospital_name', hospitalName || '');
-    formData.append('start_time', startTime);
+    formData.append('start_time', startTime || '');
     formData.append('end_time', end);
 
     if (submitting) return;
@@ -302,8 +302,8 @@ const ExitConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImage
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请输入监区' }]}>
-                <Input placeholder="请输入监区" />
+              <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请选择监区' }]}>
+                <Select placeholder="请选择监区" options={PRISON_AREAS} />
               </Form.Item>
             </Col>
             <Col span={12}>

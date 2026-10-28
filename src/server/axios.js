@@ -149,7 +149,8 @@ service.interceptors.response.use(
         if (res.msg && res.msg.includes("无效")) {
             cache.clearVal();
             window.location.href = '/login';
-            return;
+            // 返回 reject，避免调用方拿到 undefined 后访问 res.code 报错
+            return Promise.reject(new Error(res.msg || '登录已失效'));
         }
         return res;
     },

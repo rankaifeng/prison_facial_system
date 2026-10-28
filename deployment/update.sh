@@ -54,6 +54,29 @@ if [ -n "$SERVER_IP" ]; then
     fi
 fi
 
+# 确保所有服务都配置了 SECRET_KEY（旧版本安装的 compose 中 celery 服务缺失，
+# 新后端镜像启动时会强制校验，缺失会导致容器反复崩溃）
+COMPOSE_KEY=$(grep -m1 'SECRET_KEY=' "$INSTALL_DIR/docker-compose.yml" | cut -d'=' -f2- | tr -d '[:space:]')
+if [ -z "$COMPOSE_KEY" ]; then
+    COMPOSE_KEY=$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | base64 | tr -d '/+=' | head -c 32)
+fi
+awk -v key="$COMPOSE_KEY" '
+  /^[[:space:]]*- DEBUG=False$/ {
+      print
+      if ((getline nxt) > 0) {
+          if (nxt !~ /SECRET_KEY=/) print "      - SECRET_KEY=" key
+          print nxt
+      }
+      next
+  }
+  { print }
+' "$INSTALL_DIR/docker-compose.yml" > "$INSTALL_DIR/docker-compose.yml.tmp" && mv "$INSTALL_DIR/docker-compose.yml.tmp" "$INSTALL_DIR/docker-compose.yml"
+if grep -c 'SECRET_KEY=' "$INSTALL_DIR/docker-compose.yml" | grep -q '^3$'; then
+    echo "  SECRET_KEY 配置完整"
+else
+    echo "  SECRET_KEY 已补齐（backend/celery-beat/celery-worker）"
+fi
+
 # ── 3. 停止旧的图片代理服务（已由 nginx 处理）──
 echo ""
 echo "[3/6] 清理旧的图片代理..."

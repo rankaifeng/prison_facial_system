@@ -8,6 +8,22 @@ import './ExitConfirmModal.less';
 
 moment.locale('zh-cn');
 
+// 与出监弹窗保持一致，统一提交监区 ID
+const PRISON_AREAS = [
+  { value: '1', label: '一监区' },
+  { value: '2', label: '二监区' },
+  { value: '3', label: '三监区' },
+  { value: '4', label: '四监区' },
+  { value: '5', label: '五监区' },
+  { value: '6', label: '六监区' },
+  { value: '7', label: '七监区' },
+];
+
+const PRISON_AREA_NAME_TO_ID = {
+  '一监区': '1', '二监区': '2', '三监区': '3', '四监区': '4',
+  '五监区': '5', '六监区': '6', '七监区': '7',
+};
+
 const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceImage, archiveFaceImage, policeFaceImage, policeFaceName }) => {
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
@@ -69,7 +85,7 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
             form.setFieldsValue({
               prisonerNo: d.bh || prisonerNo,
               prisonerName: d.xm || '',
-              prisonArea: d.db || '',
+              prisonArea: PRISON_AREA_NAME_TO_ID[d.db] || d.db || '',
             });
           } else {
             message.error(res?.msg || '未找到该罪犯');
@@ -132,12 +148,12 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
       const formData = new FormData();
       formData.append('prisoner_no', formValues.prisonerNo);
       formData.append('prisoner_name', formValues.prisonerName);
-      formData.append('prison_area', formValues.prisonArea);
-      formData.append('entry_date', formValues.returnDate ? formValues.returnDate.format('YYYY-MM-DD HH:mm') : null);
-      formData.append('police_face', policeImage);
+      formData.append('prison_area', PRISON_AREA_NAME_TO_ID[formValues.prisonArea] || formValues.prisonArea);
+      formData.append('entry_date', formValues.returnDate ? formValues.returnDate.format('YYYY-MM-DD HH:mm') : '');
+      formData.append('police_face', policeImage || '');
       formData.append('entry_status', formValues.entryStatus || 'normal');
       formData.append('abnormal_reason', formValues.abnormalReason || '');
-      formData.append('start_time', startTime);
+      formData.append('start_time', startTime || '');
       formData.append('end_time', end);
 
       if (submitting) return;
@@ -212,8 +228,8 @@ const ReturnConfirmModal = ({ visible, onCancel, onOk, prisonerNo, capturedFaceI
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请输入监区' }]}>
-                <Input placeholder="请输入监区" />
+              <Form.Item name="prisonArea" label="监区" rules={[{ required: true, message: '请选择监区' }]}>
+                <Select placeholder="请选择监区" options={PRISON_AREAS} />
               </Form.Item>
             </Col>
             <Col span={12}>

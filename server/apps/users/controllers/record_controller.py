@@ -267,6 +267,13 @@ class ReturnRecordController(APIView):
         })
 
 
+def _safe_int(value, default):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 class RecordListController(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -279,10 +286,11 @@ class RecordListController(APIView):
         prisoner_name = request.query_params.get('prisoner_name')
         prisoner_no = request.query_params.get('prisoner_no')
         reason = request.query_params.get('reason')
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('limit', request.query_params.get('page_size', 10)))
+        page = max(1, _safe_int(request.query_params.get('page'), 1))
+        page_size = max(1, _safe_int(request.query_params.get('limit', request.query_params.get('page_size')), 10))
 
-        if request.user.role != 'admin' and not prison_area:
+        # 非 admin 强制只能查自己的监区（多监区为逗号分隔），忽略前端传入的 prison_area
+        if request.user.role != 'admin':
             prison_area = request.user.prison_id
 
         success, message, result = RecordService.list_records(
@@ -319,7 +327,7 @@ class RecordExportController(APIView):
         prisoner_no = request.query_params.get('prisoner_no')
         reason = request.query_params.get('reason')
 
-        if request.user.role != 'admin' and not prison_area:
+        if request.user.role != 'admin':
             prison_area = request.user.prison_id
 
         success, message, result = RecordService.export_records(

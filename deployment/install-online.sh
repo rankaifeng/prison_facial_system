@@ -175,6 +175,7 @@ services:
     restart: always
     environment:
       - DEBUG=False
+      - SECRET_KEY=$SECRET_KEY
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=prison_system
@@ -198,6 +199,7 @@ services:
     restart: always
     environment:
       - DEBUG=False
+      - SECRET_KEY=$SECRET_KEY
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=prison_system

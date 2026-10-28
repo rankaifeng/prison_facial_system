@@ -5,6 +5,7 @@ const RECONNECT_DELAY = 3000;
 const useDoorEvents = ({ onEvent }) => {
   const wsRef = useRef(null);
   const reconnectTimer = useRef(null);
+  const unmountedRef = useRef(false);
   const [connected, setConnected] = useState(false);
 
   const getWsUrl = () => {
@@ -38,6 +39,7 @@ const useDoorEvents = ({ onEvent }) => {
 
     ws.onclose = () => {
       setConnected(false);
+      if (unmountedRef.current) return;
       reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY);
     };
 
@@ -47,8 +49,10 @@ const useDoorEvents = ({ onEvent }) => {
   }, [onEvent]);
 
   useEffect(() => {
+    unmountedRef.current = false;
     connect();
     return () => {
+      unmountedRef.current = true;
       clearTimeout(reconnectTimer.current);
       wsRef.current?.close();
     };

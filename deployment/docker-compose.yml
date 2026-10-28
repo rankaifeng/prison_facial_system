@@ -13,7 +13,7 @@ services:
       - "8081:8000"
     environment:
       - DEBUG=False
-      - SECRET_KEY=change-this-to-a-random-string-in-production
+      - SECRET_KEY=ded6456c7b2ec1ba43635dbabd0ecebf3a7db953392311ce96e681af42aaecba
       - ALLOWED_HOSTS=localhost,127.0.0.1,*
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -44,7 +44,7 @@ services:
     restart: always
     environment:
       - DEBUG=False
-      - SECRET_KEY=change-this-to-a-random-string-in-production
+      - SECRET_KEY=ded6456c7b2ec1ba43635dbabd0ecebf3a7db953392311ce96e681af42aaecba
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=prison_system
@@ -71,7 +71,7 @@ services:
     restart: always
     environment:
       - DEBUG=False
-      - SECRET_KEY=change-this-to-a-random-string-in-production
+      - SECRET_KEY=ded6456c7b2ec1ba43635dbabd0ecebf3a7db953392311ce96e681af42aaecba
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=prison_system

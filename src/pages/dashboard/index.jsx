@@ -54,6 +54,8 @@ const Dashboard = () => {
   const exitStepRef = useRef(0);
   const enterStepRef = useRef(0);
   const activeOpRef = useRef(null);
+  // 记录最新的罪犯编号，用于档案照片异步回填的竞态比对
+  const activePrisonerNoRef = useRef(null);
   const navigate = useNavigate();
   const messagesRef = useRef(null);
   const [handheldSyncOpen, setHandheldSyncOpen] = useState(false);
@@ -93,9 +95,12 @@ const Dashboard = () => {
 
     if (data.type === 'door' && data.UserID) {
       setActivePrisonerNo(data.UserID);
+      activePrisonerNoRef.current = data.UserID;
       setSelectModalOpen(true);
-      // 主动获取档案照片，避免弹窗打开时没有照片
-      archive.detail({ prisoner_no: data.UserID }).then(res => {
+      // 主动获取档案照片，避免弹窗打开时没有照片；响应回来时比对编号，防止慢响应覆盖新事件的照片
+      const requestNo = data.UserID;
+      archive.detail({ prisoner_no: requestNo }).then(res => {
+        if (activePrisonerNoRef.current !== requestNo) return;
         if (res.code === 1 && res?.data?.mtxx?.length) {
           const photoUrl = res.data.mtxx[0].xp;
           if (photoUrl) setArchiveFaceImage(photoUrl);
@@ -126,9 +131,12 @@ const Dashboard = () => {
       if (prisonerNo) {
         console.log('[前端] 设置罪犯编号:', prisonerNo);
         setActivePrisonerNo(prisonerNo);
+        activePrisonerNoRef.current = prisonerNo;
         setSelectModalOpen(true);
-        // 获取档案照片
-        archive.detail({ prisoner_no: prisonerNo }).then(res => {
+        // 获取档案照片（比对编号防竞态，见 door 事件分支）
+        const requestNo = prisonerNo;
+        archive.detail({ prisoner_no: requestNo }).then(res => {
+          if (activePrisonerNoRef.current !== requestNo) return;
           console.log('[前端] 档案详情返回:', res);
           if (res?.code === 1 && res?.data?.mtxx?.length) {
             const photoUrl = res.data.mtxx[0].xp;
