@@ -166,6 +166,9 @@ services:
     command: ["/app/celery-worker-entrypoint.sh"]
     restart: always
     network_mode: host
+    volumes:
+      - media-data:/app/media
+      - ./cameras.yml:/app/config/cameras.yml
     environment:
       - DEBUG=False
       - SECRET_KEY=$SECRET_KEY

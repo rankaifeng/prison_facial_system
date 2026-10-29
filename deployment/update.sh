@@ -77,6 +77,24 @@ else
     echo "  SECRET_KEY 已补齐（backend/celery-beat/celery-worker）"
 fi
 
+# 确保 celery-worker 挂载 media 卷（视频由 worker 容器生成，backend 容器提供下载，
+# 不共享卷会导致 backend 找不到视频文件，worker 重启后视频丢失且不会重新生成）
+if grep -A 20 '^  celery-worker:' "$INSTALL_DIR/docker-compose.yml" | grep -q 'media-data:/app/media'; then
+    echo "  celery-worker media 卷已配置"
+else
+    awk '
+      /^  celery-worker:/ { inworker=1 }
+      inworker && /^[[:space:]]*depends_on:/ {
+          print "    volumes:"
+          print "      - media-data:/app/media"
+          print "      - ./cameras.yml:/app/config/cameras.yml"
+          inworker=0
+      }
+      { print }
+    ' "$INSTALL_DIR/docker-compose.yml" > "$INSTALL_DIR/docker-compose.yml.tmp" && mv "$INSTALL_DIR/docker-compose.yml.tmp" "$INSTALL_DIR/docker-compose.yml"
+    echo "  已为 celery-worker 补挂 media 卷（视频生成必需）"
+fi
+
 # ── 3. 停止旧的图片代理服务（已由 nginx 处理）──
 echo ""
 echo "[3/6] 清理旧的图片代理..."

@@ -69,6 +69,8 @@ services:
     container_name: prison-celery-worker
     command: ["/app/celery-worker-entrypoint.sh"]
     restart: always
+    volumes:
+      - media-data:/app/media
     environment:
       - DEBUG=False
       - SECRET_KEY=ded6456c7b2ec1ba43635dbabd0ecebf3a7db953392311ce96e681af42aaecba
