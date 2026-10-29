@@ -30,7 +30,7 @@ class RecordService(BaseService):
     @staticmethod
     def save_image(base64_data, prefix='photo'):
         if not base64_data:
-            return None
+            return ''  # 字段 NOT NULL，空值存空串而非 None
 
         # 如果是已存在的文件路径（包含 / 或 media/），直接返回
         if base64_data.startswith('/') or base64_data.startswith('media/'):
@@ -147,10 +147,10 @@ class RecordService(BaseService):
                 }
             )
 
-            # 刑满释放标记档案为已释放
+            # 仅刑满释放标记档案为已释放，其他出监原因不影响档案状态
             if reason == '刑满释放':
                 from apps.users.models import PrisonerArchive
-                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=True)
+                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=True, status='已释放')
                 logger.info(f"刑满释放: 标记已释放 prisoner_no={prisoner_no}")
 
             logger.info(f"Exit record created: id={record.id}, prisoner={prisoner_no}, reason={reason}")
@@ -196,10 +196,10 @@ class RecordService(BaseService):
             deleted_count, _ = TodayExitRecord.objects.filter(prisoner_no=prisoner_no).delete()
             print(f'[入监DEBUG] 删除出监记录: prisoner_no={prisoner_no}, deleted={deleted_count}')
 
-            # 刑满释放后回监，恢复档案为在押状态
+            # 刑满释放后入监，恢复档案为在押状态
             if exit_reason == '刑满释放':
                 from apps.users.models import PrisonerArchive
-                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False)
+                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False, status='在押')
                 logger.info(f"入监恢复档案: prisoner_no={prisoner_no}")
             logger.info(f"Entry record created: id={record.id}, prisoner={prisoner_no}")
 
@@ -249,7 +249,7 @@ class RecordService(BaseService):
             # 刑满释放后回监，恢复档案为在押状态
             if exit_reason == '刑满释放':
                 from apps.users.models import PrisonerArchive
-                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False)
+                PrisonerArchive.objects.filter(prisoner_no=prisoner_no).update(is_released=False, status='在押')
                 logger.info(f"回监恢复档案: prisoner_no={prisoner_no}")
             logger.info(f"Return record created: id={record.id}, prisoner={prisoner_no}, exit_reason={exit_reason}")
 

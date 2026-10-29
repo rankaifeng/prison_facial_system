@@ -130,6 +130,9 @@ class ArchiveListController(APIView):
             item['mtxx'] = _normalize_media_info(r.media_info) or []
             item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
             item['photo_expired'] = _compute_photo_expired(r.entry_date or item.get('rjrq', ''))
+            # 已释放标记优先展示（凌晨同步会把 basic_info.zyxz 刷回"在押"）
+            if r.is_released:
+                item['zyxz'] = '已释放'
             data.append(item)
 
         return Response({
@@ -162,6 +165,9 @@ class ArchiveDetailController(APIView):
         item['sentence_end'] = r.sentence_end or item.get('zr', '')
         item['crime'] = r.crime or item.get('zm', '')
         item['prison_area'] = r.prison_area or item.get('db', '')
+        # 已释放标记优先展示（凌晨同步会把 basic_info.zyxz 刷回"在押"）
+        if r.is_released:
+            item['zyxz'] = '已释放'
 
         return Response({
             'code': 1,

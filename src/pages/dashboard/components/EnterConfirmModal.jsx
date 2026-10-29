@@ -102,10 +102,10 @@ const EnterConfirmModal = ({ visible, onCancel, onOk, prisonerNo, policeFaceImag
         return;
       }
     } else {
-      if (!policeImage) {
-        message.warning('请先录入人脸');
-        return;
-      }
+      // if (!policeImage) {
+      //   message.warning('请先录入人脸');
+      //   return;
+      // }
       handleSubmit();
     }
   };

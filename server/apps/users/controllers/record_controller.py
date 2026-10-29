@@ -35,7 +35,8 @@ class ExitRecordController(APIView):
         end_time = data.get('end_time')
         attachments = request.FILES.getlist('attachments') if request.FILES else []
 
-        if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason, police_face, swat_face, armed_police_signature]):
+        # 民警人脸/特警人脸/武警签名改为可选，不再强制
+        if not all([prisoner_no, prisoner_name, prison_area, exit_date, reason]):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',
@@ -134,7 +135,8 @@ class EntryRecordController(APIView):
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
-        if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
+        # 民警人脸改为可选，不再强制
+        if not all([prisoner_no, prisoner_name, prison_area, entry_date]):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',
@@ -210,7 +212,8 @@ class ReturnRecordController(APIView):
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
-        if not all([prisoner_no, prisoner_name, prison_area, entry_date, police_face]):
+        # 民警人脸改为可选，不再强制
+        if not all([prisoner_no, prisoner_name, prison_area, entry_date]):
             return Response({
                 'code': 0,
                 'msg': '缺少必要参数',

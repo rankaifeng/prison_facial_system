@@ -112,7 +112,17 @@ const PrisonerList = () => {
           : <Tag color="green">正常</Tag>
       ),
     },
-    { title: '在押状态', dataIndex: 'zyxz', key: 'zyxz', width: 80 },
+    {
+      title: '在押状态',
+      dataIndex: 'zyxz',
+      key: 'zyxz',
+      width: 80,
+      render: (val) => (
+        val === '已释放'
+          ? <Tag color="red">已释放</Tag>
+          : <Tag color="green">{val || '在押'}</Tag>
+      ),
+    },
     {
       title: '操作',
       key: 'action',
