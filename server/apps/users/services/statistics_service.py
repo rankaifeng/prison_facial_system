@@ -49,7 +49,7 @@ class StatisticsService(BaseService):
             if deleted_count:
                 logger.info(f'[auto-reset] 已清空今日出监记录: {deleted_count} 条')
 
-            # 将昨日统计同步到历史记录
+            # 将昨日统计同步到历史记录，并创建今日统计（计数归零，在押人数保留）
             daily_stats = DailyStatistics.objects.filter(date=yesterday)
             for stat in daily_stats:
                 HistoryStatistics.objects.get_or_create(
@@ -62,19 +62,18 @@ class StatisticsService(BaseService):
                         'entry_count': stat.entry_count,
                     }
                 )
-            # 创建今日统计（计数归零，在押人数保留）
-            DailyStatistics.objects.get_or_create(
-                prison_area=stat.prison_area,
-                date=today,
-                defaults={
-                    'prison_area_name': stat.prison_area_name,
-                    'exit_count': 0,
-                    'entry_count': 0,
-                    'in_prison_count': stat.in_prison_count,
-                    'work_count': 0,
-                    'reason_stats': {},
-                }
-            )
+                DailyStatistics.objects.get_or_create(
+                    prison_area=stat.prison_area,
+                    date=today,
+                    defaults={
+                        'prison_area_name': stat.prison_area_name,
+                        'exit_count': 0,
+                        'entry_count': 0,
+                        'in_prison_count': stat.in_prison_count,
+                        'work_count': 0,
+                        'reason_stats': {},
+                    }
+                )
 
         if daily_stats:
             logger.info(f'[auto-reset] 昨日数据已同步，今日统计已重置 ({len(daily_stats)} 个监区)')

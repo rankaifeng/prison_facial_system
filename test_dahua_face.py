@@ -24,12 +24,12 @@ from requests.auth import HTTPDigestAuth
 from PIL import Image
 
 # ── 默认配置（命令行参数可覆盖）──
-DEFAULT_DEVICE_IP = "192.168.1.108"
+DEFAULT_DEVICE_IP = "10.2.48.224"
 DEFAULT_USER_ID = "510600425022"
 DEFAULT_USER_NAME = "测试人员"
 DEFAULT_PHOTO = "https://c-ssl.dtstatic.com/uploads/blog/202309/08/8gSMABJACgXEdZM.thumb.1000_0.png"
 AUTH_USER = "admin"
-AUTH_PASS = "sh888888"
+AUTH_PASS = "sh123456"
 
 # 接口文档: 白光人脸照片 100k x 5（每张 100KB，最多 5 张）
 # 按 base64 串长度 <= 100KB 卡口，对应原始 JPEG 约 74KB
