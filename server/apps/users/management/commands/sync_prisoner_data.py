@@ -153,6 +153,38 @@ def cdata_text(element):
     return (element.text or '').strip()
 
 
+# 监区字段别名表：接口 db 字段的已知变体 → 标准监区名
+AREA_ALIAS = {
+    '1监区': '一监区', '2监区': '二监区', '3监区': '三监区', '4监区': '四监区',
+    '5监区': '五监区', '6监区': '六监区', '7监区': '七监区', '8监区': '八监区',
+    '一监區': '一监区', '二监區': '二监区', '三监區': '三监区', '四监區': '四监区',
+    '五监區': '五监区', '六监區': '六监区', '七监區': '七监区', '八监區': '八监区',
+}
+
+STANDARD_AREAS = {'一监区', '二监区', '三监区', '四监区', '五监区', '六监区', '七监区', '八监区'}
+
+
+def normalize_prison_area(raw, prisoner_no='', warn=True):
+    """监区字段清洗：去空格（含全角）、别名归一。
+
+    "无队别"视为未分配（返回空），由调用方回退其他数据来源。
+    清洗后仍不是标准监区时打日志暴露（地图只显示标准监区，
+    非标准监区的人会计入首页总人数但不计入监区卡片，导致两边对不上）。
+    """
+    if not raw:
+        if warn:
+            logger.warning(f'[监区清洗] prisoner_no={prisoner_no} 监区字段为空')
+        return ''
+    v = re.sub(r'[\s　]+', '', str(raw))
+    v = AREA_ALIAS.get(v, v)
+    if v == '无队别':
+        return ''
+    if v not in STANDARD_AREAS:
+        if warn:
+            logger.warning(f'[监区清洗] prisoner_no={prisoner_no} 非标准监区: {raw!r} -> {v!r}')
+    return v
+
+
 def build_soap_request(prisoner_id, service_code):
     """构造 SOAP POST 请求体"""
     return (
@@ -366,6 +398,21 @@ class Command(BaseCommand):
 
     # ==================== 数据保存 ====================
 
+    def _resolve_prison_area(self, prisoner_no, basic_info, media_records):
+        """确定监区：优先接口 db 字段；为空或"无队别"时回退媒体信息的 bmmc（部门名称）。
+
+        监区必须落到标准监区名上，否则首页总人数会大于各监区卡片之和。
+        """
+        area = normalize_prison_area(basic_info.get('db', ''), prisoner_no)
+        if area:
+            return area
+        for r in (media_records or []):
+            cand = normalize_prison_area(r.get('bmmc', ''), prisoner_no, warn=False)
+            if cand:
+                logger.info(f'[监区回退] prisoner_no={prisoner_no} db字段为空，使用媒体信息bmmc: {cand}')
+                return cand
+        return ''
+
     @transaction.atomic
     def _save_archive(self, prisoner_no, basic_info, media_records):
         """保存或更新罪犯档案（编号唯一，存在则更新）"""
@@ -431,7 +478,7 @@ class Command(BaseCommand):
                 'sentence': basic_info.get('ypxq', ''),
                 'sentence_start': basic_info.get('rjrq', ''),
                 'sentence_end': basic_info.get('zr', ''),
-                'prison_area': basic_info.get('db', ''),
+                'prison_area': self._resolve_prison_area(prisoner_no, basic_info, media_records),
                 'room_no': basic_info.get('jsh', ''),
                 'bed_no': basic_info.get('cwh', ''),
                 'status': basic_info.get('zyxz', ''),
@@ -441,6 +488,10 @@ class Command(BaseCommand):
                 'judgment_no': basic_info.get('pjzh', ''),
                 'basic_info': basic_info,
                 'media_info': media_list,
+                # 编号仍在接口在押列表中 → 恢复在押状态。
+                # 修复历史 bug：某次同步接口少返回的人被"标记移除"后永远翻不回来，
+                # 导致首页人数 < 接口人数且差值随时间越积越大
+                'is_released': False,
             },
         )
         return created

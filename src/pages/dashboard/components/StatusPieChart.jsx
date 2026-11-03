@@ -200,7 +200,7 @@ const StatusPieChart = ({ data }) => {
       <div className="chart-title">
         <div className="title-content">
           <PieChartOutlined />
-          <span>罪犯状态分布</span>
+          <span>当日出监人数</span>
         </div>
         <div className="title-line"></div>
         <div className="title-decor">
