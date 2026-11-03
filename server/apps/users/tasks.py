@@ -22,17 +22,6 @@ def _build_history_reason_counts(reason_stats):
     return {field: reason_stats.get(reason, 0) for reason, field in HISTORY_REASON_FIELDS}
 
 
-def _acquire_video_lock(record_id, timeout=3600):
-    """获取记录级视频锁，防止同一记录被并发执行；拿不到返回 None"""
-    import redis
-    from django.conf import settings
-    client = redis.Redis.from_url(settings.CELERY_BROKER_URL)
-    lock = client.lock(f'prison:video_lock:{record_id}', timeout=timeout)
-    if lock.acquire(blocking=False):
-        return lock
-    return None
-
-
 def _generate_exit_video_impl(self, record_id):
     import os
     from apps.users.models import ExitEntryRecord
@@ -152,17 +141,7 @@ def generate_exit_video(self, record_id):
     异步生成出监/回监记录的录像
     失败时自动重试（最多3次，间隔60秒递增）
     """
-    lock = _acquire_video_lock(record_id)
-    if lock is None:
-        logger.info(f"记录 {record_id} 已有视频生成任务在执行，跳过重复入队")
-        return f"任务已在执行中: {record_id}"
-    try:
-        return _generate_exit_video_impl(self, record_id)
-    finally:
-        try:
-            lock.release()
-        except Exception:
-            logger.warning(f"记录 {record_id} 释放视频锁异常", exc_info=True)
+    return _generate_exit_video_impl(self, record_id)
 
 
 @shared_task
