@@ -126,7 +126,7 @@ const Login = () => {
           </ConfigProvider>
 
           <div className="login-footer">
-            <span>© 2026 罪犯进出AB门人脸识别系统222</span>
+            <span>© 2026 罪犯进出AB门人脸识别系统</span>
           </div>
         </div>
 
