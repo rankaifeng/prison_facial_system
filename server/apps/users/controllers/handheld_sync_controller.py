@@ -1,16 +1,13 @@
 import logging
-import threading
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
 from apps.users.services.handheld_sync_service import (
-    HandheldSyncService,
     get_sync_progress,
     request_cancel,
-    is_cancelled,
-    is_sync_thread_active,
+    trigger_sync,
     _update_progress,
 )
 
@@ -27,16 +24,11 @@ class HandheldSyncController(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if is_sync_thread_active() and not is_cancelled():
-            return Response({'code': 0, 'msg': '已有同步任务在运行', 'data': {'is_running': True}})
-
-        _update_progress(is_running=True, phase='idle', message='准备同步...',
-                         started_at=timezone.now(), finished_at=None, last_error='')
-
-        thread = threading.Thread(target=HandheldSyncService().sync_all, daemon=True)
-        thread.start()
-
-        return Response({'code': 1, 'msg': '已触发同步', 'data': {}})
+        # trigger_sync 原子完成检查+占位+启动线程，杜绝双线程竞态
+        ok, msg = trigger_sync()
+        if ok:
+            return Response({'code': 1, 'msg': msg, 'data': {}})
+        return Response({'code': 0, 'msg': msg, 'data': {'is_running': True}})
 
 
 class HandheldSyncProgressController(APIView):
