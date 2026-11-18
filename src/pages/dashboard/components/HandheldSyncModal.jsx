@@ -188,7 +188,7 @@ const HandheldSyncModal = ({ visible, onCancel }) => {
           <div className="phase-result">
             <PictureOutlined className="result-icon" />
             <span className="result-label">照片注册完成：</span>
-            <span className="result-value">共 {photosTotal} 人，成功 {photosSuccess}，失败 {photosFail}</span>
+            <span className="result-value">共 {photosTotal} 人，成功 {photosSuccess}，失败 {photosFail}{progress?.photos_skipped > 0 && `，无照片跳过 ${progress.photos_skipped}`}</span>
           </div>
         )}
 

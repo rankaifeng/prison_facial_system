@@ -15,7 +15,7 @@ const HOSPITALS_CENTER = [
 ];
 
 const CENTER_PRISONS = [
-  { value: '金蓥监狱', label: '金蓥监狱' },
+  { value: '金堂监狱', label: '金堂监狱' },
   { value: '成都病犯监狱', label: '成都病犯监狱' },
   { value: '其他', label: '其他' },
 ];

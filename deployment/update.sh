@@ -180,6 +180,9 @@ echo "[5/6] 数据库迁移..."
 # 如果已执行过则会跳过
 docker exec prison-backend python manage.py migrate users 0012_exit_entry_datetime --fake 2>&1 | sed 's/^/    /' || true
 
+# 全量迁移（幂等，未应用的迁移会自动补上，如 handheld_sync_log 建表）
+docker exec prison-backend python manage.py migrate --no-input 2>&1 | sed 's/^/    /' || true
+
 # 确保数据库字段类型正确（幂等操作，已改过的不会报错）
 docker exec prison-backend python manage.py shell -c "from django.db import connection; c=connection.cursor(); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN exit_date DATETIME(6) NULL'); c.execute('ALTER TABLE exit_entry_record MODIFY COLUMN entry_date DATETIME(6) NULL'); print('done')" 2>&1 | sed 's/^/    /' || true
 echo "  数据库迁移完成"
