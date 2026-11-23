@@ -15,7 +15,7 @@ const HOSPITALS_CENTER = [
 ];
 
 const CENTER_PRISONS = [
-  { value: '金堂监狱', label: '金堂监狱' },
+  { value: '金蓥监狱', label: '金蓥监狱' },
   { value: '成都病犯监狱', label: '成都病犯监狱' },
   { value: '其他', label: '其他' },
 ];
@@ -35,7 +35,50 @@ const PRISON_AREAS = [
   { value: '6', label: '六监区' },
   { value: '7', label: '七监区' },
 ];
+const hasValue = (value) => {
+  if (typeof value === 'string') return value.trim().length > 0;
+  return value !== undefined && value !== null && value !== '';
+};
 
+const getBasicMissing = (values, reasons) => {
+  const missing = [];
+  const required = [
+    ['prisonerNo', '罪犯编号'],
+    ['prisonerName', '罪犯姓名'],
+    ['prisonArea', '监区'],
+    ['exitDate', '出监日期'],
+    ['exitReason', '出监原因'],
+  ];
+  required.forEach(([key, label]) => {
+    if (!hasValue(values[key])) missing.push(label);
+  });
+
+  if (values.exitDate && !values.exitDate.isValid?.()) {
+    missing.push('有效的出监日期');
+  }
+
+  const reason = reasons.find(item => item.value === values.exitReason);
+  if (hasValue(values.exitReason) && !reason) {
+    missing.push('有效的出监原因');
+  }
+
+  if (reason?.label === '外出就医') {
+    if (!['中心医院', '社会医院'].includes(values.hospital)) {
+      missing.push('医院类型');
+    } else if (values.hospital === '中心医院') {
+      if (!hasValue(values.transferPrison)) missing.push('转诊监狱');
+      if (values.transferPrison === '其他' && !hasValue(values.transferPrisonOther)) {
+        missing.push('转诊监狱（其他）');
+      }
+    } else {
+      if (!hasValue(values.socialHospital)) missing.push('医院');
+      if (values.socialHospital === '其他' && !hasValue(values.socialHospitalOther)) {
+        missing.push('医院（其他）');
+      }
+    }
+  }
+  return missing;
+};
 const PRISON_AREA_NAME_TO_ID = {
   '一监区': '1', '二监区': '2', '三监区': '3', '四监区': '4',
   '五监区': '5', '六监区': '6', '七监区': '7',

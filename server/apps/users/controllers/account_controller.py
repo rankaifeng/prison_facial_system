@@ -132,8 +132,10 @@ class AccountUpdateController(APIView):
                 'data': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 支持多监区：prison_ids 为数组，兼容旧的单值 prison_id
-        prison_ids = request.data.get('prison_ids') or split_prison_ids(request.data.get('prison_id'))
+        # 表单同名字段重复提交，get() 只会返回最后一个监区；兼容数组及旧的单值 prison_id
+        data = request.data
+        selected = data.getlist('prison_ids') if hasattr(data, 'getlist') else data.get('prison_ids')
+        prison_ids = split_prison_ids(selected) or split_prison_ids(data.get('prison_id'))
         update_data = {}
         if request.data.get('name') is not None:
             update_data['first_name'] = request.data.get('name')

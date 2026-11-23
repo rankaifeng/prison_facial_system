@@ -15,7 +15,7 @@ const prisonAreas = [{ id: 1, name: '一监区' },
 { id: 7, name: '七监区' }];
 
 const AccountManagement = () => {
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [form] = Form.useForm();
@@ -28,7 +28,7 @@ const AccountManagement = () => {
   const [pwdVerifying, setPwdVerifying] = useState(false);
   const [adminPwdForm] = Form.useForm();
 
-  const { tableProps, form: searchForm, search, refresh } = useQueryTable({
+  const { tableProps, form: searchForm, search, refresh, loading } = useQueryTable({
     url: '/user_manage/account/account_list',
     rowKey: 'id',
   });
@@ -165,6 +165,8 @@ const AccountManagement = () => {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      setSaving(true);
+      let result;
       if (editingRecord) {
         const params = {
           id: editingRecord.id,
@@ -174,16 +176,21 @@ const AccountManagement = () => {
         if (values.password) {
           params.password = values.password;
         }
-        await http.post('/user_manage/account/account_update', params);
-        message.success('编辑成功');
+        result = await http.post('/user_manage/account/account_update', params);
       } else {
-        await http.post('/user_manage/account/account_add', values);
-        message.success('新增成功');
+        result = await http.post('/user_manage/account/account_add', values);
       }
+      if (result?.code !== 1) {
+        message.error(result?.msg || '保存失败');
+        return;
+      }
+      message.success(editingRecord ? '编辑成功' : '新增成功');
       setModalVisible(false);
       refresh();
     } catch (error) {
       // 表单校验失败或 HTTP 错误（拦截器已统一提示）
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -211,6 +218,7 @@ const AccountManagement = () => {
         visible={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
+        confirmLoading={saving}
         destroyOnClose
       >
         <Form form={form} layout="vertical" preserve={false}>
@@ -235,10 +243,10 @@ const AccountManagement = () => {
           >
             <Select
               mode="multiple"
+              maxTagCount="responsive"
               placeholder="请选择监区"
               options={prisonAreas}
               fieldNames={{ label: 'name', value: 'id' }}
-              maxTagCount="responsive"
             />
           </Form.Item>
         </Form>

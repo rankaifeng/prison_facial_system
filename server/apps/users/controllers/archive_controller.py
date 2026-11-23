@@ -1,13 +1,18 @@
 import re
-from urllib.parse import urlparse
-from datetime import date, datetime
+from datetime import date
+from django.db import transaction
+from django.utils import timezone
+from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.users.config import JWTAuthentication
-from apps.users.models import PrisonerArchive
-
-PHOTO_EXPIRED_YEARS = 5
+from apps.users.dict import expand_prison_area_values, get_all_prison_areas, get_prison_area_name, get_prison_area_names
+from apps.users.models import PrisonerArchive, ReleaseReview
+from apps.users.services.photo_reminders import PHOTO_ACTIONS, archive_admission_date, assess_photo
+from apps.users.services.release_check import (
+    archive_release_dates, build_release_check, release_check_window, release_date_in_window,
+)
 
 
 def _parse_sentence_end(raw):
@@ -23,28 +28,6 @@ def _parse_sentence_end(raw):
         return None
 
 
-def _compute_photo_expired(entry_date_str):
-    """根据入监日期计算照片是否过期：入监距今 >= 5 年则提醒"""
-    if not entry_date_str:
-        return False
-    entry_date_str = str(entry_date_str).strip()
-    for fmt in ('%Y.%m.%d', '%Y-%m-%d', '%Y/%m/%d',
-                '%Y.%m.%d %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y/%m/%d %H:%M:%S'):
-        try:
-            entry_date = datetime.strptime(entry_date_str, fmt).date()
-            break
-        except ValueError:
-            continue
-    else:
-        return False
-    today = date.today()
-    try:
-        cutoff = today.replace(year=today.year - PHOTO_EXPIRED_YEARS)
-    except ValueError:
-        cutoff = today.replace(year=today.year - PHOTO_EXPIRED_YEARS, day=28)
-    return entry_date <= cutoff
-
-
 def _normalize_photo_url(url):
     """返回完整照片URL，兼容旧数据中的错误地址"""
     if not url:
@@ -58,12 +41,12 @@ def _normalize_photo_url(url):
 
 def _normalize_media_info(media_info):
     """处理媒体信息中的照片URL"""
-    if not media_info:
-        return media_info
-    for item in media_info:
-        if 'xp' in item:
-            item['xp'] = _normalize_photo_url(item['xp'])
-    return media_info
+    if not isinstance(media_info, list):
+        return []
+    return [
+        {**item, 'xp': _normalize_photo_url(item['xp'])} if isinstance(item.get('xp'), str) else item
+        for item in media_info if isinstance(item, dict)
+    ]
 
 
 class ArchiveListController(APIView):
@@ -125,11 +108,14 @@ class ArchiveListController(APIView):
         records = qs[start:start + page_size]
 
         data = []
+        today = timezone.localdate()
         for r in records:
             item = r.basic_info.copy() if r.basic_info else {}
             item['mtxx'] = _normalize_media_info(r.media_info) or []
             item['synced_at'] = r.synced_at.strftime('%Y-%m-%d %H:%M:%S') if r.synced_at else ''
-            item['photo_expired'] = _compute_photo_expired(r.entry_date or item.get('rjrq', ''))
+            photo = assess_photo(r.media_info, archive_admission_date(r), today, _normalize_photo_url)
+            item['photo_status'] = photo['status']
+            item['photo_expired'] = photo['status'] == 'expired'
             # 已释放标记优先展示（凌晨同步会把 basic_info.zyxz 刷回"在押"）
             if r.is_released:
                 item['zyxz'] = '已释放'
@@ -141,6 +127,109 @@ class ArchiveListController(APIView):
             'data': data,
             'num': total,
         })
+
+
+class ArchivePhotoReminderController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        archives = PrisonerArchive.objects.filter(is_released=False)
+        if request.user.role == 'admin' or request.user.is_superuser:
+            visible_areas = [area['name'] for area in get_all_prison_areas()]
+        else:
+            assigned = request.user.prison_id or request.user.prison_name
+            archives = archives.filter(prison_area__in=expand_prison_area_values(assigned))
+            visible_areas = get_prison_area_names(assigned).split(',') if assigned else []
+        today = timezone.localdate()
+        rows = []
+        for archive in archives.only(
+            'prisoner_no', 'prisoner_name', 'prison_area', 'media_info', 'entry_date', 'basic_info',
+        ).iterator():
+            photo = assess_photo(archive.media_info, archive_admission_date(archive), today, _normalize_photo_url)
+            if photo['status'] in PHOTO_ACTIONS:
+                area = get_prison_area_name(archive.prison_area) or archive.prison_area or '未分配监区'
+                visible_areas.append(area)
+                rows.append({
+                    'prisoner_no': archive.prisoner_no,
+                    'prisoner_name': archive.prisoner_name,
+                    'prison_area': area,
+                    'status': photo['status'],
+                    'entry_date': photo['entry_date'],
+                    'action': PHOTO_ACTIONS[photo['status']],
+                })
+        response = Response({
+            'code': 1, 'msg': 'success', 'data': rows,
+            'areas': list(dict.fromkeys(area for area in visible_areas if area)),
+        })
+        response['Cache-Control'] = 'no-store'
+        return response
+
+
+class ReleaseReviewInput(serializers.Serializer):
+    archive_id = serializers.IntegerField(min_value=1)
+    release_date = serializers.DateField()
+    decision = serializers.ChoiceField(choices=ReleaseReview.Decision.choices)
+    note = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+
+
+def _release_review_data(review):
+    return {
+        'decision': review.decision,
+        'note': review.note,
+        'reviewer': review.reviewer_username,
+        'reviewed_at': timezone.localtime(review.reviewed_at).isoformat(),
+    }
+
+
+class ReleaseCheckController(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        range_start, range_end = release_check_window(timezone.localdate())
+        archives = PrisonerArchive.objects.only(
+            'prisoner_no', 'prisoner_name', 'prison_area', 'sentence', 'sentence_start',
+            'sentence_end', 'basic_info', 'media_info', 'is_released', 'entry_date',
+        ).iterator()
+        report = build_release_check(archives, range_start, _normalize_photo_url, range_end=range_end)
+        reviews = {
+            (review.archive_id, review.release_date.isoformat()): _release_review_data(review)
+            for review in ReleaseReview.objects.filter(release_date__range=(range_start, range_end))
+        }
+        for row in report['rows']:
+            row['review'] = reviews.get((row['id'], row['release_date']))
+        response = Response({'code': 1, 'msg': 'success', 'data': report})
+        response['Cache-Control'] = 'no-store'
+        return response
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = ReleaseReviewInput(data=request.data)
+        if not serializer.is_valid():
+            return Response({'code': 0, 'msg': '请检查核对结论和备注（最多500字）'})
+        data = serializer.validated_data
+        range_start, range_end = release_check_window(timezone.localdate())
+        if not range_start <= data['release_date'] <= range_end:
+            return Response({'code': 0, 'msg': '释放日期已超出未来7天范围，请关闭窗口后重新自检'})
+        if data['decision'] == ReleaseReview.Decision.NEEDS_REVIEW and not data['note']:
+            return Response({'code': 0, 'msg': '请在备注中填写待复核原因'})
+        archive = PrisonerArchive.objects.select_for_update().filter(
+            pk=data['archive_id'], is_released=False,
+        ).first()
+        scheduled = release_date_in_window(archive_release_dates(archive)[2:], range_start, range_end) if archive else None
+        if scheduled != data['release_date']:
+            return Response({'code': 0, 'msg': '此档案的预计释放日期已变化，请关闭窗口后重新自检'})
+        review, _ = ReleaseReview.objects.update_or_create(
+            archive=archive,
+            release_date=scheduled,
+            defaults={
+                'decision': data['decision'],
+                'note': data['note'],
+                'reviewer_username': request.user.get_username(),
+            },
+        )
+        return Response({'code': 1, 'msg': '核对结果已保存', 'data': _release_review_data(review)})
 
 
 class ArchiveDetailController(APIView):

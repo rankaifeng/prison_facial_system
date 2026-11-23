@@ -20,7 +20,7 @@ const EXIT_REASONS = ['刑期满释放', '减刑释放', '假释', '特赦', '�
 
 "中心医院", "社会医院"
 
-"金堂监狱", "成都病犯监狱", "其他"
+"金蓥监狱", "成都病犯监狱", "其他"
 "达州市中心医院", "达州区人民医院", "其他"
 
 const randomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];

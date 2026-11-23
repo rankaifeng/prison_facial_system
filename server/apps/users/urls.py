@@ -1,4 +1,5 @@
 from django.urls import re_path
+from .controllers.archive_controller import ArchivePhotoReminderController, ReleaseCheckController
 from .controllers import (
     LoginController,
     ChangePasswordController,
@@ -65,4 +66,6 @@ urlpatterns = [
     re_path(r'^handheld-sync/trigger/?$', HandheldSyncController.as_view(), name='handheld_sync_trigger'),
     re_path(r'^handheld-sync/progress/?$', HandheldSyncProgressController.as_view(), name='handheld_sync_progress'),
     re_path(r'^handheld-sync/cancel/?$', HandheldSyncCancelController.as_view(), name='handheld_sync_cancel'),
+    re_path(r'^archive/release-check/?$', ReleaseCheckController.as_view(), name='release_check'),
+    re_path(r'^archive/photo-reminders/?$', ArchivePhotoReminderController.as_view(), name='archive_photo_reminders'),
 ]

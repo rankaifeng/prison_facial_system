@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Button, message, Tag, DatePicker } from 'antd';
 import { EyeOutlined, ExportOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,8 @@ import SearchHeader from '@/components/search-header';
 import TableLayout from '@/components/table-layout';
 import useQueryTable from '@/hooks/useQueryTable';
 import exportToCSV from '@/utils/export';
+import ReleaseCheck from './ReleaseCheck';
+import PhotoReminders, { photoStatuses } from './PhotoReminders';
 
 const { RangePicker } = DatePicker;
 
@@ -24,6 +26,7 @@ const STORAGE_KEY = 'prisoner_list_page';
 
 const PrisonerList = () => {
   const navigate = useNavigate();
+  const [checkingRelease, setCheckingRelease] = useState(false);
 
   const savedState = useMemo(() => {
     try {
@@ -84,7 +87,7 @@ const PrisonerList = () => {
     }
     const exportData = data.map(row => ({
       ...row,
-      photo_expired: row.photo_expired ? '已过期' : '正常',
+      photo_status: photoStatuses[row.photo_status]?.label || '—',
     }));
     exportToCSV(exportData, columns.filter(col => col.key !== 'action'), '罪犯档案');
   };
@@ -102,15 +105,14 @@ const PrisonerList = () => {
     { title: '监室号', dataIndex: 'jsh', key: 'jsh', width: 80 },
     { title: '入监日期', dataIndex: 'rjrq', key: 'rjrq', width: 120 },
     {
-      title: '照片是否过期',
-      dataIndex: 'photo_expired',
-      key: 'photo_expired',
-      width: 110,
-      render: (val) => (
-        val
-          ? <Tag color="red">已过期</Tag>
-          : <Tag color="green">正常</Tag>
-      ),
+      title: '照片状态',
+      dataIndex: 'photo_status',
+      key: 'photo_status',
+      width: 175,
+      render: status => {
+        const photo = photoStatuses[status];
+        return photo ? <Tag color={photo.color}>{photo.label}</Tag> : '—';
+      },
     },
     {
       title: '在押状态',
@@ -181,6 +183,7 @@ const PrisonerList = () => {
 
   return (
     <div>
+      <PhotoReminders onViewArchive={number => { savePageState(); navigate(`/prisoners/${encodeURIComponent(number)}`); }} />
       <SearchHeader
         form={form}
         items={searchItems}
@@ -190,6 +193,7 @@ const PrisonerList = () => {
       <TableLayout
         headerLayout={
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10, gap: 12 }}>
+            <Button onClick={() => setCheckingRelease(true)}>未来7天释放自检</Button>
             <Button type="primary" icon={<ExportOutlined />} onClick={handleExport}>
               导出
             </Button>
@@ -199,6 +203,7 @@ const PrisonerList = () => {
         loading={loading}
         columns={columns}
       />
+      {checkingRelease && <ReleaseCheck onClose={() => setCheckingRelease(false)} />}
     </div>
   );
 };
