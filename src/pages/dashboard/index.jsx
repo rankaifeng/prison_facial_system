@@ -418,6 +418,7 @@ const Dashboard = () => {
         onSelect={handleOperationSelect}
         prisonerNo={activePrisonerNo}
       />
+      
       <ExitConfirmModal
         visible={exitModalOpen}
         onCancel={resetExitModal}
