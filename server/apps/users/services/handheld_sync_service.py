@@ -25,6 +25,7 @@ from datetime import datetime
 import requests
 import yaml
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.users.models import PrisonerArchive, HandheldSyncLog
@@ -179,9 +180,11 @@ def _get_new_prisoners():
 
 
 def _get_photo_pending_prisoners():
-    """获取人员已注册但照片未同步的罪犯（上次照片失败的）"""
+    """获取人员已注册但照片未同步的罪犯（上次照片失败的，或此前因无有效照片被跳过的）"""
     pending_nos = set(
-        HandheldSyncLog.objects.filter(person_synced=True, photo_synced=False)
+        HandheldSyncLog.objects.filter(
+            Q(person_synced=True, photo_synced=False) | Q(photo_skipped=True)
+        )
         .values_list('prisoner_no', flat=True)
     )
     if not pending_nos:
@@ -199,11 +202,21 @@ def _mark_person_synced(prisoner_nos):
 
 
 def _mark_photo_synced(prisoner_nos):
-    """标记照片已注册（含无照片被跳过的人，避免每次同步无限重试）"""
+    """标记照片已注册（同时清除跳过标记）"""
     for no in prisoner_nos:
         HandheldSyncLog.objects.update_or_create(
             prisoner_no=no,
-            defaults={'photo_synced': True, 'synced_at': timezone.now()},
+            defaults={'photo_synced': True, 'photo_skipped': False, 'synced_at': timezone.now()},
+        )
+
+
+def _mark_photo_skipped(prisoner_nos):
+    """标记照片被跳过（无有效照片URL）。photo_synced 置 True 避免当次重复计入，
+    但 photo_skipped=True 使下次同步重新检查照片URL，档案照片补齐后自动补同步"""
+    for no in prisoner_nos:
+        HandheldSyncLog.objects.update_or_create(
+            prisoner_no=no,
+            defaults={'photo_synced': True, 'photo_skipped': True, 'synced_at': timezone.now()},
         )
 
 
@@ -482,7 +495,7 @@ class HandheldSyncService:
         total = len(prisoners)
         logger.info('[照片注册] 开始，共 %d 人', total)
 
-        # 准备任务列表（无有效照片的跳过并标记，不再无限重试）
+        # 准备任务列表（无有效照片的跳过并标记 photo_skipped，下次同步重新检查）
         tasks = []
         skipped_nos = []
         for idx, p in enumerate(prisoners):
@@ -495,7 +508,7 @@ class HandheldSyncService:
 
         skip_count = len(skipped_nos)
         if skip_count > 0:
-            _mark_photo_synced(skipped_nos)
+            _mark_photo_skipped(skipped_nos)
             logger.info('[照片注册] %d 人无有效照片，已跳过并标记，实际待注册 %d 人', skip_count, len(tasks))
 
         counter_lock = threading.Lock()

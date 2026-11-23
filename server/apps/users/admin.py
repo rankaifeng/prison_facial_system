@@ -33,7 +33,7 @@ class FaceRecognitionRecordAdmin(admin.ModelAdmin):
 
 @admin.register(HandheldSyncLog)
 class HandheldSyncLogAdmin(admin.ModelAdmin):
-    list_display = ['prisoner_no', 'person_synced', 'photo_synced', 'synced_at']
-    list_filter = ['person_synced', 'photo_synced']
+    list_display = ['prisoner_no', 'person_synced', 'photo_synced', 'photo_skipped', 'synced_at']
+    list_filter = ['person_synced', 'photo_synced', 'photo_skipped']
     search_fields = ['prisoner_no']
     readonly_fields = ['synced_at']

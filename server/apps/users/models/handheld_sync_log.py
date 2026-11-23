@@ -7,6 +7,7 @@ class HandheldSyncLog(models.Model):
     prisoner_no = models.CharField('罪犯编号', max_length=64, unique=True, db_index=True)
     person_synced = models.BooleanField('人员已注册', default=False)
     photo_synced = models.BooleanField('照片已注册', default=False)
+    photo_skipped = models.BooleanField('照片曾被跳过(无有效照片)', default=False)
     synced_at = models.DateTimeField('最近同步时间', auto_now=True)
 
     class Meta:
